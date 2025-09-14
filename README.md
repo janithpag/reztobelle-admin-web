@@ -50,7 +50,7 @@ A full-stack admin dashboard for ReztoBelle jewelry business with Next.js fronte
 
 ```bash
 git clone <repository-url>
-cd reztobelle-admin-monorepo
+cd reztobelle-admin-web
 ```
 
 ### 2. Install Dependencies

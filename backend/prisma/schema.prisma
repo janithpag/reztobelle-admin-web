@@ -1,0 +1,130 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(ADMIN)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Product {
+  id          String      @id @default(cuid())
+  name        String
+  description String?
+  price       Decimal
+  sku         String      @unique
+  category    String
+  stock       Int         @default(0)
+  images      String[]    @default([])
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  
+  orderItems  OrderItem[]
+
+  @@map("products")
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  orderNumber String      @unique
+  customerName String
+  customerEmail String
+  customerPhone String?
+  status      OrderStatus @default(PENDING)
+  totalAmount Decimal
+  shippingAddress String
+  notes       String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  
+  items       OrderItem[]
+  deliveries  Delivery[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  productId String
+  quantity  Int
+  price     Decimal
+  
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+
+model Delivery {
+  id          String         @id @default(cuid())
+  orderId     String
+  trackingNumber String?     @unique
+  provider    String         // Koombiyo, etc.
+  status      DeliveryStatus @default(PENDING)
+  estimatedDelivery DateTime?
+  actualDelivery DateTime?
+  deliveryFee Decimal?
+  notes       String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  
+  order       Order          @relation(fields: [orderId], references: [id])
+
+  @@map("deliveries")
+}
+
+model Expense {
+  id          String      @id @default(cuid())
+  title       String
+  description String?
+  amount      Decimal
+  category    String
+  date        DateTime
+  receipt     String?     // File path or URL
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@map("expenses")
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  STAFF
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum DeliveryStatus {
+  PENDING
+  PICKED_UP
+  IN_TRANSIT
+  OUT_FOR_DELIVERY
+  DELIVERED
+  FAILED
+  RETURNED
+}

@@ -1,0 +1,37 @@
+{
+  "name": "reztobelle-backend",
+  "version": "1.0.0",
+  "description": "ReztoBelle Backend API with Fastify, Prisma, and PostgreSQL",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:studio": "prisma studio",
+    "db:seed": "tsx src/seed.ts"
+  },
+  "dependencies": {
+    "@fastify/cors": "^9.0.1",
+    "@fastify/env": "^4.4.0",
+    "@fastify/helmet": "^11.1.1",
+    "@fastify/rate-limit": "^9.1.0",
+    "@fastify/swagger": "^8.14.0",
+    "@fastify/swagger-ui": "^2.1.0",
+    "@prisma/client": "^5.7.1",
+    "fastify": "^4.25.2",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/node": "^20.10.5",
+    "prisma": "^5.7.1",
+    "tsx": "^4.6.2",
+    "typescript": "^5.3.3"
+  }
+}

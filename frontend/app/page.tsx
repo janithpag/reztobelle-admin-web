@@ -1,10 +1,15 @@
+"use client"
+
 import { AdminLayout } from "@/components/admin-layout"
 import { DashboardOverview } from "@/components/dashboard-overview"
+import { withAuth } from "@/contexts/auth-context"
 
-export default function HomePage() {
-  return (
-    <AdminLayout>
-      <DashboardOverview />
-    </AdminLayout>
-  )
+function HomePage() {
+	return (
+		<AdminLayout>
+			<DashboardOverview />
+		</AdminLayout>
+	)
 }
+
+export default withAuth(HomePage)

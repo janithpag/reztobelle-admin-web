@@ -1,5 +1,6 @@
 import { FastifyPluginCallback } from 'fastify'
 import { z } from 'zod'
+import { authenticateToken, requireManagerOrAdmin } from '../middleware/auth'
 
 const createProductSchema = z.object({
   name: z.string().min(1),
@@ -16,7 +17,9 @@ const updateProductSchema = createProductSchema.partial()
 
 const productRoutes: FastifyPluginCallback = async (fastify) => {
   // Get all products
-  fastify.get('/', async (request, reply) => {
+  fastify.get('/', {
+    preHandler: authenticateToken
+  }, async (request, reply) => {
     const products = await fastify.prisma.product.findMany({
       orderBy: { createdAt: 'desc' }
     })
@@ -24,7 +27,9 @@ const productRoutes: FastifyPluginCallback = async (fastify) => {
   })
 
   // Get product by ID
-  fastify.get('/:id', async (request, reply) => {
+  fastify.get('/:id', {
+    preHandler: authenticateToken
+  }, async (request, reply) => {
     const { id } = request.params as { id: string }
     
     const product = await fastify.prisma.product.findUnique({

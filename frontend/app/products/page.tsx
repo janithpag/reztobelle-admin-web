@@ -1,10 +1,15 @@
+"use client"
+
 import { AdminLayout } from "@/components/admin-layout"
 import { ProductsManagement } from "@/components/products-management"
+import { withAuth } from "@/contexts/auth-context"
 
-export default function ProductsPage() {
-  return (
-    <AdminLayout>
-      <ProductsManagement />
-    </AdminLayout>
-  )
+function ProductsPage() {
+	return (
+		<AdminLayout>
+			<ProductsManagement />
+		</AdminLayout>
+	)
 }
+
+export default withAuth(ProductsPage)

@@ -2,6 +2,7 @@ import { FastifyPluginCallback } from 'fastify'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { z } from 'zod'
+import { authenticateToken } from '../middleware/auth'
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -98,22 +99,10 @@ const authRoutes: FastifyPluginCallback = async (fastify) => {
 
   // Get current user
   fastify.get('/me', {
-    preHandler: async (request, reply) => {
-      try {
-        const token = request.headers.authorization?.replace('Bearer ', '')
-        if (!token) {
-          return reply.code(401).send({ error: 'No token provided' })
-        }
-
-        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any
-        request.user = decoded
-      } catch (error) {
-        return reply.code(401).send({ error: 'Invalid token' })
-      }
-    }
+    preHandler: authenticateToken
   }, async (request, reply) => {
     const user = await fastify.prisma.user.findUnique({
-      where: { id: (request as any).user.userId },
+      where: { id: request.user!.userId },
       select: {
         id: true,
         email: true,
@@ -128,6 +117,15 @@ const authRoutes: FastifyPluginCallback = async (fastify) => {
     }
 
     return { user }
+  })
+
+  // Logout (client-side token invalidation)
+  fastify.post('/logout', {
+    preHandler: authenticateToken
+  }, async (request, reply) => {
+    // In a production app, you might want to maintain a blacklist of tokens
+    // For now, we'll just return success and let the client handle token removal
+    return { message: 'Logged out successfully' }
   })
 }
 

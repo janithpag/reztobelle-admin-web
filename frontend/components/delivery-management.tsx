@@ -1,14 +1,14 @@
-"use client"
+'use client';
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
 	Pagination,
 	PaginationContent,
@@ -17,7 +17,7 @@ import {
 	PaginationNext,
 	PaginationPrevious,
 	PaginationEllipsis,
-} from "@/components/ui/pagination"
+} from '@/components/ui/pagination';
 import {
 	Dialog,
 	DialogContent,
@@ -25,9 +25,9 @@ import {
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
-} from "@/components/ui/dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Package, Truck, Search, RotateCcw, AlertCircle, CheckCircle, Navigation } from "lucide-react"
+} from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Package, Truck, Search, RotateCcw, AlertCircle, CheckCircle, Navigation } from 'lucide-react';
 import {
 	getDistricts,
 	getCities,
@@ -39,158 +39,158 @@ import {
 	type City,
 	type DeliveryOrder,
 	type PickupRequest,
-} from "@/lib/koombiyo-server"
+} from '@/lib/koombiyo-server';
 
 export function DeliveryManagement() {
-	const [districts, setDistricts] = useState<District[]>([])
-	const [cities, setCities] = useState<City[]>([])
-	const [selectedDistrict, setSelectedDistrict] = useState("")
-	const [waybills, setWaybills] = useState<string[]>([])
-	const [deliveryOrders, setDeliveryOrders] = useState<any[]>([])
-	const [trackingResults, setTrackingResults] = useState<any[]>([])
-	const [isCreateOrderOpen, setIsCreateOrderOpen] = useState(false)
-	const [isPickupRequestOpen, setIsPickupRequestOpen] = useState(false)
-	const [isTrackingOpen, setIsTrackingOpen] = useState(false)
-	const [currentPage, setCurrentPage] = useState(1)
-	const [itemsPerPage] = useState(5)
+	const [districts, setDistricts] = useState<District[]>([]);
+	const [cities, setCities] = useState<City[]>([]);
+	const [selectedDistrict, setSelectedDistrict] = useState('');
+	const [waybills, setWaybills] = useState<string[]>([]);
+	const [deliveryOrders, setDeliveryOrders] = useState<any[]>([]);
+	const [trackingResults, setTrackingResults] = useState<any[]>([]);
+	const [isCreateOrderOpen, setIsCreateOrderOpen] = useState(false);
+	const [isPickupRequestOpen, setIsPickupRequestOpen] = useState(false);
+	const [isTrackingOpen, setIsTrackingOpen] = useState(false);
+	const [currentPage, setCurrentPage] = useState(1);
+	const [itemsPerPage] = useState(5);
 
 	// Sample data - In real app, fetch from server actions
 	useEffect(() => {
 		// Mock delivery orders
 		setDeliveryOrders([
 			{
-				orderWaybillid: "12345688",
-				orderNo: "ORD-001",
-				receiverName: "Amara Silva",
-				receiverStreet: "123 Galle Road, Colombo 03",
-				receiverDistrict: "1",
-				receiverCity: "1",
-				receiverPhone: "0771234567",
-				description: "Rose Gold Press-On Nails x2, Diamond Stud Earrings x1",
-				spclNote: "Handle with care",
-				getCod: "599",
-				status: "In Transit",
-				created_at: "2024-01-15",
+				orderWaybillid: '12345688',
+				orderNo: 'ORD-001',
+				receiverName: 'Amara Silva',
+				receiverStreet: '123 Galle Road, Colombo 03',
+				receiverDistrict: '1',
+				receiverCity: '1',
+				receiverPhone: '0771234567',
+				description: 'Rose Gold Press-On Nails x2, Diamond Stud Earrings x1',
+				spclNote: 'Handle with care',
+				getCod: '599',
+				status: 'In Transit',
+				created_at: '2024-01-15',
 			},
 			{
-				orderWaybillid: "12345689",
-				orderNo: "ORD-002",
-				receiverName: "Nisha Perera",
-				receiverStreet: "456 Kandy Road, Kandy",
-				receiverDistrict: "2",
-				receiverCity: "2",
-				receiverPhone: "0779876543",
-				description: "Vintage Gold Rings x1",
-				spclNote: "Call before delivery",
-				getCod: "199",
-				status: "Delivered",
-				created_at: "2024-01-14",
+				orderWaybillid: '12345689',
+				orderNo: 'ORD-002',
+				receiverName: 'Nisha Perera',
+				receiverStreet: '456 Kandy Road, Kandy',
+				receiverDistrict: '2',
+				receiverCity: '2',
+				receiverPhone: '0779876543',
+				description: 'Vintage Gold Rings x1',
+				spclNote: 'Call before delivery',
+				getCod: '199',
+				status: 'Delivered',
+				created_at: '2024-01-14',
 			},
-		])
-	}, [])
+		]);
+	}, []);
 
-	const totalPages = Math.ceil(deliveryOrders.length / itemsPerPage)
-	const startIndex = (currentPage - 1) * itemsPerPage
-	const endIndex = startIndex + itemsPerPage
-	const paginatedOrders = deliveryOrders.slice(startIndex, endIndex)
+	const totalPages = Math.ceil(deliveryOrders.length / itemsPerPage);
+	const startIndex = (currentPage - 1) * itemsPerPage;
+	const endIndex = startIndex + itemsPerPage;
+	const paginatedOrders = deliveryOrders.slice(startIndex, endIndex);
 
 	const loadInitialData = async () => {
 		try {
-			const [districtsRes, waybillsRes] = await Promise.all([getDistricts(), getWaybills("5")])
+			const [districtsRes, waybillsRes] = await Promise.all([getDistricts(), getWaybills('5')]);
 
 			if (districtsRes.success && districtsRes.data) {
-				setDistricts(districtsRes.data)
+				setDistricts(districtsRes.data);
 			}
 
 			if (waybillsRes.success && waybillsRes.data) {
-				setWaybills(waybillsRes.data)
+				setWaybills(waybillsRes.data);
 			}
 		} catch (error) {
-			console.error("Failed to load initial data:", error)
+			console.error('Failed to load initial data:', error);
 		}
-	}
+	};
 
 	useEffect(() => {
 		if (selectedDistrict) {
 			getCities(selectedDistrict).then((citiesRes) => {
 				if (citiesRes.success && citiesRes.data) {
-					setCities(citiesRes.data)
+					setCities(citiesRes.data);
 				}
-			})
+			});
 		}
-	}, [selectedDistrict])
+	}, [selectedDistrict]);
 
 	const handleCreateOrder = async (formData: FormData) => {
 		try {
 			const orderData: DeliveryOrder = {
-				orderWaybillid: formData.get("waybillId") as string,
-				orderNo: formData.get("orderNo") as string,
-				receiverName: formData.get("receiverName") as string,
-				receiverStreet: formData.get("receiverStreet") as string,
-				receiverDistrict: formData.get("receiverDistrict") as string,
-				receiverCity: formData.get("receiverCity") as string,
-				receiverPhone: formData.get("receiverPhone") as string,
-				description: formData.get("description") as string,
-				spclNote: formData.get("spclNote") as string,
-				getCod: formData.get("getCod") as string,
-			}
+				orderWaybillid: formData.get('waybillId') as string,
+				orderNo: formData.get('orderNo') as string,
+				receiverName: formData.get('receiverName') as string,
+				receiverStreet: formData.get('receiverStreet') as string,
+				receiverDistrict: formData.get('receiverDistrict') as string,
+				receiverCity: formData.get('receiverCity') as string,
+				receiverPhone: formData.get('receiverPhone') as string,
+				description: formData.get('description') as string,
+				spclNote: formData.get('spclNote') as string,
+				getCod: formData.get('getCod') as string,
+			};
 
-			const result = await createDeliveryOrder(orderData)
+			const result = await createDeliveryOrder(orderData);
 			if (result.success) {
-				setIsCreateOrderOpen(false)
+				setIsCreateOrderOpen(false);
 				// Refresh orders list
 			}
 		} catch (error) {
-			console.error("Failed to create order:", error)
+			console.error('Failed to create order:', error);
 		}
-	}
+	};
 
 	const handlePickupRequest = async (formData: FormData) => {
 		try {
 			const pickupData: PickupRequest = {
-				vehicleType: formData.get("vehicleType") as "Bike" | "Three wheel" | "Lorry",
-				pickup_remark: formData.get("pickup_remark") as string,
-				pickup_address: formData.get("pickup_address") as string,
-				latitude: formData.get("latitude") as string,
-				longitude: formData.get("longitude") as string,
-				phone: formData.get("phone") as string,
-				qty: formData.get("qty") as string,
-			}
+				vehicleType: formData.get('vehicleType') as 'Bike' | 'Three wheel' | 'Lorry',
+				pickup_remark: formData.get('pickup_remark') as string,
+				pickup_address: formData.get('pickup_address') as string,
+				latitude: formData.get('latitude') as string,
+				longitude: formData.get('longitude') as string,
+				phone: formData.get('phone') as string,
+				qty: formData.get('qty') as string,
+			};
 
-			const result = await createPickupRequest(pickupData)
+			const result = await createPickupRequest(pickupData);
 			if (result.success) {
-				setIsPickupRequestOpen(false)
+				setIsPickupRequestOpen(false);
 			}
 		} catch (error) {
-			console.error("Failed to create pickup request:", error)
+			console.error('Failed to create pickup request:', error);
 		}
-	}
+	};
 
 	const handleTrackOrder = async (waybillId: string) => {
 		try {
-			const result = await trackOrders(waybillId)
+			const result = await trackOrders(waybillId);
 			if (result.success && result.data) {
-				setTrackingResults(result.data)
+				setTrackingResults(result.data);
 			}
 		} catch (error) {
-			console.error("Failed to track order:", error)
+			console.error('Failed to track order:', error);
 		}
-	}
+	};
 
 	const getStatusColor = (status: string) => {
 		switch (status?.toLowerCase()) {
-		case "delivered":
-			return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-		case "in transit":
-			return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
-		case "picked up":
-			return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300"
-		case "pending":
-			return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
-		default:
-			return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
+			case 'delivered':
+				return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+			case 'in transit':
+				return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+			case 'picked up':
+				return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
+			case 'pending':
+				return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
+			default:
+				return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
 		}
-	}
+	};
 
 	return (
 		<div className="space-y-4 sm:space-y-6">
@@ -203,13 +203,13 @@ export function DeliveryManagement() {
 				<div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
 					<Button onClick={loadInitialData} className="w-full sm:w-auto">
 						<RotateCcw className="mr-2 h-4 w-4" />
-            Refresh Data
+						Refresh Data
 					</Button>
 					<Dialog open={isPickupRequestOpen} onOpenChange={setIsPickupRequestOpen}>
 						<DialogTrigger asChild>
 							<Button variant="outline" className="w-full sm:w-auto bg-transparent">
 								<Truck className="mr-2 h-4 w-4" />
-                Request Pickup
+								Request Pickup
 							</Button>
 						</DialogTrigger>
 						<DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto mx-4">
@@ -220,7 +220,7 @@ export function DeliveryManagement() {
 							<form action={handlePickupRequest} className="space-y-4">
 								<div>
 									<Label htmlFor="vehicleType" className="text-sm">
-                    Vehicle Type
+										Vehicle Type
 									</Label>
 									<Select name="vehicleType" required>
 										<SelectTrigger>
@@ -236,7 +236,7 @@ export function DeliveryManagement() {
 
 								<div>
 									<Label htmlFor="pickup_address" className="text-sm">
-                    Pickup Address
+										Pickup Address
 									</Label>
 									<Textarea name="pickup_address" placeholder="Complete pickup address" required className="text-sm" />
 								</div>
@@ -244,13 +244,13 @@ export function DeliveryManagement() {
 								<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 									<div>
 										<Label htmlFor="latitude" className="text-sm">
-                      Latitude
+											Latitude
 										</Label>
 										<Input name="latitude" placeholder="6.901608599999999" required className="text-sm" />
 									</div>
 									<div>
 										<Label htmlFor="longitude" className="text-sm">
-                      Longitude
+											Longitude
 										</Label>
 										<Input name="longitude" placeholder="80.0087746" required className="text-sm" />
 									</div>
@@ -259,13 +259,13 @@ export function DeliveryManagement() {
 								<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 									<div>
 										<Label htmlFor="phone" className="text-sm">
-                      Contact Phone
+											Contact Phone
 										</Label>
 										<Input name="phone" placeholder="0771234567" required className="text-sm" />
 									</div>
 									<div>
 										<Label htmlFor="qty" className="text-sm">
-                      Quantity
+											Quantity
 										</Label>
 										<Input name="qty" type="number" placeholder="Number of packages" required className="text-sm" />
 									</div>
@@ -273,7 +273,7 @@ export function DeliveryManagement() {
 
 								<div>
 									<Label htmlFor="pickup_remark" className="text-sm">
-                    Remarks
+										Remarks
 									</Label>
 									<Textarea name="pickup_remark" placeholder="Any special instructions" className="text-sm" />
 								</div>
@@ -285,10 +285,10 @@ export function DeliveryManagement() {
 										onClick={() => setIsPickupRequestOpen(false)}
 										className="w-full sm:w-auto"
 									>
-                    Cancel
+										Cancel
 									</Button>
 									<Button type="submit" className="w-full sm:w-auto">
-                    Request Pickup
+										Request Pickup
 									</Button>
 								</div>
 							</form>
@@ -306,7 +306,7 @@ export function DeliveryManagement() {
 					</CardHeader>
 					<CardContent className="pt-1">
 						<div className="text-lg sm:text-xl font-bold">
-							{deliveryOrders.filter((o) => o.status !== "Delivered").length}
+							{deliveryOrders.filter((o) => o.status !== 'Delivered').length}
 						</div>
 						<p className="text-xs text-muted-foreground">In progress</p>
 					</CardContent>
@@ -319,7 +319,7 @@ export function DeliveryManagement() {
 					</CardHeader>
 					<CardContent className="pt-1">
 						<div className="text-lg sm:text-xl font-bold text-green-600">
-							{deliveryOrders.filter((o) => o.status === "Delivered").length}
+							{deliveryOrders.filter((o) => o.status === 'Delivered').length}
 						</div>
 						<p className="text-xs text-muted-foreground">Successfully completed</p>
 					</CardContent>
@@ -332,7 +332,7 @@ export function DeliveryManagement() {
 					</CardHeader>
 					<CardContent className="pt-1">
 						<div className="text-sm sm:text-lg lg:text-xl font-bold">
-              LKR {deliveryOrders.reduce((sum, order) => sum + Number.parseInt(order.getCod), 0).toLocaleString()}
+							LKR {deliveryOrders.reduce((sum, order) => sum + Number.parseInt(order.getCod), 0).toLocaleString()}
 						</div>
 						<p className="text-xs text-muted-foreground">Total collections</p>
 					</CardContent>
@@ -354,13 +354,13 @@ export function DeliveryManagement() {
 			<Tabs defaultValue="orders" className="space-y-4">
 				<TabsList className="grid w-full grid-cols-3">
 					<TabsTrigger value="orders" className="text-xs sm:text-sm">
-            Delivery Orders
+						Delivery Orders
 					</TabsTrigger>
 					<TabsTrigger value="tracking" className="text-xs sm:text-sm">
-            Track Orders
+						Track Orders
 					</TabsTrigger>
 					<TabsTrigger value="returns" className="text-xs sm:text-sm">
-            Returns
+						Returns
 					</TabsTrigger>
 				</TabsList>
 
@@ -400,11 +400,11 @@ export function DeliveryManagement() {
 												</TableCell>
 												<TableCell className="text-xs sm:text-sm hidden md:table-cell">{order.receiverPhone}</TableCell>
 												<TableCell className="font-medium text-xs sm:text-sm">
-                          LKR {Number.parseInt(order.getCod).toLocaleString()}
+													LKR {Number.parseInt(order.getCod).toLocaleString()}
 												</TableCell>
 												<TableCell>
-													<Badge className={`${getStatusColor(order.status || "pending")} text-xs`}>
-														{order.status || "Pending"}
+													<Badge className={`${getStatusColor(order.status || 'pending')} text-xs`}>
+														{order.status || 'Pending'}
 													</Badge>
 												</TableCell>
 												<TableCell className="text-xs sm:text-sm hidden sm:table-cell">{order.created_at}</TableCell>
@@ -417,15 +417,15 @@ export function DeliveryManagement() {
 							{totalPages > 1 && (
 								<div className="flex items-center justify-between space-x-2 py-4">
 									<div className="text-sm text-muted-foreground">
-                    Showing {startIndex + 1} to {Math.min(endIndex, deliveryOrders.length)} of {deliveryOrders.length}{" "}
-                    orders
+										Showing {startIndex + 1} to {Math.min(endIndex, deliveryOrders.length)} of {deliveryOrders.length}{' '}
+										orders
 									</div>
 									<Pagination>
 										<PaginationContent>
 											<PaginationItem>
 												<PaginationPrevious
 													onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-													className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+													className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
 												/>
 											</PaginationItem>
 
@@ -441,21 +441,21 @@ export function DeliveryManagement() {
 																{page}
 															</PaginationLink>
 														</PaginationItem>
-													)
+													);
 												} else if (page === currentPage - 2 || page === currentPage + 2) {
 													return (
 														<PaginationItem key={page}>
 															<PaginationEllipsis />
 														</PaginationItem>
-													)
+													);
 												}
-												return null
+												return null;
 											})}
 
 											<PaginationItem>
 												<PaginationNext
 													onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-													className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+													className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
 												/>
 											</PaginationItem>
 										</PaginationContent>
@@ -488,7 +488,7 @@ export function DeliveryManagement() {
 								</Select>
 								<Button variant="outline" className="w-full sm:w-auto bg-transparent">
 									<Search className="mr-2 h-4 w-4" />
-                  Track
+									Track
 								</Button>
 							</div>
 
@@ -530,5 +530,5 @@ export function DeliveryManagement() {
 				</TabsContent>
 			</Tabs>
 		</div>
-	)
+	);
 }

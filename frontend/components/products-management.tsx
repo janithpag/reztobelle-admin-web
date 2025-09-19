@@ -1,11 +1,12 @@
-"use client"
+'use client';
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useState, useEffect } from 'react';
+import Image from 'next/image';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
 	Pagination,
 	PaginationContent,
@@ -14,7 +15,7 @@ import {
 	PaginationNext,
 	PaginationPrevious,
 	PaginationEllipsis,
-} from "@/components/ui/pagination"
+} from '@/components/ui/pagination';
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -22,7 +23,7 @@ import {
 	DropdownMenuLabel,
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from '@/components/ui/dropdown-menu';
 import {
 	Dialog,
 	DialogContent,
@@ -30,10 +31,10 @@ import {
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
 	Plus,
 	Search,
@@ -46,115 +47,115 @@ import {
 	Star,
 	TrendingUp,
 	AlertCircle,
-} from "lucide-react"
+} from 'lucide-react';
 
 // Sample products data
 const products = [
 	{
 		id: 1,
-		name: "Rose Gold Press-On Nails",
-		sku: "RGN-001", // Added SKU field
-		category: "Press-On Nails",
+		name: 'Rose Gold Press-On Nails',
+		sku: 'RGN-001', // Added SKU field
+		category: 'Press-On Nails',
 		price: 150,
 		stock: 45,
-		status: "active",
+		status: 'active',
 		sales: 156,
 		rating: 4.8,
-		image: "/rose-gold-press-on-nails.jpg",
-		description: "Elegant rose gold press-on nails with a glossy finish",
+		image: '/rose-gold-press-on-nails.jpg',
+		description: 'Elegant rose gold press-on nails with a glossy finish',
 	},
 	{
 		id: 2,
-		name: "Diamond Stud Earrings",
-		sku: "DSE-002", // Added SKU field
-		category: "Earrings",
+		name: 'Diamond Stud Earrings',
+		sku: 'DSE-002', // Added SKU field
+		category: 'Earrings',
 		price: 299,
 		stock: 23,
-		status: "active",
+		status: 'active',
 		sales: 134,
 		rating: 4.9,
-		image: "/diamond-stud-earrings.jpg",
-		description: "Classic diamond stud earrings in sterling silver",
+		image: '/diamond-stud-earrings.jpg',
+		description: 'Classic diamond stud earrings in sterling silver',
 	},
 	{
 		id: 3,
-		name: "Vintage Gold Rings",
-		sku: "VGR-003", // Added SKU field
-		category: "Rings",
+		name: 'Vintage Gold Rings',
+		sku: 'VGR-003', // Added SKU field
+		category: 'Rings',
 		price: 199,
 		stock: 12,
-		status: "active",
+		status: 'active',
 		sales: 98,
 		rating: 4.7,
-		image: "/vintage-gold-rings.jpg",
-		description: "Vintage-inspired gold rings with intricate detailing",
+		image: '/vintage-gold-rings.jpg',
+		description: 'Vintage-inspired gold rings with intricate detailing',
 	},
 	{
 		id: 4,
-		name: "Pearl Drop Earrings",
-		sku: "PDE-004", // Added SKU field
-		category: "Earrings",
+		name: 'Pearl Drop Earrings',
+		sku: 'PDE-004', // Added SKU field
+		category: 'Earrings',
 		price: 179,
 		stock: 8,
-		status: "low_stock",
+		status: 'low_stock',
 		sales: 87,
 		rating: 4.6,
-		image: "/pearl-drop-earrings.png",
-		description: "Elegant pearl drop earrings for special occasions",
+		image: '/pearl-drop-earrings.png',
+		description: 'Elegant pearl drop earrings for special occasions',
 	},
 	{
 		id: 5,
-		name: "French Tip Nails",
-		sku: "FTN-005", // Added SKU field
-		category: "Press-On Nails",
+		name: 'French Tip Nails',
+		sku: 'FTN-005', // Added SKU field
+		category: 'Press-On Nails',
 		price: 120,
 		stock: 2,
-		status: "low_stock",
+		status: 'low_stock',
 		sales: 76,
 		rating: 4.5,
-		image: "/french-tip-nails.jpg",
-		description: "Classic French tip press-on nails",
+		image: '/french-tip-nails.jpg',
+		description: 'Classic French tip press-on nails',
 	},
 	{
 		id: 6,
-		name: "Silver Hoop Earrings",
-		sku: "SHE-006", // Added SKU field
-		category: "Earrings",
+		name: 'Silver Hoop Earrings',
+		sku: 'SHE-006', // Added SKU field
+		category: 'Earrings',
 		price: 89,
 		stock: 5,
-		status: "low_stock",
+		status: 'low_stock',
 		sales: 65,
 		rating: 4.4,
-		image: "/silver-hoop-earrings.jpg",
-		description: "Modern silver hoop earrings in various sizes",
+		image: '/silver-hoop-earrings.jpg',
+		description: 'Modern silver hoop earrings in various sizes',
 	},
-]
+];
 
 export function ProductsManagement() {
-	const [searchTerm, setSearchTerm] = useState("")
-	const [selectedCategory, setSelectedCategory] = useState("all")
-	const [isAddProductOpen, setIsAddProductOpen] = useState(false)
-	const [currentPage, setCurrentPage] = useState(1)
-	const [itemsPerPage] = useState(5)
+	const [searchTerm, setSearchTerm] = useState('');
+	const [selectedCategory, setSelectedCategory] = useState('all');
+	const [isAddProductOpen, setIsAddProductOpen] = useState(false);
+	const [currentPage, setCurrentPage] = useState(1);
+	const [itemsPerPage] = useState(5);
 
 	const filteredProducts = products.filter((product) => {
 		const matchesSearch =
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.sku.toLowerCase().includes(searchTerm.toLowerCase()) // Added SKU to search
-		const matchesCategory = selectedCategory === "all" || product.category === selectedCategory
-		return matchesSearch && matchesCategory
-	})
+			product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+			product.sku.toLowerCase().includes(searchTerm.toLowerCase()); // Added SKU to search
+		const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
+		return matchesSearch && matchesCategory;
+	});
 
-	const totalPages = Math.ceil(filteredProducts.length / itemsPerPage)
-	const startIndex = (currentPage - 1) * itemsPerPage
-	const endIndex = startIndex + itemsPerPage
-	const paginatedProducts = filteredProducts.slice(startIndex, endIndex)
+	const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+	const startIndex = (currentPage - 1) * itemsPerPage;
+	const endIndex = startIndex + itemsPerPage;
+	const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
 
 	useEffect(() => {
-		setCurrentPage(1)
-	}, [searchTerm, selectedCategory])
+		setCurrentPage(1);
+	}, [searchTerm, selectedCategory]);
 
-	const categories = ["all", "Press-On Nails", "Earrings", "Rings"]
+	const categories = ['all', 'Press-On Nails', 'Earrings', 'Rings'];
 
 	return (
 		<div className="space-y-4 sm:space-y-6">
@@ -163,36 +164,36 @@ export function ProductsManagement() {
 				<div>
 					<h1 className="text-2xl sm:text-3xl font-bold text-sidebar-foreground text-balance">Products</h1>
 					<p className="text-sm sm:text-base text-sidebar-foreground/70 font-medium">
-            Manage your fashion accessories inventory
+						Manage your fashion accessories inventory
 					</p>
 				</div>
 				<Dialog open={isAddProductOpen} onOpenChange={setIsAddProductOpen}>
 					<DialogTrigger asChild>
 						<Button className="bg-primary hover:bg-primary/90 font-semibold w-full sm:w-auto">
 							<Plus className="mr-2 h-4 w-4" />
-              Add Product
+							Add Product
 						</Button>
 					</DialogTrigger>
 					<DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto mx-4">
 						<DialogHeader>
 							<DialogTitle className="text-base sm:text-lg text-sidebar-foreground font-semibold">
-                Add New Product
+								Add New Product
 							</DialogTitle>
 							<DialogDescription className="text-sm text-sidebar-foreground/70 font-medium">
-                Create a new product for your ReztoBelle collection
+								Create a new product for your ReztoBelle collection
 							</DialogDescription>
 						</DialogHeader>
 						<div className="grid gap-4 py-4">
 							<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 								<div className="space-y-2">
 									<Label htmlFor="name" className="text-sm text-sidebar-foreground font-semibold">
-                    Product Name
+										Product Name
 									</Label>
 									<Input id="name" placeholder="Enter product name" className="border-sidebar-border text-sm" />
 								</div>
 								<div className="space-y-2">
 									<Label htmlFor="sku" className="text-sm text-sidebar-foreground font-semibold">
-                    SKU
+										SKU
 									</Label>
 									<Input id="sku" placeholder="Enter product SKU" className="border-sidebar-border text-sm" />
 								</div>
@@ -200,7 +201,7 @@ export function ProductsManagement() {
 							<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 								<div className="space-y-2">
 									<Label htmlFor="category" className="text-sm text-sidebar-foreground font-semibold">
-                    Category
+										Category
 									</Label>
 									<Select>
 										<SelectTrigger className="border-sidebar-border">
@@ -215,7 +216,7 @@ export function ProductsManagement() {
 								</div>
 								<div className="space-y-2">
 									<Label htmlFor="price" className="text-sm text-sidebar-foreground font-semibold">
-                    Price (LKR)
+										Price (LKR)
 									</Label>
 									<Input id="price" type="number" placeholder="0.00" className="border-sidebar-border text-sm" />
 								</div>
@@ -223,13 +224,13 @@ export function ProductsManagement() {
 							<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 								<div className="space-y-2">
 									<Label htmlFor="stock" className="text-sm text-sidebar-foreground font-semibold">
-                    Stock Quantity
+										Stock Quantity
 									</Label>
 									<Input id="stock" type="number" placeholder="0" className="border-sidebar-border text-sm" />
 								</div>
 								<div className="space-y-2">
 									<Label htmlFor="description" className="text-sm text-sidebar-foreground font-semibold">
-                    Description
+										Description
 									</Label>
 									<Textarea
 										id="description"
@@ -240,7 +241,7 @@ export function ProductsManagement() {
 							</div>
 							<div className="space-y-2">
 								<Label htmlFor="image" className="text-sm text-sidebar-foreground font-semibold">
-                  Product Image
+									Product Image
 								</Label>
 								<Input id="image" type="file" accept="image/*" className="border-sidebar-border text-sm" />
 							</div>
@@ -251,10 +252,10 @@ export function ProductsManagement() {
 								onClick={() => setIsAddProductOpen(false)}
 								className="border-sidebar-border text-sidebar-foreground hover:bg-muted/50 font-medium w-full sm:w-auto"
 							>
-                Cancel
+								Cancel
 							</Button>
 							<Button onClick={() => setIsAddProductOpen(false)} className="font-semibold w-full sm:w-auto">
-                Add Product
+								Add Product
 							</Button>
 						</div>
 					</DialogContent>
@@ -312,10 +313,10 @@ export function ProductsManagement() {
 			<Card className="border-sidebar-border">
 				<CardHeader>
 					<CardTitle className="text-base sm:text-lg text-sidebar-foreground font-semibold">
-            Product Inventory
+						Product Inventory
 					</CardTitle>
 					<CardDescription className="text-sm text-sidebar-foreground/70 font-medium">
-            View and manage all your products
+						View and manage all your products
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
@@ -337,7 +338,7 @@ export function ProductsManagement() {
 							<SelectContent>
 								{categories.map((category) => (
 									<SelectItem key={category} value={category}>
-										{category === "all" ? "All Categories" : category}
+										{category === 'all' ? 'All Categories' : category}
 									</SelectItem>
 								))}
 							</SelectContent>
@@ -351,22 +352,22 @@ export function ProductsManagement() {
 								<TableRow className="border-sidebar-border">
 									<TableHead className="text-sidebar-foreground font-semibold text-xs sm:text-sm">Product</TableHead>
 									<TableHead className="text-sidebar-foreground font-semibold text-xs sm:text-sm hidden lg:table-cell">
-                    SKU
+										SKU
 									</TableHead>
 									<TableHead className="text-sidebar-foreground font-semibold text-xs sm:text-sm hidden md:table-cell">
-                    Category
+										Category
 									</TableHead>
 									<TableHead className="text-sidebar-foreground font-semibold text-xs sm:text-sm">Price</TableHead>
 									<TableHead className="text-sidebar-foreground font-semibold text-xs sm:text-sm">Stock</TableHead>
 									<TableHead className="text-sidebar-foreground font-semibold text-xs sm:text-sm hidden sm:table-cell">
-                    Sales
+										Sales
 									</TableHead>
 									<TableHead className="text-sidebar-foreground font-semibold text-xs sm:text-sm hidden lg:table-cell">
-                    Rating
+										Rating
 									</TableHead>
 									<TableHead className="text-sidebar-foreground font-semibold text-xs sm:text-sm">Status</TableHead>
 									<TableHead className="text-right text-sidebar-foreground font-semibold text-xs sm:text-sm">
-                    Actions
+										Actions
 									</TableHead>
 								</TableRow>
 							</TableHeader>
@@ -375,10 +376,12 @@ export function ProductsManagement() {
 									<TableRow key={product.id} className="border-sidebar-border">
 										<TableCell>
 											<div className="flex items-center space-x-2 sm:space-x-3">
-												<img
-													src={product.image || "/placeholder.svg"}
+												<Image
+													src={product.image || '/placeholder.svg'}
 													alt={product.name}
 													className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg object-cover flex-shrink-0"
+													width={40}
+													height={40}
 												/>
 												<div className="min-w-0">
 													<div className="font-semibold text-sidebar-foreground text-xs sm:text-sm truncate">
@@ -400,14 +403,14 @@ export function ProductsManagement() {
 											{product.category}
 										</TableCell>
 										<TableCell className="text-sidebar-foreground font-semibold text-xs sm:text-sm">
-                      LKR {product.price}
+											LKR {product.price}
 										</TableCell>
 										<TableCell>
 											<div className="flex items-center space-x-1 sm:space-x-2">
 												<span className="text-sidebar-foreground font-medium text-xs sm:text-sm">{product.stock}</span>
 												{product.stock <= 10 && (
 													<Badge variant="destructive" className="text-xs font-medium">
-                            Low
+														Low
 													</Badge>
 												)}
 											</div>
@@ -423,14 +426,14 @@ export function ProductsManagement() {
 										</TableCell>
 										<TableCell>
 											<Badge
-												variant={product.status === "active" ? "default" : "secondary"}
+												variant={product.status === 'active' ? 'default' : 'secondary'}
 												className={
-													product.status === "active"
-														? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 font-medium text-xs"
-														: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300 font-medium text-xs"
+													product.status === 'active'
+														? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 font-medium text-xs'
+														: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300 font-medium text-xs'
 												}
 											>
-												{product.status === "active" ? "Active" : "Low Stock"}
+												{product.status === 'active' ? 'Active' : 'Low Stock'}
 											</Badge>
 										</TableCell>
 										<TableCell className="text-right">
@@ -442,20 +445,20 @@ export function ProductsManagement() {
 												</DropdownMenuTrigger>
 												<DropdownMenuContent align="end">
 													<DropdownMenuLabel className="text-sidebar-foreground font-semibold">
-                            Actions
+														Actions
 													</DropdownMenuLabel>
 													<DropdownMenuItem className="text-sidebar-foreground font-medium">
 														<Eye className="mr-2 h-4 w-4" />
-                            View Details
+														View Details
 													</DropdownMenuItem>
 													<DropdownMenuItem className="text-sidebar-foreground font-medium">
 														<Edit className="mr-2 h-4 w-4" />
-                            Edit Product
+														Edit Product
 													</DropdownMenuItem>
 													<DropdownMenuSeparator />
 													<DropdownMenuItem className="text-red-600 font-medium">
 														<Trash2 className="mr-2 h-4 w-4" />
-                            Delete Product
+														Delete Product
 													</DropdownMenuItem>
 												</DropdownMenuContent>
 											</DropdownMenu>
@@ -470,15 +473,15 @@ export function ProductsManagement() {
 					{totalPages > 1 && (
 						<div className="flex items-center justify-between space-x-2 py-4">
 							<div className="text-sm text-muted-foreground">
-                Showing {startIndex + 1} to {Math.min(endIndex, filteredProducts.length)} of {filteredProducts.length}{" "}
-                products
+								Showing {startIndex + 1} to {Math.min(endIndex, filteredProducts.length)} of {filteredProducts.length}{' '}
+								products
 							</div>
 							<Pagination>
 								<PaginationContent>
 									<PaginationItem>
 										<PaginationPrevious
 											onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-											className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+											className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
 										/>
 									</PaginationItem>
 
@@ -494,21 +497,21 @@ export function ProductsManagement() {
 														{page}
 													</PaginationLink>
 												</PaginationItem>
-											)
+											);
 										} else if (page === currentPage - 2 || page === currentPage + 2) {
 											return (
 												<PaginationItem key={page}>
 													<PaginationEllipsis />
 												</PaginationItem>
-											)
+											);
 										}
-										return null
+										return null;
 									})}
 
 									<PaginationItem>
 										<PaginationNext
 											onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-											className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+											className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
 										/>
 									</PaginationItem>
 								</PaginationContent>
@@ -518,5 +521,5 @@ export function ProductsManagement() {
 				</CardContent>
 			</Card>
 		</div>
-	)
+	);
 }

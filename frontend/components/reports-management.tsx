@@ -1,11 +1,11 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
 	BarChart,
 	Bar,
@@ -19,35 +19,35 @@ import {
 	PieChart,
 	Pie,
 	Cell,
-} from "recharts"
-import { Download, TrendingUp, DollarSign, Package, Users, Calendar } from "lucide-react"
+} from 'recharts';
+import { Download, TrendingUp, DollarSign, Package, Users, Calendar } from 'lucide-react';
 
 // Sample data for charts
 const salesData = [
-	{ month: "Jan", sales: 45000, orders: 156 },
-	{ month: "Feb", sales: 52000, orders: 178 },
-	{ month: "Mar", sales: 48000, orders: 165 },
-	{ month: "Apr", sales: 61000, orders: 203 },
-	{ month: "May", sales: 55000, orders: 189 },
-	{ month: "Jun", sales: 67000, orders: 234 },
-]
+	{ month: 'Jan', sales: 45000, orders: 156 },
+	{ month: 'Feb', sales: 52000, orders: 178 },
+	{ month: 'Mar', sales: 48000, orders: 165 },
+	{ month: 'Apr', sales: 61000, orders: 203 },
+	{ month: 'May', sales: 55000, orders: 189 },
+	{ month: 'Jun', sales: 67000, orders: 234 },
+];
 
 const categoryData = [
-	{ name: "Press-On Nails", value: 45, color: "#E91E63" },
-	{ name: "Earrings", value: 35, color: "#FFC107" },
-	{ name: "Rings", value: 20, color: "#9C27B0" },
-]
+	{ name: 'Press-On Nails', value: 45, color: '#E91E63' },
+	{ name: 'Earrings', value: 35, color: '#FFC107' },
+	{ name: 'Rings', value: 20, color: '#9C27B0' },
+];
 
 const topProducts = [
-	{ name: "Rose Gold Press-On Nails", sales: 156, revenue: 23400 },
-	{ name: "Diamond Stud Earrings", sales: 134, revenue: 40066 },
-	{ name: "Vintage Gold Rings", sales: 98, revenue: 19502 },
-	{ name: "Pearl Drop Earrings", sales: 87, revenue: 15573 },
-	{ name: "French Tip Nails", sales: 76, revenue: 9120 },
-]
+	{ name: 'Rose Gold Press-On Nails', sales: 156, revenue: 23400 },
+	{ name: 'Diamond Stud Earrings', sales: 134, revenue: 40066 },
+	{ name: 'Vintage Gold Rings', sales: 98, revenue: 19502 },
+	{ name: 'Pearl Drop Earrings', sales: 87, revenue: 15573 },
+	{ name: 'French Tip Nails', sales: 76, revenue: 9120 },
+];
 
 export function ReportsManagement() {
-	const [selectedPeriod, setSelectedPeriod] = useState("last_30_days")
+	const [selectedPeriod, setSelectedPeriod] = useState('last_30_days');
 
 	return (
 		<div className="space-y-6">
@@ -72,7 +72,7 @@ export function ReportsManagement() {
 					</Select>
 					<Button variant="outline">
 						<Download className="mr-2 h-4 w-4" />
-            Export Report
+						Export Report
 					</Button>
 				</div>
 			</div>
@@ -148,8 +148,8 @@ export function ReportsManagement() {
 								<YAxis />
 								<Tooltip
 									formatter={(value, name) => [
-										name === "sales" ? `LKR ${value.toLocaleString()}` : value,
-										name === "sales" ? "Sales" : "Orders",
+										name === 'sales' ? `LKR ${value.toLocaleString()}` : value,
+										name === 'sales' ? 'Sales' : 'Orders',
 									]}
 								/>
 								<Line type="monotone" dataKey="sales" stroke="#E91E63" strokeWidth={2} />
@@ -200,8 +200,8 @@ export function ReportsManagement() {
 							<YAxis />
 							<Tooltip
 								formatter={(value, name) => [
-									name === "sales" ? `LKR ${value.toLocaleString()}` : value,
-									name === "sales" ? "Revenue" : "Orders",
+									name === 'sales' ? `LKR ${value.toLocaleString()}` : value,
+									name === 'sales' ? 'Revenue' : 'Orders',
 								]}
 							/>
 							<Bar dataKey="sales" fill="#E91E63" />
@@ -234,8 +234,8 @@ export function ReportsManagement() {
 									<TableCell>{product.sales}</TableCell>
 									<TableCell>LKR {product.revenue.toLocaleString()}</TableCell>
 									<TableCell>
-										<Badge variant={index < 2 ? "default" : "secondary"}>
-											{index < 2 ? "Excellent" : index < 4 ? "Good" : "Average"}
+										<Badge variant={index < 2 ? 'default' : 'secondary'}>
+											{index < 2 ? 'Excellent' : index < 4 ? 'Good' : 'Average'}
 										</Badge>
 									</TableCell>
 								</TableRow>
@@ -245,5 +245,5 @@ export function ReportsManagement() {
 				</CardContent>
 			</Card>
 		</div>
-	)
+	);
 }

@@ -1,15 +1,15 @@
-"use client"
+'use client';
 
-import type React from "react"
+import type React from 'react';
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
 	Dialog,
 	DialogContent,
@@ -18,7 +18,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
-} from "@/components/ui/dialog"
+} from '@/components/ui/dialog';
 import {
 	Pagination,
 	PaginationContent,
@@ -26,132 +26,132 @@ import {
 	PaginationLink,
 	PaginationNext,
 	PaginationPrevious,
-} from "@/components/ui/pagination"
-import { Plus, Search, Filter, Receipt, Calendar, DollarSign, TrendingUp, TrendingDown } from "lucide-react"
-import { cn } from "@/lib/utils"
+} from '@/components/ui/pagination';
+import { Plus, Search, Filter, Receipt, Calendar, DollarSign, TrendingUp, TrendingDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 // Sample expenses data
 const expensesData = [
 	{
-		id: "EXP-001",
-		description: "Office Rent",
-		category: "Rent",
+		id: 'EXP-001',
+		description: 'Office Rent',
+		category: 'Rent',
 		amount: 50000,
-		date: "2024-01-01",
-		status: "paid",
-		vendor: "Property Management Co.",
+		date: '2024-01-01',
+		status: 'paid',
+		vendor: 'Property Management Co.',
 	},
 	{
-		id: "EXP-002",
-		description: "Marketing Campaign",
-		category: "Marketing",
+		id: 'EXP-002',
+		description: 'Marketing Campaign',
+		category: 'Marketing',
 		amount: 25000,
-		date: "2024-01-02",
-		status: "paid",
-		vendor: "Digital Marketing Agency",
+		date: '2024-01-02',
+		status: 'paid',
+		vendor: 'Digital Marketing Agency',
 	},
 	{
-		id: "EXP-003",
-		description: "Inventory Purchase",
-		category: "Inventory",
+		id: 'EXP-003',
+		description: 'Inventory Purchase',
+		category: 'Inventory',
 		amount: 150000,
-		date: "2024-01-03",
-		status: "paid",
-		vendor: "Jewelry Supplier Ltd.",
+		date: '2024-01-03',
+		status: 'paid',
+		vendor: 'Jewelry Supplier Ltd.',
 	},
 	{
-		id: "EXP-004",
-		description: "Utility Bills",
-		category: "Utilities",
+		id: 'EXP-004',
+		description: 'Utility Bills',
+		category: 'Utilities',
 		amount: 8500,
-		date: "2024-01-04",
-		status: "pending",
-		vendor: "Electricity Board",
+		date: '2024-01-04',
+		status: 'pending',
+		vendor: 'Electricity Board',
 	},
 	{
-		id: "EXP-005",
-		description: "Packaging Materials",
-		category: "Supplies",
+		id: 'EXP-005',
+		description: 'Packaging Materials',
+		category: 'Supplies',
 		amount: 12000,
-		date: "2024-01-05",
-		status: "paid",
-		vendor: "Packaging Solutions",
+		date: '2024-01-05',
+		status: 'paid',
+		vendor: 'Packaging Solutions',
 	},
 	{
-		id: "EXP-006",
-		description: "Staff Salaries",
-		category: "Payroll",
+		id: 'EXP-006',
+		description: 'Staff Salaries',
+		category: 'Payroll',
 		amount: 75000,
-		date: "2024-01-06",
-		status: "paid",
-		vendor: "Internal",
+		date: '2024-01-06',
+		status: 'paid',
+		vendor: 'Internal',
 	},
 	{
-		id: "EXP-007",
-		description: "Website Maintenance",
-		category: "Technology",
+		id: 'EXP-007',
+		description: 'Website Maintenance',
+		category: 'Technology',
 		amount: 15000,
-		date: "2024-01-07",
-		status: "pending",
-		vendor: "Web Development Co.",
+		date: '2024-01-07',
+		status: 'pending',
+		vendor: 'Web Development Co.',
 	},
-]
+];
 
-const categories = ["All", "Rent", "Marketing", "Inventory", "Utilities", "Supplies", "Payroll", "Technology"]
+const categories = ['All', 'Rent', 'Marketing', 'Inventory', 'Utilities', 'Supplies', 'Payroll', 'Technology'];
 
 export function ExpensesManagement() {
-	const [expenses, setExpenses] = useState(expensesData)
-	const [searchTerm, setSearchTerm] = useState("")
-	const [selectedCategory, setSelectedCategory] = useState("All")
-	const [currentPage, setCurrentPage] = useState(1)
-	const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-	const itemsPerPage = 5
+	const [expenses, setExpenses] = useState(expensesData);
+	const [searchTerm, setSearchTerm] = useState('');
+	const [selectedCategory, setSelectedCategory] = useState('All');
+	const [currentPage, setCurrentPage] = useState(1);
+	const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+	const itemsPerPage = 5;
 
 	// Filter expenses
 	const filteredExpenses = expenses.filter((expense) => {
 		const matchesSearch =
-      expense.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      expense.vendor.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      expense.id.toLowerCase().includes(searchTerm.toLowerCase())
-		const matchesCategory = selectedCategory === "All" || expense.category === selectedCategory
-		return matchesSearch && matchesCategory
-	})
+			expense.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+			expense.vendor.toLowerCase().includes(searchTerm.toLowerCase()) ||
+			expense.id.toLowerCase().includes(searchTerm.toLowerCase());
+		const matchesCategory = selectedCategory === 'All' || expense.category === selectedCategory;
+		return matchesSearch && matchesCategory;
+	});
 
 	// Pagination
-	const totalPages = Math.ceil(filteredExpenses.length / itemsPerPage)
-	const startIndex = (currentPage - 1) * itemsPerPage
-	const paginatedExpenses = filteredExpenses.slice(startIndex, startIndex + itemsPerPage)
+	const totalPages = Math.ceil(filteredExpenses.length / itemsPerPage);
+	const startIndex = (currentPage - 1) * itemsPerPage;
+	const paginatedExpenses = filteredExpenses.slice(startIndex, startIndex + itemsPerPage);
 
 	// Calculate totals
-	const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0)
+	const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
 	const monthlyExpenses = expenses
 		.filter((expense) => {
-			const expenseDate = new Date(expense.date)
-			const currentDate = new Date()
+			const expenseDate = new Date(expense.date);
+			const currentDate = new Date();
 			return (
 				expenseDate.getMonth() === currentDate.getMonth() && expenseDate.getFullYear() === currentDate.getFullYear()
-			)
+			);
 		})
-		.reduce((sum, expense) => sum + expense.amount, 0)
+		.reduce((sum, expense) => sum + expense.amount, 0);
 
-	const pendingExpenses = expenses.filter((expense) => expense.status === "pending").length
+	const pendingExpenses = expenses.filter((expense) => expense.status === 'pending').length;
 
 	const handleAddExpense = (event: React.FormEvent<HTMLFormElement>) => {
-		event.preventDefault()
-		const formData = new FormData(event.currentTarget)
+		event.preventDefault();
+		const formData = new FormData(event.currentTarget);
 		const newExpense = {
-			id: `EXP-${String(expenses.length + 1).padStart(3, "0")}`,
-			description: formData.get("description") as string,
-			category: formData.get("category") as string,
-			amount: Number(formData.get("amount")),
-			date: formData.get("date") as string,
-			status: "pending" as const,
-			vendor: formData.get("vendor") as string,
-		}
-		setExpenses([newExpense, ...expenses])
-		setIsAddDialogOpen(false)
-		event.currentTarget.reset()
-	}
+			id: `EXP-${String(expenses.length + 1).padStart(3, '0')}`,
+			description: formData.get('description') as string,
+			category: formData.get('category') as string,
+			amount: Number(formData.get('amount')),
+			date: formData.get('date') as string,
+			status: 'pending' as const,
+			vendor: formData.get('vendor') as string,
+		};
+		setExpenses([newExpense, ...expenses]);
+		setIsAddDialogOpen(false);
+		event.currentTarget.reset();
+	};
 
 	return (
 		<div className="space-y-4 sm:space-y-6">
@@ -160,14 +160,14 @@ export function ExpensesManagement() {
 				<div>
 					<h1 className="text-2xl sm:text-3xl font-bold text-sidebar-foreground text-balance">Expenses</h1>
 					<p className="text-sm sm:text-base text-sidebar-foreground/70 font-medium">
-            Track and manage your business expenses
+						Track and manage your business expenses
 					</p>
 				</div>
 				<Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
 					<DialogTrigger asChild>
 						<Button className="bg-primary text-primary-foreground hover:bg-primary/90">
 							<Plus className="mr-2 h-4 w-4" />
-              Add Expense
+							Add Expense
 						</Button>
 					</DialogTrigger>
 					<DialogContent className="sm:max-w-[425px]">
@@ -189,7 +189,7 @@ export function ExpensesManagement() {
 										</SelectTrigger>
 										<SelectContent>
 											{categories
-												.filter((cat) => cat !== "All")
+												.filter((cat) => cat !== 'All')
 												.map((category) => (
 													<SelectItem key={category} value={category}>
 														{category}
@@ -228,11 +228,11 @@ export function ExpensesManagement() {
 					</CardHeader>
 					<CardContent className="pt-1">
 						<div className="text-lg sm:text-xl font-bold text-sidebar-foreground">
-              LKR {totalExpenses.toLocaleString()}
+							LKR {totalExpenses.toLocaleString()}
 						</div>
 						<div className="flex items-center text-xs text-sidebar-foreground/70 font-medium">
 							<TrendingUp className="mr-1 h-2 w-2 text-red-500" />
-              All time expenses
+							All time expenses
 						</div>
 					</CardContent>
 				</Card>
@@ -244,11 +244,11 @@ export function ExpensesManagement() {
 					</CardHeader>
 					<CardContent className="pt-1">
 						<div className="text-lg sm:text-xl font-bold text-sidebar-foreground">
-              LKR {monthlyExpenses.toLocaleString()}
+							LKR {monthlyExpenses.toLocaleString()}
 						</div>
 						<div className="flex items-center text-xs text-sidebar-foreground/70 font-medium">
 							<TrendingDown className="mr-1 h-2 w-2 text-blue-500" />
-              Current month
+							Current month
 						</div>
 					</CardContent>
 				</Card>
@@ -262,7 +262,7 @@ export function ExpensesManagement() {
 						<div className="text-lg sm:text-xl font-bold text-orange-600">{pendingExpenses}</div>
 						<div className="flex items-center text-xs text-orange-600 font-medium">
 							<Receipt className="mr-1 h-2 w-2" />
-              Awaiting payment
+							Awaiting payment
 						</div>
 					</CardContent>
 				</Card>
@@ -273,7 +273,7 @@ export function ExpensesManagement() {
 				<CardHeader>
 					<CardTitle className="text-base sm:text-lg text-sidebar-foreground font-semibold">Expense Records</CardTitle>
 					<CardDescription className="text-sm text-sidebar-foreground/70 font-medium">
-            Manage and track all your business expenses
+						Manage and track all your business expenses
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
@@ -328,17 +328,17 @@ export function ExpensesManagement() {
 										</TableCell>
 										<TableCell className="text-sidebar-foreground font-medium">{expense.vendor}</TableCell>
 										<TableCell className="text-sidebar-foreground font-semibold">
-                      LKR {expense.amount.toLocaleString()}
+											LKR {expense.amount.toLocaleString()}
 										</TableCell>
 										<TableCell className="text-sidebar-foreground/70 font-medium">{expense.date}</TableCell>
 										<TableCell>
 											<Badge
-												variant={expense.status === "paid" ? "default" : "secondary"}
+												variant={expense.status === 'paid' ? 'default' : 'secondary'}
 												className={cn(
-													"text-xs font-medium",
-													expense.status === "paid"
-														? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-														: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
+													'text-xs font-medium',
+													expense.status === 'paid'
+														? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+														: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
 												)}
 											>
 												{expense.status}
@@ -354,7 +354,7 @@ export function ExpensesManagement() {
 					{totalPages > 1 && (
 						<div className="flex items-center justify-between mt-6">
 							<div className="text-sm text-sidebar-foreground/70">
-                Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredExpenses.length)} of{" "}
+								Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredExpenses.length)} of{' '}
 								{filteredExpenses.length} expenses
 							</div>
 							<Pagination>
@@ -363,10 +363,10 @@ export function ExpensesManagement() {
 										<PaginationPrevious
 											href="#"
 											onClick={(e) => {
-												e.preventDefault()
-												if (currentPage > 1) setCurrentPage(currentPage - 1)
+												e.preventDefault();
+												if (currentPage > 1) setCurrentPage(currentPage - 1);
 											}}
-											className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+											className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
 										/>
 									</PaginationItem>
 									{Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
@@ -374,8 +374,8 @@ export function ExpensesManagement() {
 											<PaginationLink
 												href="#"
 												onClick={(e) => {
-													e.preventDefault()
-													setCurrentPage(page)
+													e.preventDefault();
+													setCurrentPage(page);
 												}}
 												isActive={currentPage === page}
 											>
@@ -387,10 +387,10 @@ export function ExpensesManagement() {
 										<PaginationNext
 											href="#"
 											onClick={(e) => {
-												e.preventDefault()
-												if (currentPage < totalPages) setCurrentPage(currentPage + 1)
+												e.preventDefault();
+												if (currentPage < totalPages) setCurrentPage(currentPage + 1);
 											}}
-											className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+											className={currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}
 										/>
 									</PaginationItem>
 								</PaginationContent>
@@ -400,5 +400,5 @@ export function ExpensesManagement() {
 				</CardContent>
 			</Card>
 		</div>
-	)
+	);
 }

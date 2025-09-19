@@ -1,12 +1,13 @@
-"use client"
+'use client';
 
-import type React from "react"
-import { usePathname } from "next/navigation"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
+import type React from 'react';
+import Image from 'next/image';
+import { usePathname } from 'next/navigation';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -14,7 +15,7 @@ import {
 	DropdownMenuLabel,
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from '@/components/ui/dropdown-menu';
 import {
 	Sidebar,
 	SidebarContent,
@@ -29,7 +30,7 @@ import {
 	SidebarProvider,
 	SidebarRail,
 	SidebarTrigger,
-} from "@/components/ui/sidebar"
+} from '@/components/ui/sidebar';
 import {
 	Bell,
 	Search,
@@ -44,35 +45,35 @@ import {
 	User,
 	LogOut,
 	Receipt,
-} from "lucide-react"
-import { useAuth } from "@/contexts/auth-context"
+} from 'lucide-react';
+import { useAuth } from '@/contexts/auth-context';
 
 interface AdminLayoutProps {
-  children: React.ReactNode
+	children: React.ReactNode;
 }
 
 const navigation = [
-	{ name: "Dashboard", href: "/", icon: Home },
-	{ name: "Products", href: "/products", icon: Package },
-	{ name: "Inventory", href: "/inventory", icon: Warehouse },
-	{ name: "Orders", href: "/orders", icon: ShoppingCart },
-	{ name: "Customers", href: "/customers", icon: Users },
-	{ name: "Deliveries", href: "/delivery", icon: Truck },
-	{ name: "Expenses", href: "/expenses", icon: Receipt },
-	{ name: "Reports", href: "/reports", icon: BarChart3 },
-	{ name: "Settings", href: "/settings", icon: Settings },
-]
+	{ name: 'Dashboard', href: '/', icon: Home },
+	{ name: 'Products', href: '/products', icon: Package },
+	{ name: 'Inventory', href: '/inventory', icon: Warehouse },
+	{ name: 'Orders', href: '/orders', icon: ShoppingCart },
+	{ name: 'Customers', href: '/customers', icon: Users },
+	{ name: 'Deliveries', href: '/delivery', icon: Truck },
+	{ name: 'Expenses', href: '/expenses', icon: Receipt },
+	{ name: 'Reports', href: '/reports', icon: BarChart3 },
+	{ name: 'Settings', href: '/settings', icon: Settings },
+];
 
 export function AdminLayout({ children }: AdminLayoutProps) {
-	const pathname = usePathname()
-	const { user, logout } = useAuth()
+	const pathname = usePathname();
+	const { user, logout } = useAuth();
 
 	const handleLogout = () => {
-		logout()
-	}
+		logout();
+	};
 
 	if (!user) {
-		return null // This component should only render when authenticated
+		return null; // This component should only render when authenticated
 	}
 
 	return (
@@ -85,11 +86,17 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 					<SidebarHeader className="border-b border-sidebar-border bg-white p-3 sm:p-4">
 						<div className="flex items-center justify-center group-data-[collapsible=icon]:justify-center space-x-2 sm:space-x-3 group-data-[collapsible=icon]:space-x-0">
 							<div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg overflow-hidden shadow-md flex-shrink-0">
-								<img src="/images/reztobelle-logo.png" alt="ReztoBelle Logo" className="h-full w-full object-contain" />
+								<Image
+									src="/images/reztobelle-logo.png"
+									alt="ReztoBelle Logo"
+									className="h-full w-full object-contain"
+									width={40}
+									height={40}
+								/>
 							</div>
 							<div className="group-data-[collapsible=icon]:hidden min-w-0 flex-1">
 								<span className="text-sidebar-foreground font-bold text-base sm:text-lg truncate block">
-                  ReztoBelle
+									ReztoBelle
 								</span>
 								<p className="text-sidebar-foreground/70 text-xs font-medium truncate">Admin Dashboard</p>
 							</div>
@@ -101,8 +108,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 							<SidebarGroupContent>
 								<SidebarMenu className="space-y-1">
 									{navigation.map((item) => {
-										const Icon = item.icon
-										const isActive = pathname === item.href
+										const Icon = item.icon;
+										const isActive = pathname === item.href;
 										return (
 											<SidebarMenuItem key={item.name}>
 												<SidebarMenuButton
@@ -110,9 +117,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 													isActive={isActive}
 													tooltip={item.name}
 													className={cn(
-														"rounded-md transition-all duration-200 hover:bg-muted/80 w-full group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:h-8 sm:group-data-[collapsible=icon]:w-10 sm:group-data-[collapsible=icon]:h-10 group-data-[collapsible=icon]:p-0",
-														isActive && "bg-primary text-primary-foreground hover:bg-primary/90",
-														!isActive && "text-sidebar-foreground hover:text-sidebar-foreground",
+														'rounded-md transition-all duration-200 hover:bg-muted/80 w-full group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:h-8 sm:group-data-[collapsible=icon]:w-10 sm:group-data-[collapsible=icon]:h-10 group-data-[collapsible=icon]:p-0',
+														isActive && 'bg-primary text-primary-foreground hover:bg-primary/90',
+														!isActive && 'text-sidebar-foreground hover:text-sidebar-foreground'
 													)}
 												>
 													<a
@@ -120,7 +127,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 														className="flex items-center justify-start group-data-[collapsible=icon]:justify-center space-x-2 sm:space-x-3 group-data-[collapsible=icon]:space-x-0 px-2 sm:px-3 py-2 sm:py-2.5 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:py-0 w-full group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:h-8 sm:group-data-[collapsible=icon]:w-10 sm:group-data-[collapsible=icon]:h-10"
 													>
 														<Icon
-															className={cn("h-4 w-4 sm:h-5 sm:w-5 transition-colors duration-200 flex-shrink-0")}
+															className={cn('h-4 w-4 sm:h-5 sm:w-5 transition-colors duration-200 flex-shrink-0')}
 														/>
 														<span className="font-medium text-sm sm:text-base group-data-[collapsible=icon]:hidden min-w-0 truncate">
 															{item.name}
@@ -128,7 +135,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 													</a>
 												</SidebarMenuButton>
 											</SidebarMenuItem>
-										)
+										);
 									})}
 								</SidebarMenu>
 							</SidebarGroupContent>
@@ -164,7 +171,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 								<Button variant="ghost" size="sm" className="relative hover:bg-muted/50 rounded-lg transition-colors">
 									<Bell className="h-4 w-4 sm:h-5 sm:w-5" />
 									<Badge className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full p-0 text-xs bg-red-500 text-white shadow-md">
-                    3
+										3
 									</Badge>
 								</Button>
 
@@ -174,7 +181,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 											<Avatar className="h-8 w-8 sm:h-10 sm:w-10 ring-2 ring-primary/20 shadow-md hover:ring-primary/40 transition-all">
 												<AvatarImage src="/admin-user-avatar.png" />
 												<AvatarFallback className="bg-primary text-primary-foreground font-semibold text-xs sm:text-sm">
-													{user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+													{user.name
+														.split(' ')
+														.map((n) => n[0])
+														.join('')
+														.toUpperCase()}
 												</AvatarFallback>
 											</Avatar>
 										</Button>
@@ -210,5 +221,5 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 				</SidebarInset>
 			</div>
 		</SidebarProvider>
-	)
+	);
 }

@@ -1,11 +1,11 @@
-"use client"
+'use client';
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -13,13 +13,13 @@ import {
 	DropdownMenuLabel,
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+} from '@/components/ui/dropdown-menu';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
 	Search,
 	Filter,
@@ -35,8 +35,8 @@ import {
 	Loader2,
 	ChevronDown,
 	Check,
-} from "lucide-react"
-import { cn } from "@/lib/utils"
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 import {
 	getWaybills,
 	getDistricts,
@@ -45,7 +45,7 @@ import {
 	type District,
 	type City,
 	type DeliveryOrder,
-} from "@/lib/koombiyo-server"
+} from '@/lib/koombiyo-server';
 import {
 	Pagination,
 	PaginationContent,
@@ -54,232 +54,232 @@ import {
 	PaginationNext,
 	PaginationPrevious,
 	PaginationEllipsis,
-} from "@/components/ui/pagination"
+} from '@/components/ui/pagination';
 
 // Sample products data for selection
 const availableProducts = [
-	{ id: "PROD-001", name: "Rose Gold Press-On Nails", sku: "RGN-001", price: 150, category: "Nails" },
-	{ id: "PROD-002", name: "Diamond Stud Earrings", sku: "DSE-002", price: 299, category: "Earrings" },
-	{ id: "PROD-003", name: "Vintage Gold Rings", sku: "VGR-003", price: 199, category: "Rings" },
-	{ id: "PROD-004", name: "Pearl Drop Earrings", sku: "PDE-004", price: 179, category: "Earrings" },
-	{ id: "PROD-005", name: "French Tip Nails", sku: "FTN-005", price: 120, category: "Nails" },
-	{ id: "PROD-006", name: "Silver Hoop Earrings", sku: "SHE-006", price: 89, category: "Earrings" },
-	{ id: "PROD-007", name: "Crystal Pendant Necklace", sku: "CPN-007", price: 249, category: "Necklaces" },
-	{ id: "PROD-008", name: "Matte Black Nails", sku: "MBN-008", price: 135, category: "Nails" },
-	{ id: "PROD-009", name: "Gold Chain Bracelet", sku: "GCB-009", price: 189, category: "Bracelets" },
-	{ id: "PROD-010", name: "Emerald Stud Earrings", sku: "ESE-010", price: 329, category: "Earrings" },
-]
+	{ id: 'PROD-001', name: 'Rose Gold Press-On Nails', sku: 'RGN-001', price: 150, category: 'Nails' },
+	{ id: 'PROD-002', name: 'Diamond Stud Earrings', sku: 'DSE-002', price: 299, category: 'Earrings' },
+	{ id: 'PROD-003', name: 'Vintage Gold Rings', sku: 'VGR-003', price: 199, category: 'Rings' },
+	{ id: 'PROD-004', name: 'Pearl Drop Earrings', sku: 'PDE-004', price: 179, category: 'Earrings' },
+	{ id: 'PROD-005', name: 'French Tip Nails', sku: 'FTN-005', price: 120, category: 'Nails' },
+	{ id: 'PROD-006', name: 'Silver Hoop Earrings', sku: 'SHE-006', price: 89, category: 'Earrings' },
+	{ id: 'PROD-007', name: 'Crystal Pendant Necklace', sku: 'CPN-007', price: 249, category: 'Necklaces' },
+	{ id: 'PROD-008', name: 'Matte Black Nails', sku: 'MBN-008', price: 135, category: 'Nails' },
+	{ id: 'PROD-009', name: 'Gold Chain Bracelet', sku: 'GCB-009', price: 189, category: 'Bracelets' },
+	{ id: 'PROD-010', name: 'Emerald Stud Earrings', sku: 'ESE-010', price: 329, category: 'Earrings' },
+];
 
 // Sample orders data
 const orders = [
 	{
-		id: "ORD-001",
-		customer: "Amara Silva",
-		email: "amara@email.com",
+		id: 'ORD-001',
+		customer: 'Amara Silva',
+		email: 'amara@email.com',
 		items: [
-			{ name: "Rose Gold Press-On Nails", quantity: 2, price: 150 },
-			{ name: "Diamond Stud Earrings", quantity: 1, price: 299 },
+			{ name: 'Rose Gold Press-On Nails', quantity: 2, price: 150 },
+			{ name: 'Diamond Stud Earrings', quantity: 1, price: 299 },
 		],
 		total: 599,
-		status: "delivered",
-		date: "2024-01-15",
-		address: "123 Galle Road, Colombo 03",
+		status: 'delivered',
+		date: '2024-01-15',
+		address: '123 Galle Road, Colombo 03',
 	},
 	{
-		id: "ORD-002",
-		customer: "Nisha Perera",
-		email: "nisha@email.com",
-		items: [{ name: "Vintage Gold Rings", quantity: 1, price: 199 }],
+		id: 'ORD-002',
+		customer: 'Nisha Perera',
+		email: 'nisha@email.com',
+		items: [{ name: 'Vintage Gold Rings', quantity: 1, price: 199 }],
 		total: 199,
-		status: "shipped",
-		date: "2024-01-14",
-		address: "456 Kandy Road, Kandy",
+		status: 'shipped',
+		date: '2024-01-14',
+		address: '456 Kandy Road, Kandy',
 	},
 	{
-		id: "ORD-003",
-		customer: "Kavya Fernando",
-		email: "kavya@email.com",
+		id: 'ORD-003',
+		customer: 'Kavya Fernando',
+		email: 'kavya@email.com',
 		items: [
-			{ name: "Pearl Drop Earrings", quantity: 2, price: 179 },
-			{ name: "French Tip Nails", quantity: 1, price: 120 },
+			{ name: 'Pearl Drop Earrings', quantity: 2, price: 179 },
+			{ name: 'French Tip Nails', quantity: 1, price: 120 },
 		],
 		total: 478,
-		status: "processing",
-		date: "2024-01-13",
-		address: "789 Negombo Road, Negombo",
+		status: 'processing',
+		date: '2024-01-13',
+		address: '789 Negombo Road, Negombo',
 	},
 	{
-		id: "ORD-004",
-		customer: "Shalini Rajapaksa",
-		email: "shalini@email.com",
-		items: [{ name: "Silver Hoop Earrings", quantity: 3, price: 89 }],
+		id: 'ORD-004',
+		customer: 'Shalini Rajapaksa',
+		email: 'shalini@email.com',
+		items: [{ name: 'Silver Hoop Earrings', quantity: 3, price: 89 }],
 		total: 267,
-		status: "pending",
-		date: "2024-01-12",
-		address: "321 Matara Road, Galle",
+		status: 'pending',
+		date: '2024-01-12',
+		address: '321 Matara Road, Galle',
 	},
-]
+];
 
 export function OrdersManagement() {
-	const [searchTerm, setSearchTerm] = useState("")
-	const [selectedStatus, setSelectedStatus] = useState("all")
-	const [selectedOrder, setSelectedOrder] = useState<(typeof orders)[0] | null>(null)
-	const [isDeliveryDialogOpen, setIsDeliveryDialogOpen] = useState(false)
-	const [isCreateOrderOpen, setIsCreateOrderOpen] = useState(false)
-	const [districts, setDistricts] = useState<District[]>([])
-	const [cities, setCities] = useState<City[]>([])
-	const [availableWaybills, setAvailableWaybills] = useState<string[]>([])
-	const [isLoadingDistricts, setIsLoadingDistricts] = useState(false)
-	const [isLoadingCities, setIsLoadingCities] = useState(false)
-	const [isLoadingWaybills, setIsLoadingWaybills] = useState(false)
-	const [isCreatingOrder, setIsCreatingOrder] = useState(false)
+	const [searchTerm, setSearchTerm] = useState('');
+	const [selectedStatus, setSelectedStatus] = useState('all');
+	const [selectedOrder, setSelectedOrder] = useState<(typeof orders)[0] | null>(null);
+	const [isDeliveryDialogOpen, setIsDeliveryDialogOpen] = useState(false);
+	const [isCreateOrderOpen, setIsCreateOrderOpen] = useState(false);
+	const [districts, setDistricts] = useState<District[]>([]);
+	const [cities, setCities] = useState<City[]>([]);
+	const [availableWaybills, setAvailableWaybills] = useState<string[]>([]);
+	const [isLoadingDistricts, setIsLoadingDistricts] = useState(false);
+	const [isLoadingCities, setIsLoadingCities] = useState(false);
+	const [isLoadingWaybills, setIsLoadingWaybills] = useState(false);
+	const [isCreatingOrder, setIsCreatingOrder] = useState(false);
 	const [productSearchStates, setProductSearchStates] = useState<{ [key: number]: { open: boolean; search: string } }>(
-		{},
-	)
+		{}
+	);
 
 	const [newOrder, setNewOrder] = useState({
-		customerName: "",
-		customerEmail: "",
-		customerPhone: "",
-		receiverName: "",
-		receiverPhone: "",
-		receiverStreet: "",
-		receiverDistrict: "",
-		receiverCity: "",
-		items: [{ productId: "", quantity: 1, price: 0 }],
-		codAmount: "",
-		description: "",
-		specialNote: "",
-		waybillId: "",
-	})
+		customerName: '',
+		customerEmail: '',
+		customerPhone: '',
+		receiverName: '',
+		receiverPhone: '',
+		receiverStreet: '',
+		receiverDistrict: '',
+		receiverCity: '',
+		items: [{ productId: '', quantity: 1, price: 0 }],
+		codAmount: '',
+		description: '',
+		specialNote: '',
+		waybillId: '',
+	});
 
-	const [currentPage, setCurrentPage] = useState(1)
-	const [itemsPerPage] = useState(5)
+	const [currentPage, setCurrentPage] = useState(1);
+	const [itemsPerPage] = useState(5);
 
 	useEffect(() => {
-		loadDistricts()
-		loadWaybills()
-	}, [])
+		loadDistricts();
+		loadWaybills();
+	}, []);
 
 	const loadDistricts = async () => {
-		setIsLoadingDistricts(true)
+		setIsLoadingDistricts(true);
 		try {
-			const response = await getDistricts()
+			const response = await getDistricts();
 			if (response.success && response.data) {
-				setDistricts(response.data)
+				setDistricts(response.data);
 			}
 		} catch (error) {
-			console.error("Failed to load districts:", error)
+			console.error('Failed to load districts:', error);
 		} finally {
-			setIsLoadingDistricts(false)
+			setIsLoadingDistricts(false);
 		}
-	}
+	};
 
 	const loadCities = async (districtId: string) => {
-		if (!districtId) return
-		setIsLoadingCities(true)
+		if (!districtId) return;
+		setIsLoadingCities(true);
 		try {
-			const response = await getCities(districtId)
+			const response = await getCities(districtId);
 			if (response.success && response.data) {
-				setCities(response.data)
+				setCities(response.data);
 			}
 		} catch (error) {
-			console.error("Failed to load cities:", error)
+			console.error('Failed to load cities:', error);
 		} finally {
-			setIsLoadingCities(false)
+			setIsLoadingCities(false);
 		}
-	}
+	};
 
 	const loadWaybills = async () => {
-		setIsLoadingWaybills(true)
+		setIsLoadingWaybills(true);
 		try {
-			const response = await getWaybills("20")
+			const response = await getWaybills('20');
 			if (response.success && response.data) {
-				setAvailableWaybills(Array.isArray(response.data) ? response.data : [])
+				setAvailableWaybills(Array.isArray(response.data) ? response.data : []);
 			} else {
-				setAvailableWaybills([])
+				setAvailableWaybills([]);
 			}
 		} catch (error) {
-			console.error("Failed to load waybills:", error)
-			setAvailableWaybills([])
+			console.error('Failed to load waybills:', error);
+			setAvailableWaybills([]);
 		} finally {
-			setIsLoadingWaybills(false)
+			setIsLoadingWaybills(false);
 		}
-	}
+	};
 
 	const handleDistrictChange = (districtId: string) => {
-		setNewOrder({ ...newOrder, receiverDistrict: districtId, receiverCity: "" })
-		setCities([])
-		loadCities(districtId)
-	}
+		setNewOrder({ ...newOrder, receiverDistrict: districtId, receiverCity: '' });
+		setCities([]);
+		loadCities(districtId);
+	};
 
 	const addOrderItem = () => {
-		const newIndex = newOrder.items.length
+		const newIndex = newOrder.items.length;
 		setNewOrder({
 			...newOrder,
-			items: [...newOrder.items, { productId: "", quantity: 1, price: 0 }],
-		})
+			items: [...newOrder.items, { productId: '', quantity: 1, price: 0 }],
+		});
 		setProductSearchStates((prev) => ({
 			...prev,
-			[newIndex]: { open: false, search: "" },
-		}))
-	}
+			[newIndex]: { open: false, search: '' },
+		}));
+	};
 
 	const removeOrderItem = (index: number) => {
-		const items = newOrder.items.filter((_, i) => i !== index)
-		setNewOrder({ ...newOrder, items })
+		const items = newOrder.items.filter((_, i) => i !== index);
+		setNewOrder({ ...newOrder, items });
 		setProductSearchStates((prev) => {
-			const newState = { ...prev }
-			delete newState[index]
-			return newState
-		})
-	}
+			const newState = { ...prev };
+			delete newState[index];
+			return newState;
+		});
+	};
 
 	const updateOrderItem = (index: number, field: string, value: any) => {
-		const items = [...newOrder.items]
+		const items = [...newOrder.items];
 
-		if (field === "productId") {
-			const selectedProduct = availableProducts.find((p) => p.id === value)
+		if (field === 'productId') {
+			const selectedProduct = availableProducts.find((p) => p.id === value);
 			items[index] = {
 				...items[index],
 				productId: value,
 				price: selectedProduct ? selectedProduct.price : 0,
-			}
+			};
 		} else {
-			items[index] = { ...items[index], [field]: value }
+			items[index] = { ...items[index], [field]: value };
 		}
 
-		setNewOrder({ ...newOrder, items })
-	}
+		setNewOrder({ ...newOrder, items });
+	};
 
 	const calculateTotal = () => {
 		return newOrder.items.reduce((sum, item) => {
-			const product = availableProducts.find((p) => p.id === item.productId)
-			const price = product ? product.price : item.price
-			return sum + item.quantity * price
-		}, 0)
-	}
+			const product = availableProducts.find((p) => p.id === item.productId);
+			const price = product ? product.price : item.price;
+			return sum + item.quantity * price;
+		}, 0);
+	};
 
 	const handleCreateOrder = async () => {
 		if (!newOrder.waybillId || !newOrder.receiverDistrict || !newOrder.receiverCity) {
-			alert("Please fill in all required fields including waybill ID, district, and city")
-			return
+			alert('Please fill in all required fields including waybill ID, district, and city');
+			return;
 		}
 
-		const hasEmptyItems = newOrder.items.some((item) => !item.productId)
+		const hasEmptyItems = newOrder.items.some((item) => !item.productId);
 		if (hasEmptyItems) {
-			alert("Please select products for all order items")
-			return
+			alert('Please select products for all order items');
+			return;
 		}
 
-		setIsCreatingOrder(true)
+		setIsCreatingOrder(true);
 		try {
 			const itemDescriptions = newOrder.items
 				.map((item) => {
-					const product = availableProducts.find((p) => p.id === item.productId)
-					return `${product?.name} (Qty: ${item.quantity})`
+					const product = availableProducts.find((p) => p.id === item.productId);
+					return `${product?.name} (Qty: ${item.quantity})`;
 				})
-				.join(", ")
+				.join(', ');
 
 			const deliveryOrder: DeliveryOrder = {
 				orderWaybillid: newOrder.waybillId,
@@ -292,113 +292,113 @@ export function OrdersManagement() {
 				description: newOrder.description || itemDescriptions,
 				spclNote: newOrder.specialNote,
 				getCod: newOrder.codAmount,
-			}
+			};
 
-			const response = await createDeliveryOrder(deliveryOrder)
+			const response = await createDeliveryOrder(deliveryOrder);
 			if (response.success) {
-				alert("Order created successfully!")
-				setIsCreateOrderOpen(false)
+				alert('Order created successfully!');
+				setIsCreateOrderOpen(false);
 				setNewOrder({
-					customerName: "",
-					customerEmail: "",
-					customerPhone: "",
-					receiverName: "",
-					receiverPhone: "",
-					receiverStreet: "",
-					receiverDistrict: "",
-					receiverCity: "",
-					items: [{ productId: "", quantity: 1, price: 0 }],
-					codAmount: "",
-					description: "",
-					specialNote: "",
-					waybillId: "",
-				})
-				loadWaybills()
+					customerName: '',
+					customerEmail: '',
+					customerPhone: '',
+					receiverName: '',
+					receiverPhone: '',
+					receiverStreet: '',
+					receiverDistrict: '',
+					receiverCity: '',
+					items: [{ productId: '', quantity: 1, price: 0 }],
+					codAmount: '',
+					description: '',
+					specialNote: '',
+					waybillId: '',
+				});
+				loadWaybills();
 			} else {
-				alert(`Failed to create order: ${response.error}`)
+				alert(`Failed to create order: ${response.error}`);
 			}
 		} catch (error) {
-			console.error("Error creating order:", error)
-			alert("Failed to create order. Please try again.")
+			console.error('Error creating order:', error);
+			alert('Failed to create order. Please try again.');
 		} finally {
-			setIsCreatingOrder(false)
+			setIsCreatingOrder(false);
 		}
-	}
+	};
 
 	const filteredOrders = orders.filter((order) => {
 		const matchesSearch =
-      order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customer.toLowerCase().includes(searchTerm.toLowerCase())
-		const matchesStatus = selectedStatus === "all" || order.status === selectedStatus
-		return matchesSearch && matchesStatus
-	})
+			order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+			order.customer.toLowerCase().includes(searchTerm.toLowerCase());
+		const matchesStatus = selectedStatus === 'all' || order.status === selectedStatus;
+		return matchesSearch && matchesStatus;
+	});
 
-	const totalPages = Math.ceil(filteredOrders.length / itemsPerPage)
-	const startIndex = (currentPage - 1) * itemsPerPage
-	const endIndex = startIndex + itemsPerPage
-	const paginatedOrders = filteredOrders.slice(startIndex, endIndex)
+	const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
+	const startIndex = (currentPage - 1) * itemsPerPage;
+	const endIndex = startIndex + itemsPerPage;
+	const paginatedOrders = filteredOrders.slice(startIndex, endIndex);
 
 	useEffect(() => {
-		setCurrentPage(1)
-	}, [searchTerm, selectedStatus])
+		setCurrentPage(1);
+	}, [searchTerm, selectedStatus]);
 
-	const statuses = ["all", "pending", "processing", "shipped", "delivered"]
+	const statuses = ['all', 'pending', 'processing', 'shipped', 'delivered'];
 
 	const getStatusColor = (status: string) => {
 		switch (status) {
-		case "pending":
-			return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
-		case "processing":
-			return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
-		case "shipped":
-			return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300"
-		case "delivered":
-			return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-		default:
-			return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
+			case 'pending':
+				return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
+			case 'processing':
+				return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+			case 'shipped':
+				return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
+			case 'delivered':
+				return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+			default:
+				return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
 		}
-	}
+	};
 
 	const getStatusIcon = (status: string) => {
 		switch (status) {
-		case "pending":
-			return <Clock className="h-4 w-4" />
-		case "processing":
-			return <Package className="h-4 w-4" />
-		case "shipped":
-			return <Truck className="h-4 w-4" />
-		case "delivered":
-			return <CheckCircle className="h-4 w-4" />
-		default:
-			return <AlertCircle className="h-4 w-4" />
+			case 'pending':
+				return <Clock className="h-4 w-4" />;
+			case 'processing':
+				return <Package className="h-4 w-4" />;
+			case 'shipped':
+				return <Truck className="h-4 w-4" />;
+			case 'delivered':
+				return <CheckCircle className="h-4 w-4" />;
+			default:
+				return <AlertCircle className="h-4 w-4" />;
 		}
-	}
+	};
 
 	const handleCreateDeliveryOrder = (order: (typeof orders)[0]) => {
-		setSelectedOrder(order)
-		setIsDeliveryDialogOpen(true)
-	}
+		setSelectedOrder(order);
+		setIsDeliveryDialogOpen(true);
+	};
 
-	const updateProductSearchState = (index: number, field: "open" | "search", value: boolean | string) => {
+	const updateProductSearchState = (index: number, field: 'open' | 'search', value: boolean | string) => {
 		setProductSearchStates((prev) => ({
 			...prev,
 			[index]: {
 				...prev[index],
 				[field]: value,
 			},
-		}))
-	}
+		}));
+	};
 
 	const getFilteredProducts = (searchTerm: string) => {
-		if (!searchTerm) return availableProducts
+		if (!searchTerm) return availableProducts;
 		return availableProducts.filter(
 			(product) =>
 				product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.sku.toLowerCase().includes(searchTerm.toLowerCase()),
-		)
-	}
+				product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+				product.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+				product.sku.toLowerCase().includes(searchTerm.toLowerCase())
+		);
+	};
 
 	return (
 		<div className="space-y-4 sm:space-y-6">
@@ -409,7 +409,7 @@ export function OrdersManagement() {
 				</div>
 				<Button onClick={() => setIsCreateOrderOpen(true)} className="flex items-center gap-2 w-full sm:w-auto">
 					<Plus className="h-4 w-4" />
-          Create Order
+					Create Order
 				</Button>
 			</div>
 
@@ -432,7 +432,7 @@ export function OrdersManagement() {
 					</CardHeader>
 					<CardContent>
 						<div className="text-xl sm:text-2xl font-bold text-yellow-600">
-							{orders.filter((o) => o.status === "pending").length}
+							{orders.filter((o) => o.status === 'pending').length}
 						</div>
 						<p className="text-xs text-muted-foreground">Awaiting processing</p>
 					</CardContent>
@@ -445,7 +445,7 @@ export function OrdersManagement() {
 					</CardHeader>
 					<CardContent>
 						<div className="text-xl sm:text-2xl font-bold">
-              LKR {orders.reduce((sum, order) => sum + order.total, 0).toLocaleString()}
+							LKR {orders.reduce((sum, order) => sum + order.total, 0).toLocaleString()}
 						</div>
 						<p className="text-xs text-muted-foreground">From all orders</p>
 					</CardContent>
@@ -458,7 +458,7 @@ export function OrdersManagement() {
 					</CardHeader>
 					<CardContent>
 						<div className="text-xl sm:text-2xl font-bold text-green-600">
-							{orders.filter((o) => o.status === "delivered").length}
+							{orders.filter((o) => o.status === 'delivered').length}
 						</div>
 						<p className="text-xs text-muted-foreground">Successfully completed</p>
 					</CardContent>
@@ -489,7 +489,7 @@ export function OrdersManagement() {
 							<SelectContent>
 								{statuses.map((status) => (
 									<SelectItem key={status} value={status}>
-										{status === "all" ? "All Statuses" : status.charAt(0).toUpperCase() + status.slice(1)}
+										{status === 'all' ? 'All Statuses' : status.charAt(0).toUpperCase() + status.slice(1)}
 									</SelectItem>
 								))}
 							</SelectContent>
@@ -521,7 +521,7 @@ export function OrdersManagement() {
 										</TableCell>
 										<TableCell className="text-xs sm:text-sm hidden md:table-cell">
 											<div className="text-sm">
-												{order.items.length} item{order.items.length > 1 ? "s" : ""}
+												{order.items.length} item{order.items.length > 1 ? 's' : ''}
 											</div>
 										</TableCell>
 										<TableCell className="font-medium text-xs sm:text-sm">LKR {order.total}</TableCell>
@@ -529,7 +529,7 @@ export function OrdersManagement() {
 											{new Date(order.date).toLocaleDateString()}
 										</TableCell>
 										<TableCell>
-											<Badge className={cn("text-xs", getStatusColor(order.status))}>
+											<Badge className={cn('text-xs', getStatusColor(order.status))}>
 												<div className="flex items-center space-x-1">
 													{getStatusIcon(order.status)}
 													<span className="hidden sm:inline">
@@ -549,11 +549,11 @@ export function OrdersManagement() {
 													<DropdownMenuLabel>Actions</DropdownMenuLabel>
 													<DropdownMenuItem onClick={() => setSelectedOrder(order)}>
 														<Eye className="mr-2 h-4 w-4" />
-                            View Details
+														View Details
 													</DropdownMenuItem>
 													<DropdownMenuItem onClick={() => handleCreateDeliveryOrder(order)}>
 														<Truck className="mr-2 h-4 w-4" />
-                            Create Delivery
+														Create Delivery
 													</DropdownMenuItem>
 													<DropdownMenuSeparator />
 													<DropdownMenuItem>Update Status</DropdownMenuItem>
@@ -570,15 +570,15 @@ export function OrdersManagement() {
 					{totalPages > 1 && (
 						<div className="flex items-center justify-between space-x-2 py-4">
 							<div className="text-sm text-muted-foreground">
-                Showing {startIndex + 1} to {Math.min(endIndex, filteredOrders.length)} of {filteredOrders.length}{" "}
-                orders
+								Showing {startIndex + 1} to {Math.min(endIndex, filteredOrders.length)} of {filteredOrders.length}{' '}
+								orders
 							</div>
 							<Pagination>
 								<PaginationContent>
 									<PaginationItem>
 										<PaginationPrevious
 											onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-											className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+											className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
 										/>
 									</PaginationItem>
 
@@ -594,21 +594,21 @@ export function OrdersManagement() {
 														{page}
 													</PaginationLink>
 												</PaginationItem>
-											)
+											);
 										} else if (page === currentPage - 2 || page === currentPage + 2) {
 											return (
 												<PaginationItem key={page}>
 													<PaginationEllipsis />
 												</PaginationItem>
-											)
+											);
 										}
-										return null
+										return null;
 									})}
 
 									<PaginationItem>
 										<PaginationNext
 											onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-											className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+											className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
 										/>
 									</PaginationItem>
 								</PaginationContent>
@@ -678,16 +678,16 @@ export function OrdersManagement() {
 							</div>
 							<div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2">
 								<Button variant="outline" onClick={() => setIsDeliveryDialogOpen(false)} className="w-full sm:w-auto">
-                  Cancel
+									Cancel
 								</Button>
 								<Button
 									onClick={() => {
-										console.log("[v0] Creating delivery for order:", selectedOrder.id)
-										setIsDeliveryDialogOpen(false)
+										console.log('[v0] Creating delivery for order:', selectedOrder.id);
+										setIsDeliveryDialogOpen(false);
 									}}
 									className="w-full sm:w-auto"
 								>
-                  Create Delivery
+									Create Delivery
 								</Button>
 							</div>
 						</div>
@@ -700,7 +700,7 @@ export function OrdersManagement() {
 					<DialogHeader>
 						<DialogTitle className="text-base sm:text-lg">Create New Order</DialogTitle>
 						<DialogDescription className="text-sm">
-              Create a new order with automatic waybill assignment and delivery integration
+							Create a new order with automatic waybill assignment and delivery integration
 						</DialogDescription>
 					</DialogHeader>
 
@@ -710,7 +710,7 @@ export function OrdersManagement() {
 							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 								<div>
 									<Label htmlFor="customerName" className="text-sm">
-                    Customer Name *
+										Customer Name *
 									</Label>
 									<Input
 										id="customerName"
@@ -722,7 +722,7 @@ export function OrdersManagement() {
 								</div>
 								<div>
 									<Label htmlFor="customerEmail" className="text-sm">
-                    Customer Email
+										Customer Email
 									</Label>
 									<Input
 										id="customerEmail"
@@ -735,7 +735,7 @@ export function OrdersManagement() {
 								</div>
 								<div>
 									<Label htmlFor="customerPhone" className="text-sm">
-                    Customer Phone
+										Customer Phone
 									</Label>
 									<Input
 										id="customerPhone"
@@ -759,14 +759,14 @@ export function OrdersManagement() {
 									className="w-full sm:w-auto bg-transparent"
 								>
 									<Plus className="h-4 w-4 mr-2" />
-                  Add Item
+									Add Item
 								</Button>
 							</div>
 							<div className="space-y-3">
 								{newOrder.items.map((item, index) => {
-									const selectedProduct = availableProducts.find((p) => p.id === item.productId)
-									const searchState = productSearchStates[index] || { open: false, search: "" }
-									const filteredProducts = getFilteredProducts(searchState.search)
+									const selectedProduct = availableProducts.find((p) => p.id === item.productId);
+									const searchState = productSearchStates[index] || { open: false, search: '' };
+									const filteredProducts = getFilteredProducts(searchState.search);
 
 									return (
 										<div key={index} className="grid grid-cols-1 gap-3 p-3 border rounded-lg">
@@ -774,7 +774,7 @@ export function OrdersManagement() {
 												<Label className="text-sm">Select Product *</Label>
 												<Popover
 													open={searchState.open}
-													onOpenChange={(open) => updateProductSearchState(index, "open", open)}
+													onOpenChange={(open) => updateProductSearchState(index, 'open', open)}
 												>
 													<PopoverTrigger asChild>
 														<Button
@@ -783,7 +783,7 @@ export function OrdersManagement() {
 															aria-expanded={searchState.open}
 															className="w-full justify-between bg-transparent text-sm"
 														>
-															{selectedProduct ? selectedProduct.name : "Choose a product..."}
+															{selectedProduct ? selectedProduct.name : 'Choose a product...'}
 															<ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 														</Button>
 													</PopoverTrigger>
@@ -792,7 +792,7 @@ export function OrdersManagement() {
 															<CommandInput
 																placeholder="Search products..."
 																value={searchState.search}
-																onValueChange={(search) => updateProductSearchState(index, "search", search)}
+																onValueChange={(search) => updateProductSearchState(index, 'search', search)}
 															/>
 															<CommandList>
 																<CommandEmpty>No products found.</CommandEmpty>
@@ -802,21 +802,21 @@ export function OrdersManagement() {
 																			key={product.id}
 																			value={product.id}
 																			onSelect={() => {
-																				updateOrderItem(index, "productId", product.id)
-																				updateProductSearchState(index, "open", false)
-																				updateProductSearchState(index, "search", "")
+																				updateOrderItem(index, 'productId', product.id);
+																				updateProductSearchState(index, 'open', false);
+																				updateProductSearchState(index, 'search', '');
 																			}}
 																		>
 																			<Check
 																				className={cn(
-																					"mr-2 h-4 w-4",
-																					selectedProduct?.id === product.id ? "opacity-100" : "opacity-0",
+																					'mr-2 h-4 w-4',
+																					selectedProduct?.id === product.id ? 'opacity-100' : 'opacity-0'
 																				)}
 																			/>
 																			<div className="flex flex-col">
 																				<span className="font-medium text-sm">{product.name}</span>
 																				<span className="text-xs text-muted-foreground">
-                                          SKU: {product.sku} • {product.category} • LKR {product.price}
+																					SKU: {product.sku} • {product.category} • LKR {product.price}
 																				</span>
 																			</div>
 																		</CommandItem>
@@ -828,7 +828,7 @@ export function OrdersManagement() {
 												</Popover>
 												{selectedProduct && (
 													<p className="text-xs text-muted-foreground mt-1">
-                            Category: {selectedProduct.category} | Price: LKR {selectedProduct.price}
+														Category: {selectedProduct.category} | Price: LKR {selectedProduct.price}
 													</p>
 												)}
 											</div>
@@ -839,7 +839,7 @@ export function OrdersManagement() {
 														type="number"
 														min="1"
 														value={item.quantity}
-														onChange={(e) => updateOrderItem(index, "quantity", Number.parseInt(e.target.value) || 1)}
+														onChange={(e) => updateOrderItem(index, 'quantity', Number.parseInt(e.target.value) || 1)}
 														className="text-sm"
 													/>
 												</div>
@@ -850,9 +850,9 @@ export function OrdersManagement() {
 														min="0"
 														step="0.01"
 														value={selectedProduct ? selectedProduct.price : item.price}
-														onChange={(e) => updateOrderItem(index, "price", Number.parseFloat(e.target.value) || 0)}
+														onChange={(e) => updateOrderItem(index, 'price', Number.parseFloat(e.target.value) || 0)}
 														disabled={!!selectedProduct}
-														className={cn("text-sm", selectedProduct ? "bg-muted" : "")}
+														className={cn('text-sm', selectedProduct ? 'bg-muted' : '')}
 													/>
 													{selectedProduct && (
 														<p className="text-xs text-muted-foreground mt-1">Auto-filled from product</p>
@@ -867,19 +867,19 @@ export function OrdersManagement() {
 													onClick={() => removeOrderItem(index)}
 													className="w-full sm:w-auto"
 												>
-                          Remove Item
+													Remove Item
 												</Button>
 											)}
 											<div className="pt-2 border-t border-muted">
 												<div className="flex justify-between items-center text-sm">
 													<span className="text-muted-foreground">Item Total:</span>
 													<span className="font-medium">
-                            LKR {((selectedProduct ? selectedProduct.price : item.price) * item.quantity).toFixed(2)}
+														LKR {((selectedProduct ? selectedProduct.price : item.price) * item.quantity).toFixed(2)}
 													</span>
 												</div>
 											</div>
 										</div>
-									)
+									);
 								})}
 							</div>
 							<div className="bg-muted/50 p-4 rounded-lg space-y-2">
@@ -899,7 +899,7 @@ export function OrdersManagement() {
 							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 								<div>
 									<Label htmlFor="codAmount" className="text-sm">
-                    COD Amount (LKR)
+										COD Amount (LKR)
 									</Label>
 									<Input
 										id="codAmount"
@@ -915,7 +915,7 @@ export function OrdersManagement() {
 							</div>
 							<div>
 								<Label htmlFor="description" className="text-sm">
-                  Order Description
+									Order Description
 								</Label>
 								<Textarea
 									id="description"
@@ -928,7 +928,7 @@ export function OrdersManagement() {
 							</div>
 							<div>
 								<Label htmlFor="specialNote" className="text-sm">
-                  Special Notes
+									Special Notes
 								</Label>
 								<Textarea
 									id="specialNote"
@@ -943,16 +943,16 @@ export function OrdersManagement() {
 
 						<div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-4 border-t">
 							<Button variant="outline" onClick={() => setIsCreateOrderOpen(false)} className="w-full sm:w-auto">
-                Cancel
+								Cancel
 							</Button>
 							<Button onClick={handleCreateOrder} disabled={isCreatingOrder} className="w-full sm:w-auto">
 								{isCreatingOrder && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Create Order
+								Create Order
 							</Button>
 						</div>
 					</div>
 				</DialogContent>
 			</Dialog>
 		</div>
-	)
+	);
 }

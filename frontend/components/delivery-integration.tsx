@@ -1,13 +1,13 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Truck, Package, AlertCircle, CheckCircle, Clock } from "lucide-react"
+import { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Truck, Package, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import {
 	createDeliveryOrder,
 	getDistricts,
@@ -16,102 +16,102 @@ import {
 	type DeliveryOrder,
 	type District,
 	type City,
-} from "@/lib/koombiyo-server"
+} from '@/lib/koombiyo-server';
 
 interface DeliveryIntegrationProps {
 	order: {
-		id: string
-		customer: string
-		email: string
-		total: number
-		address: string
-		phone?: string
-		items: Array<{ name: string; quantity: number; price: number }>
-	}
-	onClose: () => void
+		id: string;
+		customer: string;
+		email: string;
+		total: number;
+		address: string;
+		phone?: string;
+		items: Array<{ name: string; quantity: number; price: number }>;
+	};
+	onClose: () => void;
 }
 
 export function DeliveryIntegration({ order, onClose }: DeliveryIntegrationProps) {
-	const [isLoading, setIsLoading] = useState(false)
-	const [districts, setDistricts] = useState<District[]>([])
-	const [cities, setCities] = useState<City[]>([])
-	const [waybills, setWaybills] = useState<string[]>([])
-	const [selectedDistrict, setSelectedDistrict] = useState("")
-	const [deliveryStatus, setDeliveryStatus] = useState<"idle" | "success" | "error">("idle")
+	const [isLoading, setIsLoading] = useState(false);
+	const [districts, setDistricts] = useState<District[]>([]);
+	const [cities, setCities] = useState<City[]>([]);
+	const [waybills, setWaybills] = useState<string[]>([]);
+	const [selectedDistrict, setSelectedDistrict] = useState('');
+	const [deliveryStatus, setDeliveryStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
 	const loadInitialData = async () => {
-		setIsLoading(true)
+		setIsLoading(true);
 		try {
-			const [districtsRes, waybillsRes] = await Promise.all([getDistricts(), getWaybills("5")])
+			const [districtsRes, waybillsRes] = await Promise.all([getDistricts(), getWaybills('5')]);
 
 			if (districtsRes.success && districtsRes.data) {
-				setDistricts(districtsRes.data)
+				setDistricts(districtsRes.data);
 			}
 
 			if (waybillsRes.success && waybillsRes.data) {
-				setWaybills(waybillsRes.data)
+				setWaybills(waybillsRes.data);
 			}
 		} catch (error) {
-			console.error("Failed to load initial data:", error)
+			console.error('Failed to load initial data:', error);
 		} finally {
-			setIsLoading(false)
+			setIsLoading(false);
 		}
-	}
+	};
 
 	const handleDistrictChange = async (districtId: string) => {
-		setSelectedDistrict(districtId)
+		setSelectedDistrict(districtId);
 		if (districtId) {
-			const citiesRes = await getCities(districtId)
+			const citiesRes = await getCities(districtId);
 			if (citiesRes.success && citiesRes.data) {
-				setCities(citiesRes.data)
+				setCities(citiesRes.data);
 			}
 		}
-	}
+	};
 
 	const handleCreateDelivery = async (formData: FormData) => {
-		setIsLoading(true)
+		setIsLoading(true);
 		try {
 			const deliveryOrder: DeliveryOrder = {
-				orderWaybillid: formData.get("waybillId") as string,
+				orderWaybillid: formData.get('waybillId') as string,
 				orderNo: order.id,
-				receiverName: (formData.get("receiverName") as string) || order.customer,
-				receiverStreet: (formData.get("receiverStreet") as string) || order.address,
-				receiverDistrict: formData.get("receiverDistrict") as string,
-				receiverCity: formData.get("receiverCity") as string,
-				receiverPhone: (formData.get("receiverPhone") as string) || order.phone || "",
-				description: order.items.map((item) => `${item.name} x${item.quantity}`).join(", "),
-				spclNote: (formData.get("spclNote") as string) || "",
+				receiverName: (formData.get('receiverName') as string) || order.customer,
+				receiverStreet: (formData.get('receiverStreet') as string) || order.address,
+				receiverDistrict: formData.get('receiverDistrict') as string,
+				receiverCity: formData.get('receiverCity') as string,
+				receiverPhone: (formData.get('receiverPhone') as string) || order.phone || '',
+				description: order.items.map((item) => `${item.name} x${item.quantity}`).join(', '),
+				spclNote: (formData.get('spclNote') as string) || '',
 				getCod: order.total.toString(),
-			}
+			};
 
-			const result = await createDeliveryOrder(deliveryOrder)
+			const result = await createDeliveryOrder(deliveryOrder);
 
 			if (result.success) {
-				setDeliveryStatus("success")
+				setDeliveryStatus('success');
 				setTimeout(() => {
-					onClose()
-				}, 2000)
+					onClose();
+				}, 2000);
 			} else {
-				setDeliveryStatus("error")
+				setDeliveryStatus('error');
 			}
 		} catch (error) {
-			console.error("Failed to create delivery:", error)
-			setDeliveryStatus("error")
+			console.error('Failed to create delivery:', error);
+			setDeliveryStatus('error');
 		} finally {
-			setIsLoading(false)
+			setIsLoading(false);
 		}
-	}
+	};
 
 	return (
 		<div className="space-y-6">
-			{deliveryStatus === "success" && (
+			{deliveryStatus === 'success' && (
 				<div className="flex items-center space-x-2 p-4 bg-green-50 border border-green-200 rounded-lg">
 					<CheckCircle className="h-5 w-5 text-green-600" />
 					<span className="text-green-800">Delivery order created successfully!</span>
 				</div>
 			)}
 
-			{deliveryStatus === "error" && (
+			{deliveryStatus === 'error' && (
 				<div className="flex items-center space-x-2 p-4 bg-red-50 border border-red-200 rounded-lg">
 					<AlertCircle className="h-5 w-5 text-red-600" />
 					<span className="text-red-800">Failed to create delivery order. Please try again.</span>
@@ -154,7 +154,7 @@ export function DeliveryIntegration({ order, onClose }: DeliveryIntegrationProps
 						{/* Load Data Button */}
 						{districts.length === 0 && (
 							<Button type="button" onClick={loadInitialData} disabled={isLoading}>
-								{isLoading ? "Loading..." : "Load Delivery Options"}
+								{isLoading ? 'Loading...' : 'Load Delivery Options'}
 							</Button>
 						)}
 
@@ -179,7 +179,7 @@ export function DeliveryIntegration({ order, onClose }: DeliveryIntegrationProps
 									</div>
 									<div>
 										<Label htmlFor="receiverPhone">Phone Number *</Label>
-										<Input name="receiverPhone" defaultValue={order.phone || ""} placeholder="0771234567" required />
+										<Input name="receiverPhone" defaultValue={order.phone || ''} placeholder="0771234567" required />
 									</div>
 								</div>
 
@@ -260,5 +260,5 @@ export function DeliveryIntegration({ order, onClose }: DeliveryIntegrationProps
 				</CardContent>
 			</Card>
 		</div>
-	)
+	);
 }

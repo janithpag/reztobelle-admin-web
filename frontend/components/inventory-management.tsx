@@ -1,11 +1,11 @@
-"use client"
+'use client';
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
 	Pagination,
 	PaginationContent,
@@ -14,7 +14,7 @@ import {
 	PaginationNext,
 	PaginationPrevious,
 	PaginationEllipsis,
-} from "@/components/ui/pagination"
+} from '@/components/ui/pagination';
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -22,7 +22,7 @@ import {
 	DropdownMenuLabel,
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from '@/components/ui/dropdown-menu';
 import {
 	Dialog,
 	DialogContent,
@@ -30,9 +30,9 @@ import {
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
 	Search,
 	Filter,
@@ -43,120 +43,120 @@ import {
 	AlertTriangle,
 	TrendingDown,
 	RotateCcw,
-} from "lucide-react"
+} from 'lucide-react';
 
 // Sample inventory data
 const inventory = [
 	{
 		id: 1,
-		name: "Rose Gold Press-On Nails",
-		sku: "RGN-001",
-		category: "Press-On Nails",
+		name: 'Rose Gold Press-On Nails',
+		sku: 'RGN-001',
+		category: 'Press-On Nails',
 		currentStock: 45,
 		minStock: 10,
 		maxStock: 100,
 		cost: 75,
-		supplier: "Beauty Supplies Co.",
-		lastRestocked: "2024-01-10",
-		status: "in_stock",
+		supplier: 'Beauty Supplies Co.',
+		lastRestocked: '2024-01-10',
+		status: 'in_stock',
 	},
 	{
 		id: 2,
-		name: "Diamond Stud Earrings",
-		sku: "DSE-002",
-		category: "Earrings",
+		name: 'Diamond Stud Earrings',
+		sku: 'DSE-002',
+		category: 'Earrings',
 		currentStock: 23,
 		minStock: 15,
 		maxStock: 50,
 		cost: 150,
-		supplier: "Jewelry Wholesale Ltd.",
-		lastRestocked: "2024-01-08",
-		status: "in_stock",
+		supplier: 'Jewelry Wholesale Ltd.',
+		lastRestocked: '2024-01-08',
+		status: 'in_stock',
 	},
 	{
 		id: 3,
-		name: "Vintage Gold Rings",
-		sku: "VGR-003",
-		category: "Rings",
+		name: 'Vintage Gold Rings',
+		sku: 'VGR-003',
+		category: 'Rings',
 		currentStock: 12,
 		minStock: 20,
 		maxStock: 40,
 		cost: 100,
-		supplier: "Gold Craft Inc.",
-		lastRestocked: "2024-01-05",
-		status: "low_stock",
+		supplier: 'Gold Craft Inc.',
+		lastRestocked: '2024-01-05',
+		status: 'low_stock',
 	},
 	{
 		id: 4,
-		name: "Pearl Drop Earrings",
-		sku: "PDE-004",
-		category: "Earrings",
+		name: 'Pearl Drop Earrings',
+		sku: 'PDE-004',
+		category: 'Earrings',
 		currentStock: 8,
 		minStock: 15,
 		maxStock: 30,
 		cost: 90,
-		supplier: "Pearl Paradise",
-		lastRestocked: "2024-01-03",
-		status: "low_stock",
+		supplier: 'Pearl Paradise',
+		lastRestocked: '2024-01-03',
+		status: 'low_stock',
 	},
 	{
 		id: 5,
-		name: "French Tip Nails",
-		sku: "FTN-005",
-		category: "Press-On Nails",
+		name: 'French Tip Nails',
+		sku: 'FTN-005',
+		category: 'Press-On Nails',
 		currentStock: 2,
 		minStock: 10,
 		maxStock: 80,
 		cost: 60,
-		supplier: "Beauty Supplies Co.",
-		lastRestocked: "2023-12-28",
-		status: "critical",
+		supplier: 'Beauty Supplies Co.',
+		lastRestocked: '2023-12-28',
+		status: 'critical',
 	},
-]
+];
 
 export function InventoryManagement() {
-	const [searchTerm, setSearchTerm] = useState("")
-	const [selectedCategory, setSelectedCategory] = useState("all")
-	const [selectedItem, setSelectedItem] = useState<(typeof inventory)[0] | null>(null)
-	const [isRestockOpen, setIsRestockOpen] = useState(false)
-	const [currentPage, setCurrentPage] = useState(1)
-	const [itemsPerPage] = useState(5)
+	const [searchTerm, setSearchTerm] = useState('');
+	const [selectedCategory, setSelectedCategory] = useState('all');
+	const [selectedItem, setSelectedItem] = useState<(typeof inventory)[0] | null>(null);
+	const [isRestockOpen, setIsRestockOpen] = useState(false);
+	const [currentPage, setCurrentPage] = useState(1);
+	const [itemsPerPage] = useState(5);
 
 	const filteredInventory = inventory.filter((item) => {
 		const matchesSearch =
-      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.sku.toLowerCase().includes(searchTerm.toLowerCase())
-		const matchesCategory = selectedCategory === "all" || item.category === selectedCategory
-		return matchesSearch && matchesCategory
-	})
+			item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+			item.sku.toLowerCase().includes(searchTerm.toLowerCase());
+		const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
+		return matchesSearch && matchesCategory;
+	});
 
-	const totalPages = Math.ceil(filteredInventory.length / itemsPerPage)
-	const startIndex = (currentPage - 1) * itemsPerPage
-	const endIndex = startIndex + itemsPerPage
-	const paginatedInventory = filteredInventory.slice(startIndex, endIndex)
+	const totalPages = Math.ceil(filteredInventory.length / itemsPerPage);
+	const startIndex = (currentPage - 1) * itemsPerPage;
+	const endIndex = startIndex + itemsPerPage;
+	const paginatedInventory = filteredInventory.slice(startIndex, endIndex);
 
 	useEffect(() => {
-		setCurrentPage(1)
-	}, [searchTerm, selectedCategory])
+		setCurrentPage(1);
+	}, [searchTerm, selectedCategory]);
 
-	const categories = ["all", "Press-On Nails", "Earrings", "Rings"]
+	const categories = ['all', 'Press-On Nails', 'Earrings', 'Rings'];
 
 	const getStatusColor = (status: string) => {
 		switch (status) {
-		case "in_stock":
-			return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-		case "low_stock":
-			return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
-		case "critical":
-			return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-		default:
-			return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
+			case 'in_stock':
+				return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+			case 'low_stock':
+				return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
+			case 'critical':
+				return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+			default:
+				return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
 		}
-	}
+	};
 
-	const lowStockItems = inventory.filter((item) => item.currentStock <= item.minStock)
-	const criticalItems = inventory.filter((item) => item.status === "critical")
-	const totalValue = inventory.reduce((sum, item) => sum + item.currentStock * item.cost, 0)
+	const lowStockItems = inventory.filter((item) => item.currentStock <= item.minStock);
+	const criticalItems = inventory.filter((item) => item.status === 'critical');
+	const totalValue = inventory.reduce((sum, item) => sum + item.currentStock * item.cost, 0);
 
 	return (
 		<div className="space-y-6">
@@ -170,7 +170,7 @@ export function InventoryManagement() {
 					<DialogTrigger asChild>
 						<Button className="bg-primary hover:bg-primary/90">
 							<RotateCcw className="mr-2 h-4 w-4" />
-              Restock Items
+							Restock Items
 						</Button>
 					</DialogTrigger>
 					<DialogContent>
@@ -205,7 +205,7 @@ export function InventoryManagement() {
 						</div>
 						<div className="flex justify-end space-x-2 pt-4">
 							<Button variant="outline" onClick={() => setIsRestockOpen(false)}>
-                Cancel
+								Cancel
 							</Button>
 							<Button onClick={() => setIsRestockOpen(false)}>Add Stock</Button>
 						</div>
@@ -285,7 +285,7 @@ export function InventoryManagement() {
 							<SelectContent>
 								{categories.map((category) => (
 									<SelectItem key={category} value={category}>
-										{category === "all" ? "All Categories" : category}
+										{category === 'all' ? 'All Categories' : category}
 									</SelectItem>
 								))}
 							</SelectContent>
@@ -329,11 +329,11 @@ export function InventoryManagement() {
 										<TableCell className="text-sm">{item.supplier}</TableCell>
 										<TableCell>
 											<Badge className={getStatusColor(item.status)}>
-												{item.status === "in_stock"
-													? "In Stock"
-													: item.status === "low_stock"
-														? "Low Stock"
-														: "Critical"}
+												{item.status === 'in_stock'
+													? 'In Stock'
+													: item.status === 'low_stock'
+														? 'Low Stock'
+														: 'Critical'}
 											</Badge>
 										</TableCell>
 										<TableCell className="text-right">
@@ -347,11 +347,11 @@ export function InventoryManagement() {
 													<DropdownMenuLabel>Actions</DropdownMenuLabel>
 													<DropdownMenuItem>
 														<Plus className="mr-2 h-4 w-4" />
-                            Add Stock
+														Add Stock
 													</DropdownMenuItem>
 													<DropdownMenuItem>
 														<Minus className="mr-2 h-4 w-4" />
-                            Remove Stock
+														Remove Stock
 													</DropdownMenuItem>
 													<DropdownMenuSeparator />
 													<DropdownMenuItem>View History</DropdownMenuItem>
@@ -368,15 +368,15 @@ export function InventoryManagement() {
 					{totalPages > 1 && (
 						<div className="flex items-center justify-between space-x-2 py-4">
 							<div className="text-sm text-muted-foreground">
-                Showing {startIndex + 1} to {Math.min(endIndex, filteredInventory.length)} of {filteredInventory.length}{" "}
-                items
+								Showing {startIndex + 1} to {Math.min(endIndex, filteredInventory.length)} of {filteredInventory.length}{' '}
+								items
 							</div>
 							<Pagination>
 								<PaginationContent>
 									<PaginationItem>
 										<PaginationPrevious
 											onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-											className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+											className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
 										/>
 									</PaginationItem>
 
@@ -392,21 +392,21 @@ export function InventoryManagement() {
 														{page}
 													</PaginationLink>
 												</PaginationItem>
-											)
+											);
 										} else if (page === currentPage - 2 || page === currentPage + 2) {
 											return (
 												<PaginationItem key={page}>
 													<PaginationEllipsis />
 												</PaginationItem>
-											)
+											);
 										}
-										return null
+										return null;
 									})}
 
 									<PaginationItem>
 										<PaginationNext
 											onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-											className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+											className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
 										/>
 									</PaginationItem>
 								</PaginationContent>
@@ -416,5 +416,5 @@ export function InventoryManagement() {
 				</CardContent>
 			</Card>
 		</div>
-	)
+	);
 }

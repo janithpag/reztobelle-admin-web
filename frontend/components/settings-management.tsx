@@ -1,17 +1,17 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Switch } from "@/components/ui/switch"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Separator } from "@/components/ui/separator"
-import { Badge } from "@/components/ui/badge"
-import { Store, Bell, Shield, Palette, CreditCard, Truck, Save, Globe } from "lucide-react"
+import { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
+import { Store, Bell, Shield, Palette, CreditCard, Truck, Save, Globe } from 'lucide-react';
 
 export function SettingsManagement() {
 	const [notifications, setNotifications] = useState({
@@ -19,7 +19,7 @@ export function SettingsManagement() {
 		lowStock: true,
 		newCustomers: false,
 		marketing: true,
-	})
+	});
 
 	return (
 		<div className="space-y-6">
@@ -35,27 +35,27 @@ export function SettingsManagement() {
 				<TabsList className="grid w-full grid-cols-6">
 					<TabsTrigger value="general">
 						<Store className="mr-2 h-4 w-4" />
-            General
+						General
 					</TabsTrigger>
 					<TabsTrigger value="notifications">
 						<Bell className="mr-2 h-4 w-4" />
-            Notifications
+						Notifications
 					</TabsTrigger>
 					<TabsTrigger value="appearance">
 						<Palette className="mr-2 h-4 w-4" />
-            Appearance
+						Appearance
 					</TabsTrigger>
 					<TabsTrigger value="payments">
 						<CreditCard className="mr-2 h-4 w-4" />
-            Payments
+						Payments
 					</TabsTrigger>
 					<TabsTrigger value="shipping">
 						<Truck className="mr-2 h-4 w-4" />
-            Shipping
+						Shipping
 					</TabsTrigger>
 					<TabsTrigger value="security">
 						<Shield className="mr-2 h-4 w-4" />
-            Security
+						Security
 					</TabsTrigger>
 				</TabsList>
 
@@ -105,7 +105,7 @@ export function SettingsManagement() {
 							</div>
 							<Button>
 								<Save className="mr-2 h-4 w-4" />
-                Save Changes
+								Save Changes
 							</Button>
 						</CardContent>
 					</Card>
@@ -136,7 +136,7 @@ export function SettingsManagement() {
 							</div>
 							<Button>
 								<Save className="mr-2 h-4 w-4" />
-                Update Address
+								Update Address
 							</Button>
 						</CardContent>
 					</Card>
@@ -236,7 +236,7 @@ export function SettingsManagement() {
 							</div>
 							<Button>
 								<Save className="mr-2 h-4 w-4" />
-                Apply Changes
+								Apply Changes
 							</Button>
 						</CardContent>
 					</Card>
@@ -319,7 +319,7 @@ export function SettingsManagement() {
 							</div>
 							<Button>
 								<Save className="mr-2 h-4 w-4" />
-                Update Shipping
+								Update Shipping
 							</Button>
 						</CardContent>
 					</Card>
@@ -357,12 +357,12 @@ export function SettingsManagement() {
 							</div>
 							<Button>
 								<Save className="mr-2 h-4 w-4" />
-                Update Security
+								Update Security
 							</Button>
 						</CardContent>
 					</Card>
 				</TabsContent>
 			</Tabs>
 		</div>
-	)
+	);
 }

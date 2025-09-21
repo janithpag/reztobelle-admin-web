@@ -105,4 +105,55 @@ export const uploadAPI = {
 	},
 };
 
+// Product-related API functions
+export const productsAPI = {
+	// Get all products
+	getProducts: async () => {
+		const response = await apiClient.get('/products');
+		return response.data;
+	},
+
+	// Get product by ID
+	getProduct: async (id: string) => {
+		const response = await apiClient.get(`/products/${id}`);
+		return response.data;
+	},
+
+	// Create new product
+	createProduct: async (productData: {
+		name: string;
+		description?: string;
+		price: number;
+		sku: string;
+		category: string;
+		stock?: number;
+		images?: string[];
+		isActive?: boolean;
+	}) => {
+		const response = await apiClient.post('/products', productData);
+		return response.data;
+	},
+
+	// Update product
+	updateProduct: async (id: string, productData: {
+		name?: string;
+		description?: string;
+		price?: number;
+		sku?: string;
+		category?: string;
+		stock?: number;
+		images?: string[];
+		isActive?: boolean;
+	}) => {
+		const response = await apiClient.put(`/products/${id}`, productData);
+		return response.data;
+	},
+
+	// Delete product
+	deleteProduct: async (id: string) => {
+		const response = await apiClient.delete(`/products/${id}`);
+		return response.data;
+	},
+};
+
 export default apiClient;

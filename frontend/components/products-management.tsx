@@ -17,14 +17,6 @@ import {
 	PaginationEllipsis,
 } from '@/components/ui/pagination';
 import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuLabel,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
 	Dialog,
 	DialogContent,
 	DialogDescription,
@@ -36,11 +28,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ImageUpload } from '@/components/image-upload';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
 	Plus,
 	Search,
 	Filter,
-	MoreHorizontal,
 	Edit,
 	Trash2,
 	Eye,
@@ -49,6 +41,7 @@ import {
 	TrendingUp,
 	AlertCircle,
 } from 'lucide-react';
+import { productsAPI } from '@/lib/api';
 
 // Types for product and uploaded image
 interface UploadedImage {
@@ -59,6 +52,21 @@ interface UploadedImage {
 	height: number;
 	format: string;
 	bytes: number;
+}
+
+// Product interface matching backend Prisma model
+interface Product {
+	id: string;
+	name: string;
+	description?: string;
+	price: number;
+	sku: string;
+	category: string;
+	stock: number;
+	images: string[];
+	isActive: boolean;
+	createdAt: string;
+	updatedAt: string;
 }
 
 interface ProductFormData {
@@ -72,96 +80,19 @@ interface ProductFormData {
 }
 import { Loading } from '@/components/ui/loading';
 
-// Sample products data
-const products = [
-	{
-		id: 1,
-		name: 'Rose Gold Press-On Nails',
-		sku: 'RGN-001', // Added SKU field
-		category: 'Press-On Nails',
-		price: 150,
-		stock: 45,
-		status: 'active',
-		sales: 156,
-		rating: 4.8,
-		image: '/rose-gold-press-on-nails.jpg',
-		description: 'Elegant rose gold press-on nails with a glossy finish',
-	},
-	{
-		id: 2,
-		name: 'Diamond Stud Earrings',
-		sku: 'DSE-002', // Added SKU field
-		category: 'Earrings',
-		price: 299,
-		stock: 23,
-		status: 'active',
-		sales: 134,
-		rating: 4.9,
-		image: '/diamond-stud-earrings.jpg',
-		description: 'Classic diamond stud earrings in sterling silver',
-	},
-	{
-		id: 3,
-		name: 'Vintage Gold Rings',
-		sku: 'VGR-003', // Added SKU field
-		category: 'Rings',
-		price: 199,
-		stock: 12,
-		status: 'active',
-		sales: 98,
-		rating: 4.7,
-		image: '/vintage-gold-rings.jpg',
-		description: 'Vintage-inspired gold rings with intricate detailing',
-	},
-	{
-		id: 4,
-		name: 'Pearl Drop Earrings',
-		sku: 'PDE-004', // Added SKU field
-		category: 'Earrings',
-		price: 179,
-		stock: 8,
-		status: 'low_stock',
-		sales: 87,
-		rating: 4.6,
-		image: '/pearl-drop-earrings.png',
-		description: 'Elegant pearl drop earrings for special occasions',
-	},
-	{
-		id: 5,
-		name: 'French Tip Nails',
-		sku: 'FTN-005', // Added SKU field
-		category: 'Press-On Nails',
-		price: 120,
-		stock: 2,
-		status: 'low_stock',
-		sales: 76,
-		rating: 4.5,
-		image: '/french-tip-nails.jpg',
-		description: 'Classic French tip press-on nails',
-	},
-	{
-		id: 6,
-		name: 'Silver Hoop Earrings',
-		sku: 'SHE-006', // Added SKU field
-		category: 'Earrings',
-		price: 89,
-		stock: 5,
-		status: 'low_stock',
-		sales: 65,
-		rating: 4.4,
-		image: '/silver-hoop-earrings.jpg',
-		description: 'Modern silver hoop earrings in various sizes',
-	},
-];
-
 export function ProductsManagement() {
 	const [searchTerm, setSearchTerm] = useState('');
 	const [selectedCategory, setSelectedCategory] = useState('all');
 	const [isAddProductOpen, setIsAddProductOpen] = useState(false);
+	const [isEditProductOpen, setIsEditProductOpen] = useState(false);
+	const [isViewProductOpen, setIsViewProductOpen] = useState(false);
 	const [currentPage, setCurrentPage] = useState(1);
 	const [itemsPerPage] = useState(5);
 	const [isLoading, setIsLoading] = useState(true);
-	const [productsData, setProductsData] = useState<any[]>([]);
+	const [productsData, setProductsData] = useState<Product[]>([]);
+	const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+	const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
+	const [error, setError] = useState<string | null>(null);
 	
 	// Form state for adding products
 	const [productForm, setProductForm] = useState<ProductFormData>({
@@ -169,7 +100,7 @@ export function ProductsManagement() {
 		description: '',
 		price: '',
 		sku: '',
-		category: '',
+		category: 'Press-On Nails', // Default category
 		stock: '',
 		images: [],
 	});
@@ -180,38 +111,135 @@ export function ProductsManagement() {
 			description: '',
 			price: '',
 			sku: '',
-			category: '',
+			category: 'Press-On Nails', // Default category
 			stock: '',
 			images: [],
 		});
 	};
 
-	const handleFormSubmit = async () => {
+	const loadProducts = async () => {
+		setIsLoading(true);
+		setError(null);
 		try {
-			// TODO: Implement API call to create product
-			console.log('Submitting product:', productForm);
-			setIsAddProductOpen(false);
-			resetForm();
+			const response = await productsAPI.getProducts();
+			setProductsData(response.products || []);
 		} catch (error) {
-			console.error('Error creating product:', error);
+			console.error('Failed to load products:', error);
+			setError('Failed to load products. Please try again.');
+		} finally {
+			setIsLoading(false);
 		}
 	};
 
-	// Simulate loading products data
-	useEffect(() => {
-		const loadProducts = async () => {
+	const handleFormSubmit = async () => {
+		try {
 			setIsLoading(true);
-			try {
-				// Simulate API call
-				await new Promise(resolve => setTimeout(resolve, 1000));
-				setProductsData(products);
-			} catch (error) {
-				console.error('Failed to load products:', error);
-			} finally {
-				setIsLoading(false);
-			}
-		};
+			
+			// Convert uploaded images to URLs
+			const imageUrls = productForm.images.map(img => img.secure_url);
+			
+			await productsAPI.createProduct({
+				name: productForm.name,
+				description: productForm.description || undefined,
+				price: parseFloat(productForm.price),
+				sku: productForm.sku,
+				category: productForm.category,
+				stock: parseInt(productForm.stock) || 0,
+				images: imageUrls,
+				isActive: true,
+			});
+			
+			setIsAddProductOpen(false);
+			resetForm();
+			await loadProducts(); // Reload products
+		} catch (error) {
+			console.error('Error creating product:', error);
+			setError('Failed to create product. Please try again.');
+		} finally {
+			setIsLoading(false);
+		}
+	};
 
+	const handleEditProduct = (product: Product) => {
+		setEditingProduct(product);
+		setProductForm({
+			name: product.name,
+			description: product.description || '',
+			price: product.price.toString(),
+			sku: product.sku,
+			category: product.category,
+			stock: product.stock.toString(),
+			images: product.images.map(url => ({
+				public_id: '',
+				url,
+				secure_url: url,
+				width: 0,
+				height: 0,
+				format: '',
+				bytes: 0
+			})),
+		});
+		setIsEditProductOpen(true);
+	};
+
+	const handleUpdateProduct = async () => {
+		if (!editingProduct) return;
+		
+		try {
+			setIsLoading(true);
+			
+			// Convert uploaded images to URLs
+			const imageUrls = productForm.images.map(img => img.secure_url);
+			
+			await productsAPI.updateProduct(editingProduct.id, {
+				name: productForm.name,
+				description: productForm.description || undefined,
+				price: parseFloat(productForm.price),
+				sku: productForm.sku,
+				category: productForm.category,
+				stock: parseInt(productForm.stock) || 0,
+				images: imageUrls,
+			});
+			
+			setIsEditProductOpen(false);
+			setEditingProduct(null);
+			resetForm();
+			await loadProducts(); // Reload products
+		} catch (error) {
+			console.error('Error updating product:', error);
+			setError('Failed to update product. Please try again.');
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	const handleViewProduct = (productId: string) => {
+		const product = productsData.find(p => p.id === productId);
+		if (product) {
+			setViewingProduct(product);
+			setIsViewProductOpen(true);
+		}
+	};
+
+	const handleDeleteProduct = async (productId: string) => {
+		if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
+			return;
+		}
+		
+		try {
+			setIsLoading(true);
+			await productsAPI.deleteProduct(productId);
+			await loadProducts(); // Reload products
+		} catch (error) {
+			console.error('Error deleting product:', error);
+			setError('Failed to delete product. Please try again.');
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	// Load products on component mount
+	useEffect(() => {
 		loadProducts();
 	}, []);
 
@@ -232,10 +260,24 @@ export function ProductsManagement() {
 		setCurrentPage(1);
 	}, [searchTerm, selectedCategory]);
 
+	// Calculate stats from products data
+	const totalProducts = productsData.length;
+	const lowStockProducts = productsData.filter(product => product.stock <= 10);
+	const totalRevenue = productsData.reduce((sum, product) => sum + Number(product.price), 0);
+	const bestSellerProduct = productsData.length > 0 ? productsData[0] : null;
+
 	const categories = ['all', 'Press-On Nails', 'Earrings', 'Rings'];
 
 	return (
 		<div className="space-y-4 sm:space-y-6">
+			{/* Error Alert */}
+			{error && (
+				<Alert variant="destructive">
+					<AlertCircle className="h-4 w-4" />
+					<AlertDescription>{error}</AlertDescription>
+				</Alert>
+			)}
+
 			{/* Header */}
 			<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
 				<div>
@@ -297,9 +339,9 @@ export function ProductsManagement() {
 											<SelectValue placeholder="Select category" />
 										</SelectTrigger>
 										<SelectContent>
-											<SelectItem value="press-on-nails">Press-On Nails</SelectItem>
-											<SelectItem value="earrings">Earrings</SelectItem>
-											<SelectItem value="rings">Rings</SelectItem>
+											<SelectItem value="Press-On Nails">Press-On Nails</SelectItem>
+											<SelectItem value="Earrings">Earrings</SelectItem>
+											<SelectItem value="Rings">Rings</SelectItem>
 										</SelectContent>
 									</Select>
 								</div>
@@ -375,6 +417,232 @@ export function ProductsManagement() {
 						</div>
 					</DialogContent>
 				</Dialog>
+
+				{/* Edit Product Dialog */}
+				<Dialog open={isEditProductOpen} onOpenChange={setIsEditProductOpen}>
+					<DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto mx-4">
+						<DialogHeader>
+							<DialogTitle className="text-base sm:text-lg text-sidebar-foreground font-semibold">
+								Edit Product
+							</DialogTitle>
+							<DialogDescription className="text-sm text-sidebar-foreground/70 font-medium">
+								Update the product details for your ReztoBelle collection
+							</DialogDescription>
+						</DialogHeader>
+						<div className="grid gap-4 py-4">
+							<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+								<div className="space-y-2">
+									<Label htmlFor="edit-name" className="text-sm text-sidebar-foreground font-semibold">
+										Product Name
+									</Label>
+									<Input
+										id="edit-name"
+										placeholder="Enter product name"
+										value={productForm.name}
+										onChange={(e) => setProductForm(prev => ({ ...prev, name: e.target.value }))}
+										className="border-sidebar-border text-sm"
+									/>
+								</div>
+								<div className="space-y-2">
+									<Label htmlFor="edit-sku" className="text-sm text-sidebar-foreground font-semibold">
+										SKU
+									</Label>
+									<Input
+										id="edit-sku"
+										placeholder="Enter product SKU"
+										value={productForm.sku}
+										onChange={(e) => setProductForm(prev => ({ ...prev, sku: e.target.value }))}
+										className="border-sidebar-border text-sm"
+									/>
+								</div>
+							</div>
+							<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+								<div className="space-y-2">
+									<Label htmlFor="edit-category" className="text-sm text-sidebar-foreground font-semibold">
+										Category
+									</Label>
+									<Select value={productForm.category} onValueChange={(value) => setProductForm(prev => ({ ...prev, category: value }))}>
+										<SelectTrigger className="border-sidebar-border">
+											<SelectValue placeholder="Select category" />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectItem value="Press-On Nails">Press-On Nails</SelectItem>
+											<SelectItem value="Earrings">Earrings</SelectItem>
+											<SelectItem value="Rings">Rings</SelectItem>
+										</SelectContent>
+									</Select>
+								</div>
+								<div className="space-y-2">
+									<Label htmlFor="edit-price" className="text-sm text-sidebar-foreground font-semibold">
+										Price (LKR)
+									</Label>
+									<Input
+										id="edit-price"
+										type="number"
+										step="0.01"
+										placeholder="0.00"
+										value={productForm.price}
+										onChange={(e) => setProductForm(prev => ({ ...prev, price: e.target.value }))}
+										className="border-sidebar-border text-sm"
+									/>
+								</div>
+							</div>
+							<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+								<div className="space-y-2">
+									<Label htmlFor="edit-stock" className="text-sm text-sidebar-foreground font-semibold">
+										Stock Quantity
+									</Label>
+									<Input
+										id="edit-stock"
+										type="number"
+										placeholder="0"
+										value={productForm.stock}
+										onChange={(e) => setProductForm(prev => ({ ...prev, stock: e.target.value }))}
+										className="border-sidebar-border text-sm"
+									/>
+								</div>
+								<div className="space-y-2">
+									<Label htmlFor="edit-description" className="text-sm text-sidebar-foreground font-semibold">
+										Description
+									</Label>
+									<Textarea
+										id="edit-description"
+										placeholder="Enter product description"
+										value={productForm.description}
+										onChange={(e) => setProductForm(prev => ({ ...prev, description: e.target.value }))}
+										className="border-sidebar-border text-sm"
+									/>
+								</div>
+							</div>
+							<div className="space-y-2">
+								<Label className="text-sm text-sidebar-foreground font-semibold">
+									Product Images
+								</Label>
+								<ImageUpload
+									onImagesChange={(images) => setProductForm(prev => ({ ...prev, images }))}
+									initialImages={productForm.images}
+									maxImages={5}
+									maxFileSize={10}
+									className="w-full"
+								/>
+							</div>
+						</div>
+						<div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2">
+							<Button
+								variant="outline"
+								onClick={() => {
+									setIsEditProductOpen(false);
+									setEditingProduct(null);
+									resetForm();
+								}}
+								className="border-sidebar-border text-sidebar-foreground hover:bg-muted/50 font-medium w-full sm:w-auto"
+							>
+								Cancel
+							</Button>
+							<Button onClick={handleUpdateProduct} className="font-semibold w-full sm:w-auto">
+								Update Product
+							</Button>
+						</div>
+					</DialogContent>
+				</Dialog>
+
+				{/* View Product Dialog */}
+				<Dialog open={isViewProductOpen} onOpenChange={setIsViewProductOpen}>
+					<DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto mx-4">
+						<DialogHeader>
+							<DialogTitle className="text-base sm:text-lg text-sidebar-foreground font-semibold">
+								Product Details
+							</DialogTitle>
+							<DialogDescription className="text-sm text-sidebar-foreground/70 font-medium">
+								View detailed information about this product
+							</DialogDescription>
+						</DialogHeader>
+						{viewingProduct && (
+							<div className="grid gap-4 py-4">
+								<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+									<div>
+										<Label className="text-sm text-sidebar-foreground font-semibold">Product Name</Label>
+										<p className="text-sm text-sidebar-foreground/80 mt-1">{viewingProduct.name}</p>
+									</div>
+									<div>
+										<Label className="text-sm text-sidebar-foreground font-semibold">SKU</Label>
+										<p className="text-sm text-sidebar-foreground/80 mt-1">{viewingProduct.sku}</p>
+									</div>
+								</div>
+								<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+									<div>
+										<Label className="text-sm text-sidebar-foreground font-semibold">Category</Label>
+										<p className="text-sm text-sidebar-foreground/80 mt-1">{viewingProduct.category}</p>
+									</div>
+									<div>
+										<Label className="text-sm text-sidebar-foreground font-semibold">Price</Label>
+										<p className="text-sm text-sidebar-foreground/80 mt-1">LKR {Number(viewingProduct.price).toFixed(2)}</p>
+									</div>
+								</div>
+								<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+									<div>
+										<Label className="text-sm text-sidebar-foreground font-semibold">Stock</Label>
+										<p className="text-sm text-sidebar-foreground/80 mt-1">{viewingProduct.stock} units</p>
+									</div>
+									<div>
+										<Label className="text-sm text-sidebar-foreground font-semibold">Status</Label>
+										<Badge
+											variant={viewingProduct.isActive ? 'default' : 'secondary'}
+											className="mt-1"
+										>
+											{viewingProduct.isActive ? 'Active' : 'Inactive'}
+										</Badge>
+									</div>
+								</div>
+								{viewingProduct.description && (
+									<div>
+										<Label className="text-sm text-sidebar-foreground font-semibold">Description</Label>
+										<p className="text-sm text-sidebar-foreground/80 mt-1">{viewingProduct.description}</p>
+									</div>
+								)}
+								{viewingProduct.images && viewingProduct.images.length > 0 && (
+									<div>
+										<Label className="text-sm text-sidebar-foreground font-semibold">Images</Label>
+										<div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-2">
+											{viewingProduct.images.map((imageUrl, index) => (
+												<Image
+													key={index}
+													src={imageUrl}
+													alt={`${viewingProduct.name} ${index + 1}`}
+													className="w-full h-24 object-cover rounded-lg"
+													width={100}
+													height={100}
+												/>
+											))}
+										</div>
+									</div>
+								)}
+								<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+									<div>
+										<Label className="text-sm text-sidebar-foreground font-semibold">Created</Label>
+										<p className="text-sm text-sidebar-foreground/80 mt-1">{new Date(viewingProduct.createdAt).toLocaleDateString()}</p>
+									</div>
+									<div>
+										<Label className="text-sm text-sidebar-foreground font-semibold">Last Updated</Label>
+										<p className="text-sm text-sidebar-foreground/80 mt-1">{new Date(viewingProduct.updatedAt).toLocaleDateString()}</p>
+									</div>
+								</div>
+							</div>
+						)}
+						<div className="flex justify-end">
+							<Button
+								variant="outline"
+								onClick={() => {
+									setIsViewProductOpen(false);
+									setViewingProduct(null);
+								}}
+								className="border-sidebar-border text-sidebar-foreground hover:bg-muted/50 font-medium"
+							>
+								Close
+							</Button>
+						</div>
+					</DialogContent>
+				</Dialog>
 			</div>
 
 			{/* Loading State */}
@@ -384,15 +652,15 @@ export function ProductsManagement() {
 				</div>
 			) : (
 				<>
-					{/* Stats Cards */}
-					<div className="grid gap-3 sm:gap-4 lg:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+			{/* Stats Cards */}
+			<div className="grid gap-3 sm:gap-4 lg:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
 				<Card className="border-sidebar-border">
 					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
 						<CardTitle className="text-xs font-semibold text-sidebar-foreground">Total Products</CardTitle>
 						<Package className="h-3 w-3 text-sidebar-foreground/70" />
 					</CardHeader>
 					<CardContent className="pt-1">
-						<div className="text-lg sm:text-xl font-bold text-sidebar-foreground">{products.length}</div>
+						<div className="text-lg sm:text-xl font-bold text-sidebar-foreground">{totalProducts}</div>
 						<p className="text-xs text-sidebar-foreground/70 font-medium">Active inventory items</p>
 					</CardContent>
 				</Card>
@@ -403,19 +671,23 @@ export function ProductsManagement() {
 						<Star className="h-3 w-3 text-sidebar-foreground/70" />
 					</CardHeader>
 					<CardContent className="pt-1">
-						<div className="text-sm sm:text-lg lg:text-xl font-bold text-sidebar-foreground">Rose Gold Nails</div>
-						<p className="text-xs text-sidebar-foreground/70 font-medium">156 units sold</p>
+						<div className="text-sm sm:text-lg lg:text-xl font-bold text-sidebar-foreground">
+							{bestSellerProduct ? bestSellerProduct.name : 'No products'}
+						</div>
+						<p className="text-xs text-sidebar-foreground/70 font-medium">
+							{bestSellerProduct ? `Stock: ${bestSellerProduct.stock}` : 'Add products to see data'}
+						</p>
 					</CardContent>
 				</Card>
 
 				<Card className="border-sidebar-border">
 					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-						<CardTitle className="text-xs font-semibold text-sidebar-foreground">Total Revenue</CardTitle>
+						<CardTitle className="text-xs font-semibold text-sidebar-foreground">Total Value</CardTitle>
 						<TrendingUp className="h-3 w-3 text-sidebar-foreground/70" />
 					</CardHeader>
 					<CardContent className="pt-1">
-						<div className="text-lg sm:text-xl font-bold text-sidebar-foreground">LKR 1,24,500</div>
-						<p className="text-xs text-sidebar-foreground/70 font-medium">From product sales</p>
+						<div className="text-lg sm:text-xl font-bold text-sidebar-foreground">LKR {totalRevenue.toFixed(2)}</div>
+						<p className="text-xs text-sidebar-foreground/70 font-medium">Inventory value</p>
 					</CardContent>
 				</Card>
 
@@ -425,13 +697,11 @@ export function ProductsManagement() {
 						<AlertCircle className="h-3 w-3 text-orange-500" />
 					</CardHeader>
 					<CardContent className="pt-1">
-						<div className="text-lg sm:text-xl font-bold text-orange-600">3</div>
+						<div className="text-lg sm:text-xl font-bold text-orange-600">{lowStockProducts.length}</div>
 						<p className="text-xs text-orange-600 font-medium">Items need restocking</p>
 					</CardContent>
 				</Card>
-			</div>
-
-			{/* Filters and Search */}
+			</div>			{/* Filters and Search */}
 			<Card className="border-sidebar-border">
 				<CardHeader>
 					<CardTitle className="text-base sm:text-lg text-sidebar-foreground font-semibold">
@@ -482,10 +752,7 @@ export function ProductsManagement() {
 									<TableHead className="text-sidebar-foreground font-semibold text-xs sm:text-sm">Price</TableHead>
 									<TableHead className="text-sidebar-foreground font-semibold text-xs sm:text-sm">Stock</TableHead>
 									<TableHead className="text-sidebar-foreground font-semibold text-xs sm:text-sm hidden sm:table-cell">
-										Sales
-									</TableHead>
-									<TableHead className="text-sidebar-foreground font-semibold text-xs sm:text-sm hidden lg:table-cell">
-										Rating
+										Created
 									</TableHead>
 									<TableHead className="text-sidebar-foreground font-semibold text-xs sm:text-sm">Status</TableHead>
 									<TableHead className="text-right text-sidebar-foreground font-semibold text-xs sm:text-sm">
@@ -499,7 +766,7 @@ export function ProductsManagement() {
 										<TableCell>
 											<div className="flex items-center space-x-2 sm:space-x-3">
 												<Image
-													src={product.image || '/placeholder.svg'}
+													src={(product.images && product.images[0]) || '/placeholder.svg'}
 													alt={product.name}
 													className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg object-cover flex-shrink-0"
 													width={40}
@@ -525,7 +792,7 @@ export function ProductsManagement() {
 											{product.category}
 										</TableCell>
 										<TableCell className="text-sidebar-foreground font-semibold text-xs sm:text-sm">
-											LKR {product.price}
+											LKR {Number(product.price).toFixed(2)}
 										</TableCell>
 										<TableCell>
 											<div className="flex items-center space-x-1 sm:space-x-2">
@@ -538,52 +805,50 @@ export function ProductsManagement() {
 											</div>
 										</TableCell>
 										<TableCell className="text-sidebar-foreground font-medium text-xs sm:text-sm hidden sm:table-cell">
-											{product.sales}
-										</TableCell>
-										<TableCell className="hidden lg:table-cell">
-											<div className="flex items-center space-x-1">
-												<Star className="h-3 w-3 sm:h-4 sm:w-4 fill-yellow-400 text-yellow-400" />
-												<span className="text-sidebar-foreground font-medium text-xs sm:text-sm">{product.rating}</span>
-											</div>
+											{new Date(product.createdAt).toLocaleDateString()}
 										</TableCell>
 										<TableCell>
 											<Badge
-												variant={product.status === 'active' ? 'default' : 'secondary'}
+												variant={product.isActive ? 'default' : 'secondary'}
 												className={
-													product.status === 'active'
+													product.isActive
 														? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 font-medium text-xs'
-														: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300 font-medium text-xs'
+														: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300 font-medium text-xs'
 												}
 											>
-												{product.status === 'active' ? 'Active' : 'Low Stock'}
+												{product.isActive ? 'Active' : 'Inactive'}
 											</Badge>
 										</TableCell>
 										<TableCell className="text-right">
-											<DropdownMenu>
-												<DropdownMenuTrigger asChild>
-													<Button variant="ghost" className="h-8 w-8 p-0 hover:bg-muted/50">
-														<MoreHorizontal className="h-4 w-4" />
-													</Button>
-												</DropdownMenuTrigger>
-												<DropdownMenuContent align="end">
-													<DropdownMenuLabel className="text-sidebar-foreground font-semibold">
-														Actions
-													</DropdownMenuLabel>
-													<DropdownMenuItem className="text-sidebar-foreground font-medium">
-														<Eye className="mr-2 h-4 w-4" />
-														View Details
-													</DropdownMenuItem>
-													<DropdownMenuItem className="text-sidebar-foreground font-medium">
-														<Edit className="mr-2 h-4 w-4" />
-														Edit Product
-													</DropdownMenuItem>
-													<DropdownMenuSeparator />
-													<DropdownMenuItem className="text-red-600 font-medium">
-														<Trash2 className="mr-2 h-4 w-4" />
-														Delete Product
-													</DropdownMenuItem>
-												</DropdownMenuContent>
-											</DropdownMenu>
+											<div className="flex items-center justify-end space-x-1">
+												<Button
+													variant="ghost"
+													size="sm"
+													className="h-8 w-8 p-0 hover:bg-muted/50"
+													onClick={() => handleViewProduct(product.id)}
+													title="View Product"
+												>
+													<Eye className="h-4 w-4" />
+												</Button>
+												<Button
+													variant="ghost"
+													size="sm"
+													className="h-8 w-8 p-0 hover:bg-muted/50"
+													onClick={() => handleEditProduct(product)}
+													title="Edit Product"
+												>
+													<Edit className="h-4 w-4" />
+												</Button>
+												<Button
+													variant="ghost"
+													size="sm"
+													className="h-8 w-8 p-0 hover:bg-muted/50 text-red-600 hover:text-red-700"
+													onClick={() => handleDeleteProduct(product.id)}
+													title="Delete Product"
+												>
+													<Trash2 className="h-4 w-4" />
+												</Button>
+											</div>
 										</TableCell>
 									</TableRow>
 								))}

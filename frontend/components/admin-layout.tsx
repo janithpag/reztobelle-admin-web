@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import {
 	DropdownMenu,
@@ -16,6 +16,8 @@ import {
 	DropdownMenuLabel,
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
+	DropdownMenuRadioGroup,
+	DropdownMenuRadioItem,
 } from '@/components/ui/dropdown-menu';
 import {
 	Sidebar,
@@ -48,6 +50,7 @@ import {
 	Receipt,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
+import { useTheme } from 'next-themes';
 
 interface AdminLayoutProps {
 	children: React.ReactNode;
@@ -68,6 +71,7 @@ const navigation = [
 export function AdminLayout({ children }: AdminLayoutProps) {
 	const pathname = usePathname();
 	const { user, logout } = useAuth();
+	const { theme, setTheme } = useTheme();
 
 	const handleLogout = () => {
 		logout();
@@ -169,24 +173,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 									<Search className="h-4 w-4" />
 								</Button>
 
-								<Button variant="ghost" size="sm" className="relative hover:bg-muted/50 rounded-lg transition-colors">
-									<Bell className="h-4 w-4 sm:h-5 sm:w-5" />
-									<Badge className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full p-0 text-xs bg-red-500 text-white shadow-md">
-										3
-									</Badge>
-								</Button>
-
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
 										<Button variant="ghost" className="relative h-8 w-8 sm:h-10 sm:w-10 rounded-full">
 											<Avatar className="h-8 w-8 sm:h-10 sm:w-10 ring-2 ring-primary/20 shadow-md hover:ring-primary/40 transition-all">
-												<AvatarImage src="/admin-user-avatar.png" />
 												<AvatarFallback className="bg-primary text-primary-foreground font-semibold text-xs sm:text-sm">
-													{user.name
-														.split(' ')
-														.map((n) => n[0])
-														.join('')
-														.toUpperCase()}
+													{user.name?.trim().charAt(0).toUpperCase()}
 												</AvatarFallback>
 											</Avatar>
 										</Button>
@@ -207,6 +199,13 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 											<Settings className="mr-2 h-4 w-4" />
 											<span>Settings</span>
 										</DropdownMenuItem>
+										<DropdownMenuSeparator />
+										<DropdownMenuLabel>Theme</DropdownMenuLabel>
+										<DropdownMenuRadioGroup value={theme} onValueChange={(v) => setTheme(v)}>
+											<DropdownMenuRadioItem value="light">Light</DropdownMenuRadioItem>
+											<DropdownMenuRadioItem value="dark">Dark</DropdownMenuRadioItem>
+											<DropdownMenuRadioItem value="system">System</DropdownMenuRadioItem>
+										</DropdownMenuRadioGroup>
 										<DropdownMenuSeparator />
 										<DropdownMenuItem onClick={handleLogout}>
 											<LogOut className="mr-2 h-4 w-4" />

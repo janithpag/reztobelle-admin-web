@@ -46,6 +46,7 @@ reztobelle-admin-web/
 - **Validation**: Zod schema validation
 - **Documentation**: Swagger/OpenAPI with auto-generated UI
 - **Security**: Helmet, CORS, Rate limiting
+- **Image Management**: Cloudinary for image upload and transformation
 - **Language**: TypeScript
 
 ### Frontend (Admin Dashboard)
@@ -86,7 +87,8 @@ src/
 │   ├── orders.ts        # Order management
 │   ├── deliveries.ts    # Delivery tracking
 │   ├── expenses.ts      # Expense management
-│   └── reports.ts       # Analytics and reporting
+│   ├── reports.ts       # Analytics and reporting
+│   └── uploads.ts       # Image upload management (Cloudinary)
 └── types/
     └── fastify.d.ts     # Extended Fastify type definitions
 ```
@@ -120,6 +122,7 @@ app/                     # Next.js App Router pages
 components/
 ├── ui/                # shadcn/ui base components
 ├── admin-layout.tsx   # Main admin dashboard layout
+├── image-upload.tsx   # Cloudinary image upload component
 ├── *-management.tsx   # Feature-specific management components
 └── theme-provider.tsx # Dark/light theme provider
 
@@ -178,6 +181,152 @@ lib/
 - `GET /reports/inventory` - Stock reports
 - `GET /reports/expenses` - Expense summaries
 
+### Image Management (Cloudinary Integration)
+- `POST /uploads/upload` - Upload single image to Cloudinary
+- `POST /uploads/upload-multiple` - Upload multiple images to Cloudinary
+- `DELETE /uploads/delete/:publicId` - Delete image from Cloudinary
+- `GET /uploads/transformations/:publicId` - Get image transformation URLs
+
+## Image Management System
+
+### Overview
+The application uses **Cloudinary** for professional image management, providing automatic optimization, transformation, and CDN delivery. This system is specifically optimized for jewelry e-commerce with multiple image sizes and quality variants.
+
+### Cloudinary Integration Features
+
+#### Backend Implementation
+- **Secure Upload API**: JWT-protected endpoints for image operations
+- **File Validation**: Type and size validation (max 10MB per image)
+- **Automatic Optimization**: Quality and format optimization for web delivery
+- **Multiple Transformations**: Auto-generation of thumbnail, medium, large, and zoom versions
+- **Cloud Storage**: Images stored in `reztobelle/products` folder on Cloudinary
+
+#### Frontend Components
+```
+components/
+├── image-upload.tsx      # Drag-and-drop upload component with preview
+└── products-management.tsx # Integrated with ImageUpload component
+```
+
+**ImageUpload Component Features:**
+- **Drag & Drop Interface**: Modern upload experience with visual feedback
+- **Progress Tracking**: Real-time upload progress indicators
+- **Image Preview**: Immediate preview with metadata display
+- **Error Handling**: Comprehensive validation and error messaging
+- **Batch Operations**: Support for multiple image uploads
+- **Image Management**: Delete functionality with Cloudinary cleanup
+
+#### Image Transformations
+Automatically generated for each uploaded image:
+
+| Transformation | Size | Use Case |
+|----------------|------|----------|
+| Thumbnail | 150x150px | Product lists, search results |
+| Medium | 400x400px | Product cards, catalog view |
+| Large | 1200x1200px | Product detail pages |
+| Zoom | 2000x2000px | High-resolution viewing |
+
+#### Database Schema Integration
+```prisma
+model Product {
+  id          String      @id @default(cuid())
+  name        String
+  // ... other fields
+  images      String[]    @default([])  // Array of Cloudinary URLs
+  // ... other fields
+}
+```
+
+### Environment Configuration
+
+#### Backend Environment Variables (.env)
+```env
+# Cloudinary Configuration (Required)
+CLOUDINARY_CLOUD_NAME="your-cloudinary-cloud-name"
+CLOUDINARY_API_KEY="your-cloudinary-api-key"
+CLOUDINARY_API_SECRET="your-cloudinary-api-secret"
+```
+
+#### Frontend Environment Variables (.env.local)
+```env
+# Cloudinary Configuration (Optional - for frontend features)
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME="your-cloudinary-cloud-name"
+```
+
+### Setup Instructions
+
+1. **Create Cloudinary Account**
+   - Sign up at [cloudinary.com](https://cloudinary.com)
+   - Get credentials from Dashboard → Settings → Account
+
+2. **Configure Environment Variables**
+   - Copy credentials to backend `.env` file
+   - Optionally add cloud name to frontend `.env.local`
+
+3. **API Usage**
+   ```typescript
+   // Upload single image
+   const result = await uploadAPI.uploadImage(file, (progress) => {
+     console.log(`Upload progress: ${progress}%`);
+   });
+
+   // Upload multiple images
+   const results = await uploadAPI.uploadMultipleImages(files);
+
+   // Delete image
+   await uploadAPI.deleteImage(publicId);
+   ```
+
+### Security & Performance
+
+#### Security Features
+- **Authentication Required**: All upload endpoints require JWT authentication
+- **File Type Validation**: Only image files (JPEG, PNG, WebP) allowed
+- **Size Limits**: Maximum 10MB per image file
+- **Rate Limiting**: Prevents abuse of upload endpoints
+
+#### Performance Optimizations
+- **CDN Delivery**: Global content delivery through Cloudinary's CDN
+- **Automatic Format Selection**: Cloudinary chooses optimal format for each browser
+- **Quality Optimization**: Automatic quality adjustment for best size/quality ratio
+- **Lazy Loading**: Next.js Image component with lazy loading
+- **Multiple Formats**: WebP for modern browsers, JPEG fallback
+
+### Image Management Workflow
+
+1. **Product Creation**:
+   - Admin selects product images via drag-and-drop interface
+   - Images uploaded to Cloudinary with automatic transformations
+   - Cloudinary URLs stored in database `images` array
+
+2. **Image Display**:
+   - Frontend retrieves Cloudinary URLs from database
+   - Next.js Image component renders with appropriate transformation
+   - CDN delivers optimized images based on device and connection
+
+3. **Image Updates**:
+   - Admin can add/remove images from existing products
+   - Removed images are deleted from Cloudinary to prevent storage bloat
+   - Database updated with new image URL array
+
+### Error Handling & Recovery
+
+- **Upload Failures**: Automatic retry with user feedback
+- **Network Issues**: Graceful degradation with offline indicators
+- **Invalid Files**: Clear error messages with accepted format guidance
+- **Storage Limits**: Cloudinary quota monitoring and alerts
+
+### Dependencies
+```json
+// Backend
+"cloudinary": "^1.x.x",
+"@fastify/multipart": "^8.x.x",
+
+// Frontend  
+"cloudinary-react": "^1.x.x",
+"next-cloudinary": "^5.x.x"
+```
+
 ## Development Workflow
 
 ### Environment Setup
@@ -185,6 +334,7 @@ lib/
 2. **Installation**: `npm run install:all` (installs all dependencies)
 3. **Database**: Set up PostgreSQL and configure `DATABASE_URL`
 4. **Environment Variables**: Create `.env` files for both frontend and backend
+5. **Image Management**: Set up Cloudinary account and configure credentials
 
 ### Development Commands
 - `npm run dev` - Start both frontend and backend in development mode

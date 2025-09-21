@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client'
+import '@fastify/multipart'
 
 declare module 'fastify' {
     interface FastifyInstance {

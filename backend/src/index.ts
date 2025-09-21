@@ -14,6 +14,7 @@ import orderRoutes from './routes/orders'
 import deliveryRoutes from './routes/deliveries'
 import expenseRoutes from './routes/expenses'
 import reportRoutes from './routes/reports'
+import uploadsRoutes from './routes/uploads'
 
 const prisma = new PrismaClient()
 
@@ -56,7 +57,10 @@ async function buildApp() {
 	await app.register(cors, {
 		origin: process.env.NODE_ENV === 'production'
 			? ['https://your-frontend-domain.com']
-			: ['http://localhost:3000', 'http://127.0.0.1:3000']
+			: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+		methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+		allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+		credentials: true
 	})
 
 	await app.register(rateLimit, {
@@ -109,6 +113,7 @@ async function buildApp() {
 	await app.register(deliveryRoutes, { prefix: '/api/deliveries' })
 	await app.register(expenseRoutes, { prefix: '/api/expenses' })
 	await app.register(reportRoutes, { prefix: '/api/reports' })
+	await app.register(uploadsRoutes, { prefix: '/api/uploads' })
 
 	return app
 }

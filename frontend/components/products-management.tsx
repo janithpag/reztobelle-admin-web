@@ -35,6 +35,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ImageUpload } from '@/components/image-upload';
 import {
 	Plus,
 	Search,
@@ -48,6 +49,27 @@ import {
 	TrendingUp,
 	AlertCircle,
 } from 'lucide-react';
+
+// Types for product and uploaded image
+interface UploadedImage {
+	public_id: string;
+	url: string;
+	secure_url: string;
+	width: number;
+	height: number;
+	format: string;
+	bytes: number;
+}
+
+interface ProductFormData {
+	name: string;
+	description: string;
+	price: string;
+	sku: string;
+	category: string;
+	stock: string;
+	images: UploadedImage[];
+}
 import { Loading } from '@/components/ui/loading';
 
 // Sample products data
@@ -140,6 +162,40 @@ export function ProductsManagement() {
 	const [itemsPerPage] = useState(5);
 	const [isLoading, setIsLoading] = useState(true);
 	const [productsData, setProductsData] = useState<any[]>([]);
+	
+	// Form state for adding products
+	const [productForm, setProductForm] = useState<ProductFormData>({
+		name: '',
+		description: '',
+		price: '',
+		sku: '',
+		category: '',
+		stock: '',
+		images: [],
+	});
+
+	const resetForm = () => {
+		setProductForm({
+			name: '',
+			description: '',
+			price: '',
+			sku: '',
+			category: '',
+			stock: '',
+			images: [],
+		});
+	};
+
+	const handleFormSubmit = async () => {
+		try {
+			// TODO: Implement API call to create product
+			console.log('Submitting product:', productForm);
+			setIsAddProductOpen(false);
+			resetForm();
+		} catch (error) {
+			console.error('Error creating product:', error);
+		}
+	};
 
 	// Simulate loading products data
 	useEffect(() => {
@@ -210,13 +266,25 @@ export function ProductsManagement() {
 									<Label htmlFor="name" className="text-sm text-sidebar-foreground font-semibold">
 										Product Name
 									</Label>
-									<Input id="name" placeholder="Enter product name" className="border-sidebar-border text-sm" />
+									<Input
+										id="name"
+										placeholder="Enter product name"
+										value={productForm.name}
+										onChange={(e) => setProductForm(prev => ({ ...prev, name: e.target.value }))}
+										className="border-sidebar-border text-sm"
+									/>
 								</div>
 								<div className="space-y-2">
 									<Label htmlFor="sku" className="text-sm text-sidebar-foreground font-semibold">
 										SKU
 									</Label>
-									<Input id="sku" placeholder="Enter product SKU" className="border-sidebar-border text-sm" />
+									<Input
+										id="sku"
+										placeholder="Enter product SKU"
+										value={productForm.sku}
+										onChange={(e) => setProductForm(prev => ({ ...prev, sku: e.target.value }))}
+										className="border-sidebar-border text-sm"
+									/>
 								</div>
 							</div>
 							<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -224,7 +292,7 @@ export function ProductsManagement() {
 									<Label htmlFor="category" className="text-sm text-sidebar-foreground font-semibold">
 										Category
 									</Label>
-									<Select>
+									<Select value={productForm.category} onValueChange={(value) => setProductForm(prev => ({ ...prev, category: value }))}>
 										<SelectTrigger className="border-sidebar-border">
 											<SelectValue placeholder="Select category" />
 										</SelectTrigger>
@@ -239,7 +307,15 @@ export function ProductsManagement() {
 									<Label htmlFor="price" className="text-sm text-sidebar-foreground font-semibold">
 										Price (LKR)
 									</Label>
-									<Input id="price" type="number" placeholder="0.00" className="border-sidebar-border text-sm" />
+									<Input
+										id="price"
+										type="number"
+										step="0.01"
+										placeholder="0.00"
+										value={productForm.price}
+										onChange={(e) => setProductForm(prev => ({ ...prev, price: e.target.value }))}
+										className="border-sidebar-border text-sm"
+									/>
 								</div>
 							</div>
 							<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -247,7 +323,14 @@ export function ProductsManagement() {
 									<Label htmlFor="stock" className="text-sm text-sidebar-foreground font-semibold">
 										Stock Quantity
 									</Label>
-									<Input id="stock" type="number" placeholder="0" className="border-sidebar-border text-sm" />
+									<Input
+										id="stock"
+										type="number"
+										placeholder="0"
+										value={productForm.stock}
+										onChange={(e) => setProductForm(prev => ({ ...prev, stock: e.target.value }))}
+										className="border-sidebar-border text-sm"
+									/>
 								</div>
 								<div className="space-y-2">
 									<Label htmlFor="description" className="text-sm text-sidebar-foreground font-semibold">
@@ -256,26 +339,37 @@ export function ProductsManagement() {
 									<Textarea
 										id="description"
 										placeholder="Enter product description"
+										value={productForm.description}
+										onChange={(e) => setProductForm(prev => ({ ...prev, description: e.target.value }))}
 										className="border-sidebar-border text-sm"
 									/>
 								</div>
 							</div>
 							<div className="space-y-2">
-								<Label htmlFor="image" className="text-sm text-sidebar-foreground font-semibold">
-									Product Image
+								<Label className="text-sm text-sidebar-foreground font-semibold">
+									Product Images
 								</Label>
-								<Input id="image" type="file" accept="image/*" className="border-sidebar-border text-sm" />
+								<ImageUpload
+									onImagesChange={(images) => setProductForm(prev => ({ ...prev, images }))}
+									initialImages={productForm.images}
+									maxImages={5}
+									maxFileSize={10}
+									className="w-full"
+								/>
 							</div>
 						</div>
 						<div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2">
 							<Button
 								variant="outline"
-								onClick={() => setIsAddProductOpen(false)}
+								onClick={() => {
+									setIsAddProductOpen(false);
+									resetForm();
+								}}
 								className="border-sidebar-border text-sidebar-foreground hover:bg-muted/50 font-medium w-full sm:w-auto"
 							>
 								Cancel
 							</Button>
-							<Button onClick={() => setIsAddProductOpen(false)} className="font-semibold w-full sm:w-auto">
+							<Button onClick={handleFormSubmit} className="font-semibold w-full sm:w-auto">
 								Add Product
 							</Button>
 						</div>

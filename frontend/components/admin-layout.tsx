@@ -86,9 +86,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 			<div className="min-h-screen bg-background flex w-full">
 				<Sidebar
 					collapsible="icon"
-					className="border-r border-sidebar-border shadow-lg bg-white fixed left-0 top-0 h-screen z-40"
+					className="border-r border-sidebar-border shadow-lg fixed left-0 top-0 h-screen z-40"
 				>
-					<SidebarHeader className="border-b border-sidebar-border bg-white p-3 sm:p-4">
+					<SidebarHeader className="border-b border-sidebar-border bg-sidebar text-sidebar-foreground p-3 sm:p-4">
 						<div className="flex items-center justify-center group-data-[collapsible=icon]:justify-center space-x-2 sm:space-x-3 group-data-[collapsible=icon]:space-x-0">
 							<div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg overflow-hidden shadow-md flex-shrink-0">
 								<Image
@@ -108,7 +108,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 						</div>
 					</SidebarHeader>
 
-					<SidebarContent className="bg-white p-2 sm:p-3 group-data-[collapsible=icon]:p-2">
+					<SidebarContent className="bg-sidebar text-sidebar-foreground p-2 sm:p-3 group-data-[collapsible=icon]:p-2">
 						<SidebarGroup>
 							<SidebarGroupContent>
 								<SidebarMenu className="space-y-1">
@@ -122,18 +122,14 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 													isActive={isActive}
 													tooltip={item.name}
 													className={cn(
-														'rounded-md transition-all duration-200 hover:bg-muted/80 w-full group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:h-8 sm:group-data-[collapsible=icon]:w-10 sm:group-data-[collapsible=icon]:h-10 group-data-[collapsible=icon]:p-0',
-														isActive && 'bg-primary text-primary-foreground hover:bg-primary/90',
-														!isActive && 'text-sidebar-foreground hover:text-sidebar-foreground'
+														'rounded-md transition-all duration-200 w-full group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:h-8 sm:group-data-[collapsible=icon]:w-10 sm:group-data-[collapsible=icon]:h-10 group-data-[collapsible=icon]:p-0'
 													)}
 												>
 													<Link
 														href={item.href}
 														className="flex items-center justify-start group-data-[collapsible=icon]:justify-center space-x-2 sm:space-x-3 group-data-[collapsible=icon]:space-x-0 px-2 sm:px-3 py-2 sm:py-2.5 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:py-0 w-full group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:h-8 sm:group-data-[collapsible=icon]:w-10 sm:group-data-[collapsible=icon]:h-10"
 													>
-														<Icon
-															className={cn('h-4 w-4 sm:h-5 sm:w-5 transition-colors duration-200 flex-shrink-0')}
-														/>
+														<Icon className={cn('h-4 w-4 sm:h-5 sm:w-5 transition-colors duration-200 flex-shrink-0')} />
 														<span className="font-medium text-sm sm:text-base group-data-[collapsible=icon]:hidden min-w-0 truncate">
 															{item.name}
 														</span>
@@ -147,7 +143,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 						</SidebarGroup>
 					</SidebarContent>
 
-					<SidebarFooter className="border-t border-sidebar-border bg-white p-2 sm:p-4 group-data-[collapsible=icon]:p-2">
+					<SidebarFooter className="border-t border-sidebar-border bg-sidebar text-sidebar-foreground p-2 sm:p-4 group-data-[collapsible=icon]:p-2">
 						{/* User details removed */}
 					</SidebarFooter>
 					<SidebarRail />

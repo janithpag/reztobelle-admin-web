@@ -2,6 +2,7 @@
 
 import type React from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -122,7 +123,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 														!isActive && 'text-sidebar-foreground hover:text-sidebar-foreground'
 													)}
 												>
-													<a
+													<Link
 														href={item.href}
 														className="flex items-center justify-start group-data-[collapsible=icon]:justify-center space-x-2 sm:space-x-3 group-data-[collapsible=icon]:space-x-0 px-2 sm:px-3 py-2 sm:py-2.5 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:py-0 w-full group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:h-8 sm:group-data-[collapsible=icon]:w-10 sm:group-data-[collapsible=icon]:h-10"
 													>
@@ -132,7 +133,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 														<span className="font-medium text-sm sm:text-base group-data-[collapsible=icon]:hidden min-w-0 truncate">
 															{item.name}
 														</span>
-													</a>
+													</Link>
 												</SidebarMenuButton>
 											</SidebarMenuItem>
 										);

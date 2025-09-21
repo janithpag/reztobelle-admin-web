@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
 import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/contexts/auth-context';
+import { LayoutWrapper } from '@/components/layout-wrapper';
 import { Suspense } from 'react';
 import './globals.css';
 
@@ -28,7 +29,9 @@ export default function RootLayout({
 			<body className={`font-sans ${inter.variable} antialiased`}>
 				<Suspense fallback={null}>
 					<ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-						<AuthProvider>{children}</AuthProvider>
+						<AuthProvider>
+							<LayoutWrapper>{children}</LayoutWrapper>
+						</AuthProvider>
 					</ThemeProvider>
 				</Suspense>
 				<Analytics />

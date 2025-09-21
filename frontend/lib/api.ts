@@ -31,10 +31,15 @@ apiClient.interceptors.response.use(
 	(response) => response,
 	(error) => {
 		if (error.response?.status === 401) {
-			// Token is invalid, clear auth data
-			localStorage.removeItem('authToken');
-			localStorage.removeItem('user');
-			window.location.href = '/login';
+			// Only redirect on 401 if this is not a login request
+			const isLoginRequest = error.config?.url?.includes('/auth/login');
+			
+			if (!isLoginRequest) {
+				// Token is invalid, clear auth data and redirect
+				localStorage.removeItem('authToken');
+				localStorage.removeItem('user');
+				window.location.href = '/login';
+			}
 		}
 		return Promise.reject(error);
 	}

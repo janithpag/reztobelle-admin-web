@@ -44,6 +44,7 @@ import {
 	TrendingDown,
 	RotateCcw,
 } from 'lucide-react';
+import { Loading } from '@/components/ui/loading';
 
 // Sample inventory data
 const inventory = [
@@ -119,10 +120,45 @@ export function InventoryManagement() {
 	const [selectedCategory, setSelectedCategory] = useState('all');
 	const [selectedItem, setSelectedItem] = useState<(typeof inventory)[0] | null>(null);
 	const [isRestockOpen, setIsRestockOpen] = useState(false);
+	const [isRestocking, setIsRestocking] = useState(false);
 	const [currentPage, setCurrentPage] = useState(1);
 	const [itemsPerPage] = useState(5);
+	const [isLoading, setIsLoading] = useState(true);
+	const [inventoryData, setInventoryData] = useState<any[]>([]);
 
-	const filteredInventory = inventory.filter((item) => {
+	// Simulate loading inventory data
+	useEffect(() => {
+		const loadInventory = async () => {
+			setIsLoading(true);
+			try {
+				// Simulate API call
+				await new Promise(resolve => setTimeout(resolve, 1200));
+				setInventoryData(inventory);
+			} catch (error) {
+				console.error('Failed to load inventory:', error);
+			} finally {
+				setIsLoading(false);
+			}
+		};
+
+		loadInventory();
+	}, []);
+
+	const handleRestock = async () => {
+		setIsRestocking(true);
+		try {
+			// Simulate API call
+			await new Promise(resolve => setTimeout(resolve, 2000));
+			console.log('Adding stock...');
+			setIsRestockOpen(false);
+		} catch (error) {
+			console.error('Failed to add stock:', error);
+		} finally {
+			setIsRestocking(false);
+		}
+	};
+
+	const filteredInventory = inventoryData.filter((item) => {
 		const matchesSearch =
 			item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
 			item.sku.toLowerCase().includes(searchTerm.toLowerCase());
@@ -154,9 +190,31 @@ export function InventoryManagement() {
 		}
 	};
 
-	const lowStockItems = inventory.filter((item) => item.currentStock <= item.minStock);
-	const criticalItems = inventory.filter((item) => item.status === 'critical');
-	const totalValue = inventory.reduce((sum, item) => sum + item.currentStock * item.cost, 0);
+	const lowStockItems = inventoryData.filter((item) => item.currentStock <= item.minStock);
+	const criticalItems = inventoryData.filter((item) => item.status === 'critical');
+	const totalValue = inventoryData.reduce((sum, item) => sum + item.currentStock * item.cost, 0);
+
+	// Show loading state
+	if (isLoading) {
+		return (
+			<div className="space-y-6">
+				{/* Header */}
+				<div className="flex items-center justify-between">
+					<div>
+						<h1 className="text-2xl sm:text-3xl font-bold text-sidebar-foreground">Inventory</h1>
+						<p className="text-sm sm:text-base text-sidebar-foreground/70 font-medium">
+							Monitor and manage your product stock levels
+						</p>
+					</div>
+				</div>
+				
+				{/* Loading container with proper height */}
+				<div className="relative min-h-[600px] w-full">
+					<Loading variant="overlay" text="Loading inventory data..." />
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className="space-y-6">
@@ -207,7 +265,9 @@ export function InventoryManagement() {
 							<Button variant="outline" onClick={() => setIsRestockOpen(false)}>
 								Cancel
 							</Button>
-							<Button onClick={() => setIsRestockOpen(false)}>Add Stock</Button>
+							<Button onClick={handleRestock} disabled={isRestocking}>
+								{isRestocking ? 'Adding Stock...' : 'Add Stock'}
+							</Button>
 						</div>
 					</DialogContent>
 				</Dialog>

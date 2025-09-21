@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Truck, Package, AlertCircle, CheckCircle, Clock } from 'lucide-react';
+import { Loading } from '@/components/ui/loading';
 import {
 	createDeliveryOrder,
 	getDistricts,
@@ -126,7 +127,14 @@ export function DeliveryIntegration({ order, onClose }: DeliveryIntegrationProps
 					</CardTitle>
 					<CardDescription>Send order {order.id} for delivery</CardDescription>
 				</CardHeader>
-				<CardContent>
+				<CardContent className="relative">
+					{/* Loading overlay when processing delivery */}
+					<Loading 
+						variant="overlay" 
+						text="Processing delivery..." 
+						isLoading={isLoading && districts.length > 0}
+					/>
+					
 					<form action={handleCreateDelivery} className="space-y-4">
 						{/* Order Summary */}
 						<div className="p-4 bg-muted rounded-lg">

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +9,7 @@ import { Progress } from '@/components/ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { DollarSign, ShoppingCart, AlertTriangle, Clock, TrendingUp, Package, Eye } from 'lucide-react';
+import { Loading } from '@/components/ui/loading';
 import { cn } from '@/lib/utils';
 
 // Sample data for demonstration
@@ -102,8 +104,58 @@ const lowStockItems = [
 ];
 
 export function DashboardOverview() {
-	const totalSales = 245000;
-	const totalExpenses = 335500; // Sum of all expenses from expenses data
+	const [isLoading, setIsLoading] = useState(true);
+	const [dashboardData, setDashboardData] = useState<any>(null);
+
+	useEffect(() => {
+		// Simulate loading dashboard data
+		const loadDashboardData = async () => {
+			setIsLoading(true);
+			try {
+				// Simulate API call delay
+				await new Promise(resolve => setTimeout(resolve, 1500));
+				
+				// Set the data (using existing static data)
+				setDashboardData({
+					totalSales: 245000,
+					totalExpenses: 335500,
+					salesData,
+					recentOrders,
+					topProducts,
+					lowStockItems
+				});
+			} catch (error) {
+				console.error('Failed to load dashboard data:', error);
+			} finally {
+				setIsLoading(false);
+			}
+		};
+
+		loadDashboardData();
+	}, []);
+
+		// Show loading state
+		if (isLoading) {
+			return (
+				<div className="space-y-4 sm:space-y-6">
+					{/* Header */}
+					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+						<div>
+							<h1 className="text-2xl sm:text-3xl font-bold text-sidebar-foreground text-balance">Dashboard</h1>
+							<p className="text-sm sm:text-base text-sidebar-foreground/70 font-medium">
+								Welcome back! Here&apos;s what&apos;s happening with your store today.
+							</p>
+						</div>
+					</div>
+					
+					{/* Loading container with proper height */}
+					<div className="relative min-h-[600px] w-full">
+						<Loading variant="overlay" text="Loading dashboard data..." />
+					</div>
+				</div>
+			);
+		}	const totalSales = dashboardData?.totalSales || 0;
+	const totalExpenses = dashboardData?.totalExpenses || 0;
 	const netProfit = totalSales - totalExpenses;
 	const profitMargin = ((netProfit / totalSales) * 100).toFixed(1);
 
@@ -229,7 +281,7 @@ export function DashboardOverview() {
 					</CardHeader>
 					<CardContent>
 						<ResponsiveContainer width="100%" height={250}>
-							<LineChart data={salesData}>
+							<LineChart data={dashboardData?.salesData || []}>
 								<CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
 								<XAxis dataKey="date" className="text-xs" />
 								<YAxis className="text-xs" />
@@ -264,7 +316,7 @@ export function DashboardOverview() {
 					</CardHeader>
 					<CardContent>
 						<div className="space-y-3 sm:space-y-4">
-							{topProducts.map((product, index) => (
+							{(dashboardData?.topProducts || []).map((product: any, index: number) => (
 								<div key={product.id} className="flex items-center space-x-3 sm:space-x-4">
 									<div className="flex-shrink-0">
 										<Image
@@ -334,7 +386,7 @@ export function DashboardOverview() {
 									</TableRow>
 								</TableHeader>
 								<TableBody>
-									{recentOrders.map((order) => (
+									{(dashboardData?.recentOrders || []).map((order: any) => (
 										<TableRow key={order.id} className="border-sidebar-border">
 											<TableCell className="font-semibold text-sidebar-foreground text-xs sm:text-sm">
 												{order.id}
@@ -397,7 +449,7 @@ export function DashboardOverview() {
 					</CardHeader>
 					<CardContent>
 						<div className="space-y-3 sm:space-y-4">
-							{lowStockItems.map((item, index) => (
+							{(dashboardData?.lowStockItems || []).map((item: any, index: number) => (
 								<div key={index} className="space-y-2">
 									<div className="flex items-center justify-between">
 										<span className="text-sm font-semibold text-sidebar-foreground">{item.name}</span>

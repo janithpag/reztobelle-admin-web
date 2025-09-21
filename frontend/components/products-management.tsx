@@ -48,6 +48,7 @@ import {
 	TrendingUp,
 	AlertCircle,
 } from 'lucide-react';
+import { Loading } from '@/components/ui/loading';
 
 // Sample products data
 const products = [
@@ -137,8 +138,28 @@ export function ProductsManagement() {
 	const [isAddProductOpen, setIsAddProductOpen] = useState(false);
 	const [currentPage, setCurrentPage] = useState(1);
 	const [itemsPerPage] = useState(5);
+	const [isLoading, setIsLoading] = useState(true);
+	const [productsData, setProductsData] = useState<any[]>([]);
 
-	const filteredProducts = products.filter((product) => {
+	// Simulate loading products data
+	useEffect(() => {
+		const loadProducts = async () => {
+			setIsLoading(true);
+			try {
+				// Simulate API call
+				await new Promise(resolve => setTimeout(resolve, 1000));
+				setProductsData(products);
+			} catch (error) {
+				console.error('Failed to load products:', error);
+			} finally {
+				setIsLoading(false);
+			}
+		};
+
+		loadProducts();
+	}, []);
+
+	const filteredProducts = productsData.filter((product) => {
 		const matchesSearch =
 			product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
 			product.sku.toLowerCase().includes(searchTerm.toLowerCase()); // Added SKU to search
@@ -169,7 +190,7 @@ export function ProductsManagement() {
 				</div>
 				<Dialog open={isAddProductOpen} onOpenChange={setIsAddProductOpen}>
 					<DialogTrigger asChild>
-						<Button className="bg-primary hover:bg-primary/90 font-semibold w-full sm:w-auto">
+						<Button className="bg-primary hover:bg-primary/90 font-semibold w-full sm:w-auto" disabled={isLoading}>
 							<Plus className="mr-2 h-4 w-4" />
 							Add Product
 						</Button>
@@ -262,8 +283,15 @@ export function ProductsManagement() {
 				</Dialog>
 			</div>
 
-			{/* Stats Cards */}
-			<div className="grid gap-3 sm:gap-4 lg:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+			{/* Loading State */}
+			{isLoading ? (
+				<div className="relative min-h-[600px] w-full">
+					<Loading variant="overlay" text="Loading products..." />
+				</div>
+			) : (
+				<>
+					{/* Stats Cards */}
+					<div className="grid gap-3 sm:gap-4 lg:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
 				<Card className="border-sidebar-border">
 					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
 						<CardTitle className="text-xs font-semibold text-sidebar-foreground">Total Products</CardTitle>
@@ -520,6 +548,8 @@ export function ProductsManagement() {
 					)}
 				</CardContent>
 			</Card>
+				</>
+			)}
 		</div>
 	);
 }

@@ -198,6 +198,265 @@ lib/
 - **Seeding**: Run `npm run db:seed` to populate initial data
 - **Schema Updates**: Modify `prisma/schema.prisma` and generate migrations
 
+## UI Components & Loading States
+
+### Common Loading Components
+
+The application implements a comprehensive loading system using shadcn/ui patterns for consistent user experience across all data loading scenarios.
+
+#### Spinner Component (`/components/ui/spinner.tsx`)
+A reusable spinner component with multiple size variants:
+```tsx
+<Spinner size="sm" />      // Small spinner (3x3)
+<Spinner size="default" /> // Default spinner (4x4)
+<Spinner size="lg" />      // Large spinner (6x6)
+<Spinner size="xl" />      // Extra large spinner (8x8)
+```
+
+#### Loading Component (`/components/ui/loading.tsx`)
+A flexible loading component that handles different loading scenarios:
+
+**Variants:**
+- `default` - Inline loading with text
+- `overlay` - Semi-transparent overlay over content
+- `inline` - Simple inline loading indicator
+- `fullscreen` - Full screen loading overlay
+
+**Usage Examples:**
+```tsx
+// Overlay loading during data fetch
+<Loading variant="overlay" text="Loading dashboard data..." isLoading={isLoading} />
+
+// Inline loading with custom spinner size
+<Loading variant="inline" text="Processing..." spinnerSize="lg" />
+
+// Wrapper pattern - shows children when not loading
+<Loading isLoading={isLoading} text="Loading products...">
+  <ProductsList products={products} />
+</Loading>
+```
+
+#### Implementation Patterns
+
+**Initial Data Loading:**
+```tsx
+const [isLoading, setIsLoading] = useState(true);
+const [data, setData] = useState(null);
+
+useEffect(() => {
+  const loadData = async () => {
+    setIsLoading(true);
+    try {
+      const result = await fetchData();
+      setData(result);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  loadData();
+}, []);
+
+return (
+  <div>
+    <Loading variant="overlay" text="Loading..." isLoading={isLoading} />
+    {!isLoading && <DataComponent data={data} />}
+  </div>
+);
+```
+
+**Components with Loading States:**
+- **Dashboard Overview** - Shows loading overlay while fetching analytics data
+- **Products Management** - Displays loading state during product list fetch
+- **Delivery Integration** - Loading overlay during form processing
+- **Settings Management** - Individual loading states for save operations
+
+### Benefits
+- **Consistent UX** - Unified loading experience across all components
+- **Flexible** - Multiple variants for different use cases
+- **Accessible** - Built with accessibility in mind
+- **Type-Safe** - Full TypeScript support with proper prop typing
+- **Performance** - Efficient rendering with conditional display logic
+
+## UI Design Guidelines & Standards
+
+### Core Design Principles
+
+When implementing new UI components or modifying existing ones, developers and AI agents must adhere to the following design standards to ensure consistency, accessibility, and optimal user experience across both light and dark themes.
+
+#### 1. Theme Compatibility Requirements
+
+**Mandatory Theme Support:**
+- All components MUST work seamlessly in both light and dark themes
+- Use CSS custom properties (theme variables) from `globals.css` instead of hardcoded colors
+- Test components in both themes before implementation
+- Ensure proper contrast ratios for accessibility (WCAG 2.1 AA compliance)
+
+**Theme Variable Usage:**
+```css
+/* Correct - Use theme variables */
+background: hsl(var(--background))
+color: hsl(var(--foreground))
+border: hsl(var(--border))
+
+/* Incorrect - Avoid hardcoded colors */
+background: #ffffff
+color: #000000
+border: #e5e5e5
+```
+
+**Common Theme Variables:**
+- `--background` / `--foreground` - Primary background and text
+- `--muted` / `--muted-foreground` - Secondary/muted content
+- `--card` / `--card-foreground` - Card backgrounds and text
+- `--border` - Border colors that adapt to theme
+- `--primary` / `--primary-foreground` - Brand colors
+- `--sidebar` / `--sidebar-foreground` - Navigation specific colors
+
+#### 2. Responsive Design Requirements
+
+**Mobile-First Approach:**
+- All components MUST be responsive and mobile-friendly
+- Use Tailwind's responsive prefixes (`sm:`, `md:`, `lg:`, `xl:`)
+- Test on multiple screen sizes (320px, 768px, 1024px, 1440px+)
+- Ensure touch targets are minimum 44px for accessibility
+
+**Responsive Patterns:**
+```tsx
+// Correct - Progressive enhancement
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+
+// Text sizing that scales
+<h1 className="text-2xl sm:text-3xl font-bold">
+
+// Spacing that adapts
+<div className="space-y-4 sm:space-y-6">
+
+// Buttons that stack on mobile
+<Button className="w-full sm:w-auto">
+```
+
+#### 3. Component Architecture Standards
+
+**Consistent Component Structure:**
+```tsx
+// Component template structure
+export interface ComponentProps {
+  // Props with clear types
+  variant?: 'default' | 'secondary';
+  size?: 'sm' | 'default' | 'lg';
+  className?: string;
+  // Other specific props
+}
+
+const Component = React.forwardRef<HTMLElement, ComponentProps>(
+  ({ variant = 'default', size = 'default', className, ...props }, ref) => {
+    return (
+      <element
+        ref={ref}
+        className={cn(componentVariants({ variant, size }), className)}
+        {...props}
+      />
+    );
+  }
+);
+```
+
+**Loading State Implementation:**
+- Use the common `Loading` component for all data loading scenarios
+- Provide meaningful loading text
+- Ensure loading states have proper container heights
+- Show loading overlays for async operations
+
+#### 4. Accessibility Requirements
+
+**Mandatory Accessibility Features:**
+- Proper semantic HTML structure
+- ARIA labels where needed
+- Keyboard navigation support
+- Screen reader compatibility
+- Focus management and visual indicators
+- Color contrast compliance
+
+**Accessibility Checklist:**
+```tsx
+// Semantic HTML
+<main>, <section>, <article>, <nav>, <header>, <footer>
+
+// Proper form labels
+<Label htmlFor="input-id">Label Text</Label>
+<Input id="input-id" />
+
+// ARIA attributes when needed
+<button aria-label="Close dialog" aria-expanded="false">
+
+// Focus management
+<Dialog onOpenChange={setOpen} />
+```
+
+#### 5. Performance Guidelines
+
+**Optimization Requirements:**
+- Use React.memo() for expensive components
+- Implement proper useMemo() and useCallback() where beneficial
+- Lazy load heavy components with React.lazy()
+- Optimize images and assets
+- Minimize bundle size impact
+
+#### 6. Typography & Spacing Standards
+
+**Typography Scale:**
+```tsx
+// Heading hierarchy
+<h1 className="text-2xl sm:text-3xl font-bold">     // Main page titles
+<h2 className="text-xl sm:text-2xl font-semibold">  // Section titles  
+<h3 className="text-lg font-medium">                // Subsection titles
+<p className="text-sm sm:text-base">                // Body text
+<span className="text-xs text-muted-foreground">    // Secondary text
+```
+
+**Spacing Consistency:**
+```tsx
+// Container spacing
+<div className="space-y-4 sm:space-y-6">           // Vertical spacing
+<div className="grid gap-3 sm:gap-4 lg:gap-6">     // Grid gaps
+<div className="p-4 sm:p-6">                       // Padding
+<div className="mx-4 sm:mx-6">                     // Horizontal margins
+```
+
+#### 7. Component Testing Standards
+
+**Required Testing:**
+- Visual testing in both light and dark themes
+- Responsive testing across different screen sizes
+- Keyboard navigation testing
+- Screen reader compatibility testing
+- Loading state behavior verification
+
+#### 8. Implementation Checklist
+
+Before submitting any UI component implementation:
+
+- [ ] **Theme Compatibility**: Tested in both light and dark modes
+- [ ] **Responsive Design**: Works on mobile, tablet, and desktop
+- [ ] **Accessibility**: Meets WCAG 2.1 AA standards
+- [ ] **Performance**: No unnecessary re-renders or heavy operations
+- [ ] **Type Safety**: Full TypeScript support with proper interfaces
+- [ ] **Consistent Styling**: Follows established design patterns
+- [ ] **Loading States**: Implements proper loading UX where needed
+- [ ] **Error Handling**: Graceful error states and user feedback
+
+### Design Violations to Avoid
+
+**Common Mistakes:**
+- Hardcoded colors that break in dark mode
+- Non-responsive layouts that fail on mobile
+- Missing loading states for async operations
+- Inconsistent spacing and typography
+- Poor accessibility implementation
+- Heavy components without optimization
+
+By following these guidelines, all UI components will maintain the high quality and consistency expected in the ReztoBelle admin application.
+
 ## Security Considerations
 
 ### Backend Security

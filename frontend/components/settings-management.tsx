@@ -21,6 +21,28 @@ export function SettingsManagement() {
 		marketing: true,
 	});
 
+	const [loadingStates, setLoadingStates] = useState({
+		general: false,
+		address: false,
+		notifications: false,
+		payment: false,
+		delivery: false,
+	});
+
+	const handleSave = async (section: keyof typeof loadingStates) => {
+		setLoadingStates(prev => ({ ...prev, [section]: true }));
+		
+		try {
+			// Simulate API call
+			await new Promise(resolve => setTimeout(resolve, 2000));
+			console.log(`Saving ${section} settings...`);
+		} catch (error) {
+			console.error(`Failed to save ${section} settings:`, error);
+		} finally {
+			setLoadingStates(prev => ({ ...prev, [section]: false }));
+		}
+	};
+
 	return (
 		<div className="space-y-6">
 			{/* Header */}
@@ -103,9 +125,12 @@ export function SettingsManagement() {
 									</Select>
 								</div>
 							</div>
-							<Button>
+							<Button 
+								onClick={() => handleSave('general')}
+								disabled={loadingStates.general}
+							>
 								<Save className="mr-2 h-4 w-4" />
-								Save Changes
+								{loadingStates.general ? 'Saving...' : 'Save Changes'}
 							</Button>
 						</CardContent>
 					</Card>
@@ -134,9 +159,12 @@ export function SettingsManagement() {
 									<Input id="zip" defaultValue="00300" />
 								</div>
 							</div>
-							<Button>
+							<Button 
+								onClick={() => handleSave('address')}
+								disabled={loadingStates.address}
+							>
 								<Save className="mr-2 h-4 w-4" />
-								Update Address
+								{loadingStates.address ? 'Updating...' : 'Update Address'}
 							</Button>
 						</CardContent>
 					</Card>
@@ -234,9 +262,12 @@ export function SettingsManagement() {
 									</SelectContent>
 								</Select>
 							</div>
-							<Button>
+							<Button 
+								onClick={() => handleSave('notifications')}
+								disabled={loadingStates.notifications}
+							>
 								<Save className="mr-2 h-4 w-4" />
-								Apply Changes
+								{loadingStates.notifications ? 'Applying...' : 'Apply Changes'}
 							</Button>
 						</CardContent>
 					</Card>
@@ -317,9 +348,12 @@ export function SettingsManagement() {
 									<Badge>LKR 500</Badge>
 								</div>
 							</div>
-							<Button>
+							<Button 
+								onClick={() => handleSave('delivery')}
+								disabled={loadingStates.delivery}
+							>
 								<Save className="mr-2 h-4 w-4" />
-								Update Shipping
+								{loadingStates.delivery ? 'Updating...' : 'Update Shipping'}
 							</Button>
 						</CardContent>
 					</Card>
@@ -355,9 +389,12 @@ export function SettingsManagement() {
 								</div>
 								<Switch />
 							</div>
-							<Button>
+							<Button 
+								onClick={() => handleSave('general')}
+								disabled={loadingStates.general}
+							>
 								<Save className="mr-2 h-4 w-4" />
-								Update Security
+								{loadingStates.general ? 'Updating...' : 'Update Security'}
 							</Button>
 						</CardContent>
 					</Card>

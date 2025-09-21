@@ -1,7 +1,6 @@
 'use client';
 
 import type React from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -89,16 +88,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 					className="border-r border-sidebar-border shadow-lg fixed left-0 top-0 h-screen z-40"
 				>
 					<SidebarHeader className="border-b border-sidebar-border bg-sidebar text-sidebar-foreground p-3 sm:p-4">
-						<div className="flex items-center justify-center group-data-[collapsible=icon]:justify-center space-x-2 sm:space-x-3 group-data-[collapsible=icon]:space-x-0">
-							<div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg overflow-hidden shadow-md flex-shrink-0">
-								<Image
-									src="/images/reztobelle-logo.png"
-									alt="ReztoBelle Logo"
-									className="h-full w-full object-contain"
-									width={40}
-									height={40}
-								/>
-							</div>
+						<div className="flex items-center justify-center group-data-[collapsible=icon]:justify-center">
 							<div className="group-data-[collapsible=icon]:hidden min-w-0 flex-1">
 								<span className="text-sidebar-foreground font-bold text-base sm:text-lg truncate block">
 									ReztoBelle

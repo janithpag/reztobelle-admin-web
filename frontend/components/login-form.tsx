@@ -7,8 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { useAuth } from '@/contexts/auth-context';
-import Image from 'next/image';
 
 interface LoginFormData {
 	email: string;
@@ -52,26 +52,20 @@ export function LoginForm() {
 	const isFormValid = formData.email && formData.password;
 
 	return (
-		<div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+		<div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
 			<div className="max-w-md w-full space-y-8">
+				<div className="flex justify-end">
+					<ThemeToggle compact />
+				</div>
 				<div className="text-center">
-					<div className="flex justify-center mb-6">
-						<Image
-							src="/images/reztobelle-logo.png"
-							alt="ReztoBelle Logo"
-							width={120}
-							height={60}
-							className="h-15 w-auto"
-						/>
-					</div>
-					<h2 className="text-3xl font-bold text-gray-900">Admin Dashboard</h2>
-					<p className="mt-2 text-sm text-gray-600">Sign in to your account to continue</p>
+					<div className="flex justify-center mb-6" />
+					<h2 className="text-3xl font-bold text-foreground">ReztoBelle Admin</h2>
+					<p className="mt-2 text-sm text-muted-foreground">Sign in to your account to continue</p>
 				</div>
 
 				<Card>
 					<CardHeader>
 						<CardTitle>Sign In</CardTitle>
-						<CardDescription>Enter your credentials to access the admin dashboard</CardDescription>
 					</CardHeader>
 					<CardContent>
 						<form onSubmit={handleSubmit} className="space-y-4">
@@ -117,9 +111,9 @@ export function LoginForm() {
 										disabled={isLoading}
 									>
 										{showPassword ? (
-											<EyeOff className="h-4 w-4 text-gray-400" />
+											<EyeOff className="h-4 w-4 text-muted-foreground" />
 										) : (
-											<Eye className="h-4 w-4 text-gray-400" />
+											<Eye className="h-4 w-4 text-muted-foreground" />
 										)}
 									</button>
 								</div>
@@ -138,10 +132,6 @@ export function LoginForm() {
 						</form>
 					</CardContent>
 				</Card>
-
-				<div className="text-center text-sm text-gray-600">
-					<p>Need help? Contact your system administrator.</p>
-				</div>
 			</div>
 		</div>
 	);

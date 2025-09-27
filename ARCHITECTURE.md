@@ -62,45 +62,112 @@ reztobelle-admin-web/
 - **Analytics**: Vercel Analytics
 
 ### Database Schema (Prisma)
-Key entities:
-- **User**: Admin authentication and role management
-- **Product**: Jewelry inventory with SKU, pricing, and stock
-- **Order**: Customer orders with status tracking
-- **OrderItem**: Individual items within orders
-- **Delivery**: Shipment tracking and delivery management
-- **Expense**: Business expense tracking and categorization
+
+The database follows a comprehensive e-commerce schema optimized for jewelry business operations:
+
+#### Core Business Entities
+- **Category**: Product categories with hierarchical support, SEO optimization
+- **Product**: Comprehensive jewelry product management with advanced attributes
+- **ProductImage**: Dedicated image management with Cloudinary integration
+- **Inventory**: Real-time stock tracking with reservation system
+- **StockMovement**: Detailed audit trail for all inventory changes
+
+#### Order Management System
+- **Order**: Complete order lifecycle with Koombiyo delivery integration
+- **OrderItem**: Line items with cost tracking and product snapshots
+- **PaymentTransaction**: Multi-method payment processing with verification
+- **DeliveryLog**: Comprehensive delivery tracking and status updates
+
+#### Administration & Analytics
+- **User**: Role-based admin system with activity tracking
+- **ActivityLog**: System-wide audit trail for all admin actions
+- **Expense**: Business expense categorization with recurring expense support
+
+## Recent Major Updates (September 2024)
+
+### Comprehensive Database Redesign
+The project underwent a major architectural overhaul with the **September 27, 2024 comprehensive redesign** migration, which introduced:
+
+#### Database Schema Enhancements
+- **Enhanced Product Management**: Added jewelry-specific attributes (material, color, size, weight, dimensions, brand)
+- **Professional Image System**: Dedicated `ProductImage` model with Cloudinary integration and multiple image variants
+- **Advanced Inventory Tracking**: New `Inventory` and `StockMovement` models with reservation system
+- **Comprehensive Order Management**: Enhanced order model with Koombiyo delivery integration
+- **Payment Transaction System**: Dedicated payment tracking with verification workflows
+- **Business Intelligence**: Activity logging, delivery logs, and comprehensive audit trails
+- **User Role System**: Granular permission system with multiple admin levels
+
+#### Backend Architecture Improvements
+- **Service Layer Implementation**: Added `InventoryService` and `KoombiyoService` for complex business logic
+- **Enhanced Route Structure**: Added dedicated routes for categories, payments, and advanced inventory management
+- **Koombiyo Integration**: Complete delivery service integration with real-time tracking
+- **Advanced Authentication**: Role-based access control with granular permissions
+- **Comprehensive API Endpoints**: Over 50 new endpoints for complete business management
+
+#### Key Migration Changes
+- **Data Structure Optimization**: Moved from generic fields to specialized business-specific models
+- **Relationship Improvements**: Better foreign key relationships and cascade operations
+- **Performance Enhancements**: Optimized database indexes and query patterns
+- **Type Safety**: Enhanced TypeScript integration across all models and operations
+- **SEO Optimization**: Added meta fields, slugs, and search optimization features
+
+### Breaking Changes Notice
+This comprehensive redesign introduced breaking changes from previous versions:
+- **Product Model**: Removed generic `images` array, replaced with dedicated `ProductImage` model
+- **Inventory System**: Complete redesign from simple stock tracking to advanced inventory management
+- **Order Processing**: Enhanced order lifecycle with delivery integration and payment verification
+- **User Management**: Expanded user model with role-based permissions and activity tracking
+
+### Migration Impact
+- **Database Structure**: Complete schema redesign requiring fresh migration
+- **API Endpoints**: Significant expansion of available endpoints and functionality  
+- **Frontend Integration**: Enhanced data models requiring frontend component updates
+- **Business Logic**: Advanced business rules implemented through service layer
 
 ## Application Architecture
 
 ### Backend Architecture
 
-The backend follows a modular route-based architecture:
+The backend follows a modular architecture with service layer separation:
 
 ```
 src/
 ├── index.ts              # Server setup, plugins, and route registration
 ├── middleware/
-│   └── auth.ts          # JWT authentication middleware
+│   └── auth.ts          # JWT authentication with role-based access
 ├── routes/              # Domain-specific route handlers
-│   ├── auth.ts          # User authentication endpoints
-│   ├── products.ts      # Product CRUD operations
-│   ├── orders.ts        # Order management
-│   ├── deliveries.ts    # Delivery tracking
-│   ├── expenses.ts      # Expense management
-│   ├── reports.ts       # Analytics and reporting
-│   └── uploads.ts       # Image upload management (Cloudinary)
+│   ├── auth.ts          # User authentication & authorization
+│   ├── categories.ts    # Product category management
+│   ├── products.ts      # Advanced product operations
+│   ├── inventory.ts     # Stock management & tracking
+│   ├── orders.ts        # Complete order lifecycle
+│   ├── payments.ts      # Payment transaction processing
+│   ├── deliveries.ts    # Koombiyo delivery integration
+│   ├── koombiyo.ts      # Third-party delivery service API
+│   ├── expenses.ts      # Business expense management
+│   ├── reports.ts       # Analytics and business intelligence
+│   └── uploads.ts       # Cloudinary image management
+├── services/            # Business logic layer
+│   ├── inventory.service.ts # Stock operations & reservations
+│   └── koombiyo.service.ts  # External delivery service integration
 └── types/
     └── fastify.d.ts     # Extended Fastify type definitions
 ```
 
 **Key Features**:
-- RESTful API design
-- JWT-based authentication
-- Role-based access control (RBAC)
-- Input validation with Zod schemas
-- Automatic API documentation
-- Database migrations with Prisma
-- Environment-based configuration
+- RESTful API design with comprehensive endpoints
+- JWT-based authentication with role-based access control (RBAC)
+- Service layer architecture for complex business logic
+- Advanced inventory management with stock reservation system
+- Integrated Koombiyo delivery service with real-time tracking
+- Comprehensive payment transaction processing and verification
+- Professional image management with Cloudinary integration
+- Advanced business analytics and reporting capabilities
+- Audit logging for all administrative actions
+- Input validation with Zod schemas across all endpoints
+- Automatic API documentation with Swagger/OpenAPI
+- Database migrations with Prisma for schema evolution
+- Environment-based configuration with security best practices
 
 ### Frontend Architecture
 
@@ -147,45 +214,94 @@ lib/
 
 ## API Structure
 
-### Authentication Endpoints
-- `POST /auth/login` - User login with email/password
-- `POST /auth/register` - User registration (admin only)
-- `GET /auth/me` - Get current user profile
+### Authentication & User Management
+- `POST /auth/login` - User authentication with JWT tokens
+- `POST /auth/register` - Admin user registration (super admin only)
+- `GET /auth/me` - Current user profile with permissions
+- `POST /auth/refresh` - JWT token refresh
+- `POST /auth/logout` - Secure logout with token invalidation
 
-### Product Management
-- `GET /products` - List all products with pagination
-- `POST /products` - Create new product
-- `PUT /products/:id` - Update product
-- `DELETE /products/:id` - Delete product
-- `GET /products/:id` - Get single product
+### Category Management
+- `GET /categories` - List active categories with product counts
+- `GET /categories/:id` - Get category with products
+- `POST /categories` - Create new category (admin required)
+- `PUT /categories/:id` - Update category (admin required)
+- `DELETE /categories/:id` - Soft delete category (admin required)
 
-### Order Management
-- `GET /orders` - List orders with filtering
-- `POST /orders` - Create new order
-- `PUT /orders/:id` - Update order status
-- `GET /orders/:id` - Get order details
+### Advanced Product Management
+- `GET /products` - List products with advanced filtering & pagination
+- `GET /products/search` - Full-text product search
+- `GET /products/:id` - Get detailed product with inventory
+- `POST /products` - Create product with category assignment
+- `PUT /products/:id` - Update product with validation
+- `DELETE /products/:id` - Soft delete product
+- `POST /products/:id/images` - Add product images
+- `DELETE /products/:id/images/:imageId` - Remove product image
 
-### Delivery Integration
-- `GET /deliveries` - List delivery records
-- `POST /deliveries` - Create delivery tracking
-- `PUT /deliveries/:id` - Update delivery status
+### Inventory Management System
+- `GET /inventory` - Inventory overview with low stock alerts
+- `GET /inventory/:productId` - Detailed stock information
+- `POST /inventory/adjust` - Manual stock adjustments
+- `POST /inventory/reserve` - Reserve stock for orders
+- `POST /inventory/release` - Release reserved stock
+- `GET /inventory/movements` - Stock movement history
+- `POST /inventory/restock` - Record new inventory purchases
 
-### Expense Tracking
-- `GET /expenses` - List expenses with categories
-- `POST /expenses` - Add new expense
-- `PUT /expenses/:id` - Update expense
-- `DELETE /expenses/:id` - Delete expense
+### Comprehensive Order Management
+- `GET /orders` - List orders with advanced filtering
+- `GET /orders/search` - Search orders by customer/number
+- `GET /orders/:id` - Complete order details with items
+- `POST /orders` - Create new order with stock reservation
+- `PUT /orders/:id` - Update order details
+- `PUT /orders/:id/status` - Change order status with validation
+- `POST /orders/:id/items` - Add items to existing order
+- `DELETE /orders/:id/items/:itemId` - Remove order item
+- `GET /orders/:id/timeline` - Order status history
 
-### Reports & Analytics
-- `GET /reports/sales` - Sales analytics
-- `GET /reports/inventory` - Stock reports
-- `GET /reports/expenses` - Expense summaries
+### Payment Transaction System
+- `GET /payments` - List payment transactions
+- `GET /payments/:transactionId` - Payment transaction details
+- `POST /payments` - Record new payment
+- `PUT /payments/:id/verify` - Verify payment transaction
+- `GET /payments/pending` - List pending verifications
+- `POST /payments/:id/refund` - Process refund
 
-### Image Management (Cloudinary Integration)
-- `POST /uploads/upload` - Upload single image to Cloudinary
-- `POST /uploads/upload-multiple` - Upload multiple images to Cloudinary
-- `DELETE /uploads/delete/:publicId` - Delete image from Cloudinary
-- `GET /uploads/transformations/:publicId` - Get image transformation URLs
+### Koombiyo Delivery Integration
+- `GET /deliveries` - List delivery records with status
+- `POST /deliveries/send` - Send order to Koombiyo
+- `GET /deliveries/:orderId/status` - Check delivery status
+- `POST /deliveries/:orderId/track` - Update tracking information
+- `GET /deliveries/logs` - Delivery operation logs
+- `POST /koombiyo/webhook` - Koombiyo status webhook handler
+- `GET /koombiyo/cities` - Available delivery cities
+- `GET /koombiyo/rates` - Delivery rate calculator
+
+### Business Expense Management
+- `GET /expenses` - List expenses with categorization
+- `GET /expenses/categories` - Expense category breakdown
+- `POST /expenses` - Add new business expense
+- `PUT /expenses/:id` - Update expense details
+- `DELETE /expenses/:id` - Remove expense record
+- `GET /expenses/recurring` - Manage recurring expenses
+- `POST /expenses/upload-receipt` - Upload expense receipts
+
+### Advanced Reports & Analytics
+- `GET /reports/dashboard` - Executive dashboard metrics
+- `GET /reports/sales` - Sales performance analytics
+- `GET /reports/inventory` - Stock level and movement reports
+- `GET /reports/expenses` - Expense analysis and trends
+- `GET /reports/orders` - Order fulfillment metrics
+- `GET /reports/delivery` - Delivery performance statistics
+- `GET /reports/financial` - Financial performance summary
+- `GET /reports/export/:type` - Export reports to CSV/PDF
+
+### Professional Image Management
+- `POST /uploads/upload` - Single image upload with optimization
+- `POST /uploads/upload-multiple` - Batch image upload
+- `DELETE /uploads/delete/:publicId` - Remove image from Cloudinary
+- `GET /uploads/transformations/:publicId` - Get optimized image variants
+- `POST /uploads/organize` - Organize images in folders
+- `GET /uploads/usage` - Cloudinary usage statistics
 
 ## Image Management System
 
@@ -327,14 +443,367 @@ NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME="your-cloudinary-cloud-name"
 "next-cloudinary": "^5.x.x"
 ```
 
+## Comprehensive Database Schema
+
+### Core Models & Relationships
+
+#### Category Model
+```prisma
+model Category {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique @db.VarChar(100)
+  description String?
+  slug        String    @unique @db.VarChar(100)
+  imageUrl    String?   @db.VarChar(500)
+  isActive    Boolean   @default(true)
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Relations
+  products    Product[]
+}
+```
+
+#### Product Model (Enhanced)
+```prisma
+model Product {
+  id               Int             @id @default(autoincrement())
+  name             String          @db.VarChar(200)
+  description      String?
+  shortDescription String?         @db.VarChar(500)
+  sku              String          @unique @db.VarChar(50)
+  slug             String          @unique @db.VarChar(200)
+  
+  // Pricing & Cost Management
+  price            Decimal         @db.Decimal(10, 2)
+  costPrice        Decimal         @db.Decimal(10, 2)
+  
+  // Product Attributes (Jewelry Specific)
+  material         String?         @db.VarChar(100)
+  color            String?         @db.VarChar(50)
+  size             String?         @db.VarChar(50)
+  weight           Decimal?        @db.Decimal(8, 2)
+  dimensions       String?         @db.VarChar(100)
+  brand            String?         @db.VarChar(100)
+  
+  // SEO & Marketing
+  metaTitle        String?         @db.VarChar(200)
+  metaDescription  String?         @db.VarChar(300)
+  isFeatured       Boolean         @default(false)
+  isActive         Boolean         @default(true)
+  
+  // Timestamps
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  
+  // Foreign Keys
+  categoryId       Int
+  
+  // Relations
+  category         Category        @relation(fields: [categoryId], references: [id])
+  images           ProductImage[]
+  inventory        Inventory?
+  orderItems       OrderItem[]
+  stockMovements   StockMovement[]
+}
+```
+
+#### ProductImage Model (Cloudinary Integration)
+```prisma
+model ProductImage {
+  id           Int      @id @default(autoincrement())
+  productId    Int
+  cloudinaryId String   @db.VarChar(200)
+  imageUrl     String   @db.VarChar(500)
+  altText      String?  @db.VarChar(200)
+  isPrimary    Boolean  @default(false)
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  
+  // Relations
+  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+```
+
+#### Inventory Management System
+```prisma
+model Inventory {
+  id                Int       @id @default(autoincrement())
+  productId         Int       @unique
+  quantityAvailable Int       @default(0)
+  quantityReserved  Int       @default(0)
+  reorderLevel      Int       @default(10)
+  maxStockLevel     Int       @default(1000)
+  lastRestockedAt   DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  // Relations
+  product           Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model StockMovement {
+  id            Int                @id @default(autoincrement())
+  productId     Int
+  movementType  StockMovementType  // IN, OUT, ADJUSTMENT
+  quantity      Int
+  referenceType StockReferenceType // PURCHASE, SALE, RETURN, DAMAGE, ADJUSTMENT
+  referenceId   Int?
+  notes         String?
+  unitCost      Decimal?           @db.Decimal(10, 2)
+  createdBy     Int
+  createdAt     DateTime           @default(now())
+  
+  // Relations
+  product       Product            @relation(fields: [productId], references: [id])
+  createdByUser User               @relation(fields: [createdBy], references: [id])
+}
+```
+
+#### Advanced Order Management
+```prisma
+model Order {
+  id                      Int                     @id @default(autoincrement())
+  orderNumber             String                  @unique @db.VarChar(50)
+  
+  // Customer Information
+  customerName            String                  @db.VarChar(200)
+  customerEmail           String?                 @db.VarChar(255)
+  customerPhone           String?                 @db.VarChar(20)
+  
+  // Order Status & Processing
+  status                  OrderStatus             @default(PENDING)
+  paymentStatus           PaymentStatus           @default(PENDING)
+  paymentMethod           PaymentMethod
+  
+  // Financial Details
+  subtotal                Decimal                 @db.Decimal(12, 2)
+  discountAmount          Decimal                 @default(0.00) @db.Decimal(10, 2)
+  shippingAmount          Decimal                 @default(0.00) @db.Decimal(10, 2)
+  totalAmount             Decimal                 @db.Decimal(12, 2)
+  codAmount               Decimal?                @db.Decimal(12, 2)
+  
+  // Delivery Information
+  address                 String                  @db.VarChar(500)
+  cityId                  Int
+  cityName                String                  @db.VarChar(100)
+  districtId              Int
+  districtName            String                  @db.VarChar(100)
+  packageDescription      String?                 @db.VarChar(500)
+  
+  // Koombiyo Integration
+  koombiyoOrderId         String?                 @db.VarChar(100)
+  waybillId               String?                 @unique @db.VarChar(50)
+  deliveryStatus          KoombiyoDeliveryStatus? @default(NOT_SENT)
+  koombiyoLastStatus      String?                 @db.VarChar(100)
+  koombiyoStatusUpdatedAt DateTime?
+  
+  // Operational Notes
+  notes                   String?
+  internalNotes           String?
+  specialNotes            String?
+  
+  // Timestamps
+  orderedAt               DateTime                @default(now())
+  sentToDeliveryAt        DateTime?
+  shippedAt               DateTime?
+  deliveredAt             DateTime?
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+  
+  // Relations
+  orderItems              OrderItem[]
+  paymentTransactions     PaymentTransaction[]
+  deliveryLogs            DeliveryLog[]
+}
+
+model OrderItem {
+  id          Int      @id @default(autoincrement())
+  orderId     Int
+  productId   Int
+  productName String   @db.VarChar(200) // Snapshot for order history
+  sku         String   @db.VarChar(50)  // Snapshot for order history
+  quantity    Int
+  unitPrice   Decimal  @db.Decimal(10, 2)
+  unitCost    Decimal  @db.Decimal(10, 2) // For profit calculation
+  totalPrice  Decimal  @db.Decimal(12, 2)
+  createdAt   DateTime @default(now())
+  
+  // Relations
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product  @relation(fields: [productId], references: [id])
+}
+```
+
+#### Payment Transaction System
+```prisma
+model PaymentTransaction {
+  id             Int               @id @default(autoincrement())
+  orderId        Int
+  transactionId  String            @unique @db.VarChar(100)
+  paymentMethod  PaymentMethod
+  amount         Decimal           @db.Decimal(12, 2)
+  status         TransactionStatus
+  bankDetails    String?           @db.VarChar(500)
+  depositSlipUrl String?           @db.VarChar(500)
+  verifiedBy     Int?
+  verifiedAt     DateTime?
+  notes          String?
+  processedAt    DateTime?
+  createdAt      DateTime          @default(now())
+  
+  // Relations
+  order          Order             @relation(fields: [orderId], references: [id])
+  verifiedByUser User?             @relation(fields: [verifiedBy], references: [id])
+}
+```
+
+#### User Management & Activity Tracking
+```prisma
+model User {
+  id                   Int                  @id @default(autoincrement())
+  email                String               @unique @db.VarChar(255)
+  passwordHash         String               @db.VarChar(255)
+  firstName            String               @db.VarChar(100)
+  lastName             String               @db.VarChar(100)
+  role                 UserRole             // SUPER_ADMIN, ADMIN, MANAGER, STAFF
+  isActive             Boolean              @default(true)
+  emailVerifiedAt      DateTime?
+  lastLoginAt          DateTime?
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  
+  // Relations
+  activityLogs         ActivityLog[]
+  deliveryLogs         DeliveryLog[]
+  expenses             Expense[]
+  verifiedTransactions PaymentTransaction[]
+  stockMovements       StockMovement[]
+}
+
+model ActivityLog {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  action      String   @db.VarChar(100)
+  entityType  String   @db.VarChar(50)
+  entityId    Int
+  description String?
+  ipAddress   String?  @db.VarChar(45)
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  
+  // Relations
+  user        User     @relation(fields: [userId], references: [id])
+}
+```
+
+#### Delivery Management & Logging
+```prisma
+model DeliveryLog {
+  id            Int            @id @default(autoincrement())
+  orderId       Int
+  action        DeliveryAction // SENT_TO_KOOMBIYO, STATUS_UPDATE, etc.
+  status        String?        @db.VarChar(100)
+  message       String?
+  response      Json?          // Store API responses
+  createdBy     Int?
+  createdAt     DateTime       @default(now())
+  
+  // Relations
+  order         Order          @relation(fields: [orderId], references: [id])
+  createdByUser User?          @relation(fields: [createdBy], references: [id])
+}
+```
+
+#### Business Expense Management
+```prisma
+model Expense {
+  id                 Int                 @id @default(autoincrement())
+  description        String              @db.VarChar(500)
+  amount             Decimal             @db.Decimal(12, 2)
+  category           ExpenseCategory     // INVENTORY, SHIPPING, MARKETING, etc.
+  subcategory        String?             @db.VarChar(100)
+  expenseDate        DateTime            @db.Date
+  supplierName       String?             @db.VarChar(200)
+  referenceNumber    String?             @db.VarChar(100)
+  receiptUrl         String?             @db.VarChar(500)
+  isRecurring        Boolean             @default(false)
+  recurringFrequency RecurringFrequency? // WEEKLY, MONTHLY, QUARTERLY, YEARLY
+  createdBy          Int
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  
+  // Relations
+  createdByUser      User                @relation(fields: [createdBy], references: [id])
+}
+```
+
+### Database Enums
+
+```prisma
+// Stock Management
+enum StockMovementType { IN, OUT, ADJUSTMENT }
+enum StockReferenceType { PURCHASE, SALE, RETURN, DAMAGE, ADJUSTMENT }
+
+// Order Management
+enum OrderStatus {
+  PENDING, CONFIRMED, PROCESSING, READY_FOR_DELIVERY,
+  SENT_TO_DELIVERY, SHIPPED, DELIVERED, CANCELLED, REFUNDED
+}
+
+enum PaymentStatus { PENDING, PAID, PARTIALLY_PAID, REFUNDED, FAILED }
+enum PaymentMethod { BANK_TRANSFER, CASH_ON_DELIVERY }
+
+// Koombiyo Integration
+enum KoombiyoDeliveryStatus {
+  NOT_SENT, SENT_TO_KOOMBIYO, PICKED_UP, IN_TRANSIT,
+  OUT_FOR_DELIVERY, DELIVERED, FAILED_DELIVERY, RETURNED, CANCELLED
+}
+
+enum DeliveryAction {
+  SENT_TO_KOOMBIYO, STATUS_UPDATE, PICKUP_REQUEST,
+  TRACKING_UPDATE, RETURN_RECEIVED, ERROR_LOG
+}
+
+// Financial Management
+enum TransactionStatus { PENDING, COMPLETED, FAILED, CANCELLED, REFUNDED }
+enum ExpenseCategory {
+  INVENTORY, SHIPPING, MARKETING, OPERATIONS,
+  OFFICE, UTILITIES, FEES, OTHER
+}
+enum RecurringFrequency { WEEKLY, MONTHLY, QUARTERLY, YEARLY }
+
+// User Management
+enum UserRole { SUPER_ADMIN, ADMIN, MANAGER, STAFF }
+```
+
+### Key Database Features
+
+1. **Comprehensive Product Management**: Full jewelry-specific attributes with SEO optimization
+2. **Advanced Inventory System**: Real-time stock tracking with reservation capabilities
+3. **Integrated Payment Processing**: Multi-method payment with verification workflows
+4. **Koombiyo Delivery Integration**: Complete delivery lifecycle management
+5. **Business Intelligence**: Comprehensive logging and audit trails
+6. **Role-Based Access Control**: Granular permission system
+7. **Financial Tracking**: Detailed expense management with recurring expense support
+8. **Professional Image Management**: Cloudinary integration with multiple image variants
+
 ## Development Workflow
 
 ### Environment Setup
-1. **Prerequisites**: Node.js >=18.0.0, npm >=9.0.0, PostgreSQL
-2. **Installation**: `npm run install:all` (installs all dependencies)
-3. **Database**: Set up PostgreSQL and configure `DATABASE_URL`
-4. **Environment Variables**: Create `.env` files for both frontend and backend
-5. **Image Management**: Set up Cloudinary account and configure credentials
+1. **Prerequisites**: Node.js >=18.0.0, npm >=9.0.0, PostgreSQL >=13
+2. **Installation**: `npm run install:all` (installs all dependencies for both frontend and backend)
+3. **Database Setup**: 
+   - Set up PostgreSQL instance and configure `DATABASE_URL` in backend `.env`
+   - Run `npm run db:migrate` to apply the comprehensive database schema
+4. **Environment Variables**: 
+   - Create `.env` file in backend directory with database and Cloudinary credentials
+   - Create `.env.local` file in frontend directory for client-side configurations
+5. **Third-party Services**:
+   - Set up Cloudinary account for professional image management
+   - Configure Koombiyo delivery service API credentials (if using delivery integration)
+6. **Initial Data**: Run database seeding commands to populate categories and initial admin user
 
 ### Development Commands
 - `npm run dev` - Start both frontend and backend in development mode
@@ -344,9 +813,17 @@ NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME="your-cloudinary-cloud-name"
 - `npm run db:studio` - Open Prisma Studio for database GUI
 
 ### Database Management
-- **Migrations**: Use `prisma migrate dev` for schema changes
-- **Seeding**: Run `npm run db:seed` to populate initial data
-- **Schema Updates**: Modify `prisma/schema.prisma` and generate migrations
+- **Schema Migrations**: Use `prisma migrate dev` for development schema changes
+- **Production Migrations**: Use `prisma migrate deploy` for production deployments  
+- **Database GUI**: Run `npm run db:studio` to open Prisma Studio for visual database management
+- **Seeding**: Run custom seed scripts to populate initial categories, admin users, and test data
+- **Schema Updates**: 
+  1. Modify `backend/prisma/schema.prisma` 
+  2. Generate migration with `npx prisma migrate dev --name descriptive_name`
+  3. Update TypeScript types if needed
+  4. Adjust API endpoints and frontend interfaces accordingly
+- **Backup & Recovery**: Regular database backups recommended for production environments
+- **Performance Monitoring**: Use Prisma's built-in query analysis and database performance insights
 
 ## UI Components & Loading States
 
@@ -639,12 +1116,17 @@ By following these guidelines, all UI components will maintain the high quality 
 ## Key Design Decisions
 
 1. **Monorepo Structure**: Simplifies development and deployment coordination
-2. **Fastify over Express**: Better performance and TypeScript support
+2. **Fastify over Express**: Better performance and TypeScript support  
 3. **Prisma ORM**: Type-safe database operations and easy migrations
-4. **Next.js App Router**: Modern React patterns with SSR capabilities
-5. **shadcn/ui**: Consistent, accessible, and customizable UI components
-6. **Context API**: Lightweight state management for authentication
-7. **TypeScript**: End-to-end type safety across the entire stack
+4. **Service Layer Architecture**: Separation of business logic from route handlers
+5. **Comprehensive Database Design**: Optimized schema for jewelry e-commerce operations
+6. **Next.js App Router**: Modern React patterns with SSR capabilities
+7. **shadcn/ui**: Consistent, accessible, and customizable UI components
+8. **Context API**: Lightweight state management for authentication
+9. **TypeScript**: End-to-end type safety across the entire stack
+10. **Cloudinary Integration**: Professional image management with CDN delivery
+11. **Koombiyo API Integration**: Seamless third-party delivery service integration
+12. **Role-Based Access Control**: Granular permissions for different admin levels
 
 ## Performance Optimizations
 
@@ -655,10 +1137,14 @@ By following these guidelines, all UI components will maintain the high quality 
 - **Caching**: Strategic use of React memo and useMemo
 
 ### Backend
-- **Database Indexing**: Optimized queries with proper indexes
-- **Connection Pooling**: Prisma connection management
-- **Response Caching**: Cache frequently accessed data
-- **Rate Limiting**: Prevent API abuse and improve stability
+- **Service Layer Pattern**: Business logic separated into reusable services (InventoryService, KoombiyoService)
+- **Database Indexing**: Optimized queries with proper indexes for categories, products, orders
+- **Connection Pooling**: Prisma connection management with efficient resource utilization
+- **Transaction Management**: Atomic operations for complex business processes (stock reservations, order processing)
+- **Response Caching**: Cache frequently accessed data like categories and product information
+- **Rate Limiting**: Prevent API abuse and improve stability across all endpoints
+- **Stock Reservation System**: Ensures inventory consistency during order processing
+- **Koombiyo Integration Optimization**: Efficient API calls with proper error handling and retry logic
 
 ## Monitoring and Observability
 

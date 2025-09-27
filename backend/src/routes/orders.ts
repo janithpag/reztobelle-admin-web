@@ -3,14 +3,21 @@ import { z } from 'zod'
 
 const createOrderSchema = z.object({
     customerName: z.string().min(1),
-    customerEmail: z.string().email(),
+    customerEmail: z.string().email().optional(),
     customerPhone: z.string().optional(),
-    shippingAddress: z.string().min(1),
+    address: z.string().min(1),
+    cityId: z.number().int(),
+    cityName: z.string().min(1),
+    districtId: z.number().int(),
+    districtName: z.string().min(1),
+    paymentMethod: z.enum(['CASH_ON_DELIVERY', 'BANK_TRANSFER']),
     notes: z.string().optional(),
     items: z.array(z.object({
-        productId: z.string(),
+        productId: z.number().int(),
         quantity: z.number().int().positive(),
-        price: z.number().positive()
+        unitPrice: z.number().positive(),
+        productName: z.string().min(1),
+        sku: z.string().min(1)
     }))
 })
 
@@ -19,12 +26,17 @@ const orderRoutes: FastifyPluginCallback = async (fastify) => {
     fastify.get('/', async (request, reply) => {
         const orders = await fastify.prisma.order.findMany({
             include: {
-                items: {
+                orderItems: {
                     include: {
-                        product: true
+                        product: {
+                            select: {
+                                name: true,
+                                sku: true,
+                                price: true
+                            }
+                        }
                     }
-                },
-                deliveries: true
+                }
             },
             orderBy: { createdAt: 'desc' }
         })
@@ -36,14 +48,13 @@ const orderRoutes: FastifyPluginCallback = async (fastify) => {
         const { id } = request.params as { id: string }
 
         const order = await fastify.prisma.order.findUnique({
-            where: { id },
+            where: { id: parseInt(id) },
             include: {
-                items: {
+                orderItems: {
                     include: {
                         product: true
                     }
-                },
-                deliveries: true
+                }
             }
         })
 
@@ -54,28 +65,54 @@ const orderRoutes: FastifyPluginCallback = async (fastify) => {
         return { order }
     })
 
-    // Create order
+    // Create new order
     fastify.post('/', async (request, reply) => {
         try {
-            const { items, ...orderData } = createOrderSchema.parse(request.body)
+            const orderData = createOrderSchema.parse(request.body)
 
-            // Calculate total amount
-            const totalAmount = items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+            // Calculate totals
+            const subtotal = orderData.items.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0)
+            const shippingAmount = 0
+            const totalAmount = subtotal + shippingAmount
 
             // Generate order number
             const orderNumber = `ORD-${Date.now()}`
 
             const order = await fastify.prisma.order.create({
                 data: {
-                    ...orderData,
                     orderNumber,
+                    customerName: orderData.customerName,
+                    customerEmail: orderData.customerEmail,
+                    customerPhone: orderData.customerPhone,
+                    address: orderData.address,
+                    cityId: orderData.cityId,
+                    cityName: orderData.cityName,
+                    districtId: orderData.districtId,
+                    districtName: orderData.districtName,
+                    paymentMethod: orderData.paymentMethod,
+                    subtotal,
+                    shippingAmount,
                     totalAmount,
-                    items: {
-                        create: items
+                    notes: orderData.notes,
+                    orderItems: {
+                        create: orderData.items.map((item) => ({
+                            productId: item.productId,
+                            quantity: item.quantity,
+                            unitPrice: item.unitPrice,
+                            unitCost: item.unitPrice,
+                            totalPrice: item.quantity * item.unitPrice,
+                            productName: item.productName,
+                            sku: item.sku
+                        }))
                     }
-                },
+                }
+            })
+
+            // Fetch the created order with includes
+            const orderWithItems = await fastify.prisma.order.findUnique({
+                where: { id: order.id },
                 include: {
-                    items: {
+                    orderItems: {
                         include: {
                             product: true
                         }
@@ -83,34 +120,54 @@ const orderRoutes: FastifyPluginCallback = async (fastify) => {
                 }
             })
 
-            return reply.code(201).send({ order })
+            return reply.code(201).send({ order: orderWithItems })
         } catch (error) {
+            console.error('Create order error:', error)
             return reply.code(400).send({ error: 'Invalid request data' })
         }
     })
 
-    // Update order status
-    fastify.patch('/:id/status', async (request, reply) => {
+    // Update order
+    fastify.put('/:id', async (request, reply) => {
         try {
             const { id } = request.params as { id: string }
-            const { status } = request.body as { status: string }
+            const updateData = request.body as any
 
             const order = await fastify.prisma.order.update({
-                where: { id },
-                data: { status: status as any },
+                where: { id: parseInt(id) },
+                data: {
+                    ...(updateData.status && { status: updateData.status }),
+                    ...(updateData.deliveryStatus && { deliveryStatus: updateData.deliveryStatus }),
+                    ...(updateData.paymentStatus && { paymentStatus: updateData.paymentStatus }),
+                    ...(updateData.notes && { notes: updateData.notes })
+                },
                 include: {
-                    items: {
+                    orderItems: {
                         include: {
                             product: true
                         }
-                    },
-                    deliveries: true
+                    }
                 }
             })
 
             return { order }
         } catch (error) {
             return reply.code(400).send({ error: 'Invalid request data or order not found' })
+        }
+    })
+
+    // Delete order
+    fastify.delete('/:id', async (request, reply) => {
+        try {
+            const { id } = request.params as { id: string }
+
+            await fastify.prisma.order.delete({
+                where: { id: parseInt(id) }
+            })
+
+            return reply.code(204).send()
+        } catch (error) {
+            return reply.code(404).send({ error: 'Order not found' })
         }
     })
 }

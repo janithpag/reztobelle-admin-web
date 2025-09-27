@@ -14,7 +14,7 @@ const expenseRoutes: FastifyPluginCallback = async (fastify) => {
 	// Get all expenses
 	fastify.get('/', async (request, reply) => {
 		const expenses = await fastify.prisma.expense.findMany({
-			orderBy: { date: 'desc' }
+			    orderBy: { expenseDate: 'desc' }
 		})
 		return { expenses }
 	})
@@ -24,7 +24,7 @@ const expenseRoutes: FastifyPluginCallback = async (fastify) => {
 		const { id } = request.params as { id: string }
 
 		const expense = await fastify.prisma.expense.findUnique({
-			where: { id }
+			where: { id: parseInt(id) }
 		})
 
 		if (!expense) {
@@ -40,7 +40,14 @@ const expenseRoutes: FastifyPluginCallback = async (fastify) => {
 			const data = createExpenseSchema.parse(request.body)
 
 			const expense = await fastify.prisma.expense.create({
-				data
+				data: {
+					description: data.description || data.title,
+					amount: data.amount,
+					category: data.category as any,
+					expenseDate: data.date,
+					createdBy: 1, // TODO: Get from auth context
+					receiptUrl: data.receipt
+				}
 			})
 
 			return reply.code(201).send({ expense })
@@ -56,8 +63,15 @@ const expenseRoutes: FastifyPluginCallback = async (fastify) => {
 			const data = createExpenseSchema.partial().parse(request.body)
 
 			const expense = await fastify.prisma.expense.update({
-				where: { id },
-				data
+				where: { id: parseInt(id) },
+				data: {
+					...(data.description && { description: data.description }),
+					...(data.title && { description: data.title }),
+					...(data.amount && { amount: data.amount }),
+					...(data.category && { category: data.category as any }),
+					...(data.date && { expenseDate: data.date }),
+					...(data.receipt && { receiptUrl: data.receipt })
+				}
 			})
 
 			return { expense }
@@ -72,7 +86,7 @@ const expenseRoutes: FastifyPluginCallback = async (fastify) => {
 			const { id } = request.params as { id: string }
 
 			await fastify.prisma.expense.delete({
-				where: { id }
+				where: { id: parseInt(id) }
 			})
 
 			return reply.code(204).send()

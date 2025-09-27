@@ -12,7 +12,8 @@ const loginSchema = z.object({
 const registerSchema = z.object({
 	email: z.string().email(),
 	password: z.string().min(6),
-	name: z.string().min(2)
+	firstName: z.string().min(2),
+	lastName: z.string().min(2)
 })
 
 const authRoutes: FastifyPluginCallback = async (fastify) => {
@@ -29,10 +30,16 @@ const authRoutes: FastifyPluginCallback = async (fastify) => {
 				return reply.code(401).send({ error: 'Invalid credentials' })
 			}
 
-			const isValidPassword = await bcrypt.compare(password, user.password)
+			const isValidPassword = await bcrypt.compare(password, user.passwordHash)
 			if (!isValidPassword) {
 				return reply.code(401).send({ error: 'Invalid credentials' })
 			}
+
+			// Update last login
+			await fastify.prisma.user.update({
+				where: { id: user.id },
+				data: { lastLoginAt: new Date() }
+			})
 
 			const token = jwt.sign(
 				{ userId: user.id, email: user.email, role: user.role },
@@ -44,7 +51,8 @@ const authRoutes: FastifyPluginCallback = async (fastify) => {
 				user: {
 					id: user.id,
 					email: user.email,
-					name: user.name,
+					firstName: user.firstName,
+					lastName: user.lastName,
 					role: user.role
 				},
 				token
@@ -57,7 +65,7 @@ const authRoutes: FastifyPluginCallback = async (fastify) => {
 	// Register
 	fastify.post('/register', async (request, reply) => {
 		try {
-			const { email, password, name } = registerSchema.parse(request.body)
+			const { email, password, firstName, lastName } = registerSchema.parse(request.body)
 
 			const existingUser = await fastify.prisma.user.findUnique({
 				where: { email }
@@ -72,8 +80,10 @@ const authRoutes: FastifyPluginCallback = async (fastify) => {
 			const user = await fastify.prisma.user.create({
 				data: {
 					email,
-					password: hashedPassword,
-					name
+					passwordHash: hashedPassword,
+					firstName,
+					lastName,
+					role: 'ADMIN'
 				}
 			})
 
@@ -87,7 +97,8 @@ const authRoutes: FastifyPluginCallback = async (fastify) => {
 				user: {
 					id: user.id,
 					email: user.email,
-					name: user.name,
+					firstName: user.firstName,
+					lastName: user.lastName,
 					role: user.role
 				},
 				token
@@ -102,11 +113,12 @@ const authRoutes: FastifyPluginCallback = async (fastify) => {
 		preHandler: authenticateToken
 	}, async (request, reply) => {
 		const user = await fastify.prisma.user.findUnique({
-			where: { id: request.user!.userId },
+			where: { id: parseInt(request.user!.userId) },
 			select: {
 				id: true,
 				email: true,
-				name: true,
+				firstName: true,
+				lastName: true,
 				role: true,
 				createdAt: true
 			}

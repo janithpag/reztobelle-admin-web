@@ -33,7 +33,7 @@ const productRoutes: FastifyPluginCallback = async (fastify) => {
 		const { id } = request.params as { id: string }
 
 		const product = await fastify.prisma.product.findUnique({
-			where: { id }
+			where: { id: parseInt(id) }
 		})
 
 		if (!product) {
@@ -49,7 +49,29 @@ const productRoutes: FastifyPluginCallback = async (fastify) => {
 			const data = createProductSchema.parse(request.body)
 
 			const product = await fastify.prisma.product.create({
-				data
+				data: {
+					name: data.name,
+					description: data.description,
+					sku: data.sku,
+					price: data.price,
+					costPrice: data.price * 0.7, // TODO: Get actual cost price
+					categoryId: parseInt(data.category),
+					isActive: data.isActive,
+					slug: data.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+					images: {
+						create: data.images?.map((url: string, index: number) => ({
+							imageUrl: url,
+							cloudinaryId: `temp-${Date.now()}-${index}`,
+							isPrimary: index === 0,
+							sortOrder: index
+						})) || []
+					}
+				},
+				include: {
+					images: true,
+					inventory: true,
+					category: true
+				}
 			})
 
 			return reply.code(201).send({ product })
@@ -65,8 +87,20 @@ const productRoutes: FastifyPluginCallback = async (fastify) => {
 			const data = updateProductSchema.parse(request.body)
 
 			const product = await fastify.prisma.product.update({
-				where: { id },
-				data
+				where: { id: parseInt(id) },
+				data: {
+					...(data.name && { name: data.name }),
+					...(data.description && { description: data.description }),
+					...(data.price && { price: data.price }),
+					...(data.sku && { sku: data.sku }),
+					...(data.category && { categoryId: parseInt(data.category) }),
+					...(data.isActive !== undefined && { isActive: data.isActive })
+				},
+				include: {
+					images: true,
+					inventory: true,
+					category: true
+				}
 			})
 
 			return { product }
@@ -81,7 +115,7 @@ const productRoutes: FastifyPluginCallback = async (fastify) => {
 			const { id } = request.params as { id: string }
 
 			await fastify.prisma.product.delete({
-				where: { id }
+				where: { id: parseInt(id) }
 			})
 
 			return reply.code(204).send()

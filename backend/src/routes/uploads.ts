@@ -78,7 +78,7 @@ export default async function uploadsRoutes(fastify: FastifyInstance) {
 		try {
 			// Get the uploaded file
 			const data = await (request as any).file();
-			
+
 			if (!data) {
 				return reply.code(400).send({
 					success: false,
@@ -286,12 +286,12 @@ export default async function uploadsRoutes(fastify: FastifyInstance) {
 	}>, reply: FastifyReply) => {
 		try {
 			const { publicId } = request.params;
-			
+
 			// Replace URL encoding
 			const decodedPublicId = decodeURIComponent(publicId);
-			
+
 			const result = await cloudinary.uploader.destroy(decodedPublicId);
-			
+
 			if (result.result === 'ok') {
 				return reply.send({
 					success: true,

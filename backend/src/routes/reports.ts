@@ -1,172 +1,197 @@
-import { FastifyPluginCallback } from "fastify";
+import { FastifyPluginCallback } from 'fastify'
 
 const reportRoutes: FastifyPluginCallback = async (fastify) => {
 	// Dashboard overview
-	fastify.get("/dashboard", async (request, reply) => {
-		const [
-			totalProducts,
-			totalOrders,
-			totalRevenue,
-			pendingOrders,
-			lowStockProducts,
-			recentOrders,
-		] = await Promise.all([
-			fastify.prisma.product.count(),
-			fastify.prisma.order.count(),
-			fastify.prisma.order.aggregate({
-				_sum: { totalAmount: true },
-			}),
-			fastify.prisma.order.count({
-				where: { status: "PENDING" },
-			}),
-			fastify.prisma.product.findMany({
-				where: { stock: { lte: 10 } },
-				select: { id: true, name: true, stock: true, sku: true },
-			}),
-			fastify.prisma.order.findMany({
-				take: 5,
-				orderBy: { createdAt: "desc" },
-				include: {
-					items: {
-						include: {
-							product: { select: { name: true } },
-						},
-					},
-				},
-			}),
-		]);
-
-		return {
-			overview: {
+	fastify.get('/overview', async (request, reply) => {
+		try {
+			const [
 				totalProducts,
 				totalOrders,
-				totalRevenue: totalRevenue._sum.totalAmount || 0,
+				totalRevenue,
 				pendingOrders,
-				lowStockCount: lowStockProducts.length,
-			},
-			lowStockProducts,
-			recentOrders,
-		};
-	});
+				lowStockProducts,
+				recentOrders
+			] = await Promise.all([
+				fastify.prisma.product.count(),
+				fastify.prisma.order.count(),
+				fastify.prisma.order.aggregate({
+					_sum: { totalAmount: true },
+				}),
+				fastify.prisma.order.count({
+					where: { status: "PENDING" },
+				}),
+				fastify.prisma.product.findMany({
+					where: {
+						inventory: {
+							quantityAvailable: { lte: 10 }
+						}
+					},
+					select: {
+						id: true,
+						name: true,
+						sku: true,
+						inventory: {
+							select: {
+								quantityAvailable: true
+							}
+						}
+					},
+				}),
+				fastify.prisma.order.findMany({
+					take: 5,
+					orderBy: { createdAt: "desc" },
+					include: {
+						orderItems: {
+							include: {
+								product: { select: { name: true } },
+							},
+						},
+					},
+				}),
+			])
 
-	// Sales report
-	fastify.get("/sales", async (request, reply) => {
-		const { startDate, endDate } = request.query as {
-			startDate?: string;
-			endDate?: string;
-		};
-
-		const whereClause: any = {};
-		if (startDate && endDate) {
-			whereClause.createdAt = {
-				gte: new Date(startDate),
-				lte: new Date(endDate),
-			};
+			return {
+				overview: {
+					totalProducts,
+					totalOrders,
+					totalRevenue: totalRevenue._sum.totalAmount || 0,
+					pendingOrders,
+					lowStockProducts,
+					recentOrders,
+				},
+			}
+		} catch (error) {
+			return reply.code(500).send({ error: 'Internal server error' })
 		}
+	})
 
-		const [orders, totalRevenue, ordersByStatus] = await Promise.all([
-			fastify.prisma.order.findMany({
-				where: whereClause,
+	// Sales report by date range
+	fastify.get('/sales', async (request, reply) => {
+		try {
+			const query = request.query as { startDate?: string; endDate?: string }
+			const startDate = query.startDate ? new Date(query.startDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+			const endDate = query.endDate ? new Date(query.endDate) : new Date()
+
+			const orders = await fastify.prisma.order.findMany({
+				where: {
+					createdAt: { gte: startDate, lte: endDate },
+					status: { not: "CANCELLED" },
+				},
 				include: {
-					items: {
+					orderItems: {
 						include: {
-							product: { select: { name: true, category: true } },
+							product: {
+								select: {
+									name: true,
+									categoryId: true,
+								},
+							},
 						},
 					},
 				},
 				orderBy: { createdAt: "desc" },
-			}),
-			fastify.prisma.order.aggregate({
-				where: whereClause,
-				_sum: { totalAmount: true },
-				_count: true,
-			}),
-			fastify.prisma.order.groupBy({
-				by: ["status"],
-				where: whereClause,
-				_count: true,
-			}),
-		]);
+			})
 
-		return {
-			orders,
-			summary: {
-				totalRevenue: totalRevenue._sum.totalAmount || 0,
-				totalOrders: totalRevenue._count,
-				ordersByStatus,
-			},
-		};
-	});
+			return { orders, dateRange: { startDate, endDate } }
+		} catch (error) {
+			return reply.code(500).send({ error: 'Internal server error' })
+		}
+	})
 
 	// Inventory report
-	fastify.get("/inventory", async (request, reply) => {
-		const products = await fastify.prisma.product.findMany({
-			select: {
-				id: true,
-				name: true,
-				sku: true,
-				category: true,
-				stock: true,
-				price: true,
-				isActive: true,
-			},
-			orderBy: { stock: "asc" },
-		});
+	fastify.get('/inventory', async (request, reply) => {
+		try {
+			const products = await fastify.prisma.product.findMany({
+				select: {
+					id: true,
+					name: true,
+					sku: true,
+					price: true,
+					inventory: {
+						select: {
+							quantityAvailable: true,
+							quantityReserved: true,
+							reorderLevel: true
+						}
+					}
+				},
+				orderBy: { name: "asc" },
+			})
 
-		const categoryStats = await fastify.prisma.product.groupBy({
-			by: ["category"],
-			_count: true,
-			_sum: { stock: true },
-		});
+			return { products }
+		} catch (error) {
+			return reply.code(500).send({ error: 'Internal server error' })
+		}
+	})
 
-		return {
-			products,
-			categoryStats,
-		};
-	});
+	// Products by category
+	fastify.get('/products-by-category', async (request, reply) => {
+		try {
+			const productsByCategory = await fastify.prisma.product.groupBy({
+				by: ["categoryId"],
+				_count: { id: true },
+			})
+
+			// Get category names
+			const categories = await fastify.prisma.category.findMany({
+				select: { id: true, name: true }
+			})
+
+			const categoryMap = categories.reduce((acc, cat) => {
+				acc[cat.id] = cat.name
+				return acc
+			}, {} as Record<number, string>)
+
+			const result = productsByCategory.map(item => ({
+				categoryId: item.categoryId,
+				categoryName: categoryMap[item.categoryId] || 'Unknown',
+				count: item._count.id
+			}))
+
+			return { productsByCategory: result }
+		} catch (error) {
+			return reply.code(500).send({ error: 'Internal server error' })
+		}
+	})
 
 	// Expense report
-	fastify.get("/expenses", async (request, reply) => {
-		const { startDate, endDate } = request.query as {
-			startDate?: string;
-			endDate?: string;
-		};
+	fastify.get('/expenses', async (request, reply) => {
+		try {
+			const query = request.query as { startDate?: string; endDate?: string }
+			const startDate = query.startDate ? new Date(query.startDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+			const endDate = query.endDate ? new Date(query.endDate) : new Date()
 
-		const whereClause: any = {};
-		if (startDate && endDate) {
-			whereClause.date = {
-				gte: new Date(startDate),
-				lte: new Date(endDate),
-			};
+			const expenses = await fastify.prisma.expense.findMany({
+				where: {
+					expenseDate: { gte: startDate, lte: endDate },
+				},
+				include: {
+					createdByUser: {
+						select: {
+							firstName: true,
+							lastName: true
+						}
+					}
+				},
+				orderBy: { expenseDate: "desc" },
+			})
+
+			const totalExpenses = await fastify.prisma.expense.aggregate({
+				where: {
+					expenseDate: { gte: startDate, lte: endDate },
+				},
+				_sum: { amount: true }
+			})
+
+			return {
+				expenses,
+				totalExpenses: totalExpenses._sum.amount || 0,
+				dateRange: { startDate, endDate }
+			}
+		} catch (error) {
+			return reply.code(500).send({ error: 'Internal server error' })
 		}
+	})
+}
 
-		const [expenses, totalExpenses, expensesByCategory] = await Promise.all([
-			fastify.prisma.expense.findMany({
-				where: whereClause,
-				orderBy: { date: "desc" },
-			}),
-			fastify.prisma.expense.aggregate({
-				where: whereClause,
-				_sum: { amount: true },
-				_count: true,
-			}),
-			fastify.prisma.expense.groupBy({
-				by: ["category"],
-				where: whereClause,
-				_sum: { amount: true },
-				_count: true,
-			}),
-		]);
-
-		return {
-			expenses,
-			summary: {
-				totalAmount: totalExpenses._sum.amount || 0,
-				totalExpenses: totalExpenses._count,
-				expensesByCategory,
-			},
-		};
-	});
-};
-
-export default reportRoutes;
+export default reportRoutes

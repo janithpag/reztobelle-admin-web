@@ -1303,6 +1303,41 @@ enum UserRole { SUPER_ADMIN, ADMIN, MANAGER, STAFF }
 - **Backup & Recovery**: Regular database backups recommended for production environments
 - **Performance Monitoring**: Use Prisma's built-in query analysis and database performance insights
 
+## AI Assistant Guidelines
+
+### Critical Development Restrictions
+
+**⚠️ IMPORTANT: Server Management Restrictions**
+
+When making code changes, modifications, or assisting with development tasks:
+
+1. **DO NOT start development servers**: Never execute `npm run dev`, `npm run dev:frontend`, or `npm run dev:backend` commands
+2. **DO NOT run server-starting commands**: Avoid any commands that would start the frontend or backend servers
+3. **Focus on code modifications only**: Limit assistance to file editing, code generation, and architectural guidance
+4. **Let developers manage servers**: Server startup and management should be handled manually by the developer
+
+**Rationale**: 
+- Prevents conflicts with existing running servers
+- Avoids port conflicts and resource contention
+- Maintains developer control over the development environment
+- Reduces system resource usage during code assistance
+
+### Recommended AI Assistant Workflow
+
+1. **Code Analysis**: Read and understand existing code structure
+2. **File Modifications**: Edit files using appropriate tools (`replace_string_in_file`, `create_file`, etc.)
+3. **Architectural Guidance**: Provide recommendations based on project structure
+4. **Database Operations**: Assist with schema modifications and migrations (without running them)
+5. **Documentation Updates**: Help maintain and update project documentation
+
+### Exceptions
+
+The following commands are acceptable when specifically requested by the developer:
+- Database operations: `npm run db:migrate`, `npm run db:studio`
+- Package management: `npm install`, `npm run install:all`
+- Build operations: `npm run build` (when explicitly requested)
+- Testing commands: Test runners and validation tools
+
 ## UI Components & Loading States
 
 ### Common Loading Components

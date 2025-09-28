@@ -1084,6 +1084,594 @@ Before submitting any UI component implementation:
 
 By following these guidelines, all UI components will maintain the high quality and consistency expected in the ReztoBelle admin application.
 
+## Feature Implementation Requirements
+
+### Mandatory Implementation Standards
+
+When implementing any new feature in the ReztoBelle Admin Web application, the following requirements are **MANDATORY** and must be strictly adhered to ensure consistent user experience, reliability, and maintainability.
+
+#### 1. User Feedback & Status Communication
+
+**Toast Notifications (REQUIRED):**
+- **Success States**: Display success toasts for all successful operations
+- **Error States**: Show detailed error messages for failed operations
+- **Warning States**: Implement warning toasts for cautionary actions
+- **Information States**: Use info toasts for important status updates
+
+**Implementation Standards:**
+```tsx
+// Success toast example
+toast.success("Product created successfully!");
+
+// Error toast with detailed message
+toast.error("Failed to save product: Invalid price format");
+
+// Warning toast for destructive actions
+toast.warning("This action cannot be undone. Are you sure?");
+
+// Info toast for status updates
+toast.info("Order status updated to 'Processing'");
+```
+
+**Toast Requirements:**
+- All API operations MUST trigger appropriate toast notifications
+- Toast messages must be descriptive and user-friendly
+- Use consistent toast positioning and duration
+- Implement toast cleanup for component unmounting
+
+#### 2. Comprehensive Error Handling
+
+**Backend Error Handling (MANDATORY):**
+```typescript
+// Route handler with comprehensive error handling
+app.post('/api/products', async (request, reply) => {
+  try {
+    // Business logic here
+    const result = await productService.create(data);
+    return reply.code(201).send({ success: true, data: result });
+  } catch (error) {
+    // Log error for debugging
+    request.log.error(error);
+    
+    // Return appropriate error response
+    if (error instanceof ValidationError) {
+      return reply.code(400).send({
+        success: false,
+        error: 'Validation failed',
+        details: error.details
+      });
+    }
+    
+    if (error instanceof NotFoundError) {
+      return reply.code(404).send({
+        success: false,
+        error: 'Resource not found'
+      });
+    }
+    
+    // Generic server error
+    return reply.code(500).send({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
+```
+
+**Frontend Error Handling (MANDATORY):**
+```tsx
+// Component with proper error handling
+const [error, setError] = useState<string | null>(null);
+const [loading, setLoading] = useState(false);
+
+const handleSubmit = async (data: FormData) => {
+  setLoading(true);
+  setError(null);
+  
+  try {
+    await api.createProduct(data);
+    toast.success("Product created successfully!");
+    // Handle success (redirect, refresh, etc.)
+  } catch (err) {
+    const errorMessage = err.response?.data?.error || 'An unexpected error occurred';
+    setError(errorMessage);
+    toast.error(errorMessage);
+  } finally {
+    setLoading(false);
+  }
+};
+
+// Error display in UI
+{error && (
+  <Alert variant="destructive" className="mb-4">
+    <AlertCircle className="h-4 w-4" />
+    <AlertTitle>Error</AlertTitle>
+    <AlertDescription>{error}</AlertDescription>
+  </Alert>
+)}
+```
+
+#### 3. Responsive Design & Standard Colors
+
+**Responsive Requirements (MANDATORY):**
+- All interfaces MUST be fully responsive across mobile, tablet, and desktop
+- Use mobile-first design approach with progressive enhancement
+- Test on minimum screen width of 320px
+- Implement proper touch targets (minimum 44px) for mobile devices
+
+**Standard Color Usage (MANDATORY):**
+```tsx
+// Use standard semantic colors for consistency
+const statusColors = {
+  success: "text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20",
+  error: "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20",
+  warning: "text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20",
+  info: "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20",
+  pending: "text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20"
+};
+
+// Status badges with consistent colors
+<Badge className={statusColors.success}>Active</Badge>
+<Badge className={statusColors.error}>Inactive</Badge>
+<Badge className={statusColors.warning}>Low Stock</Badge>
+```
+
+#### 4. Form Design Standards
+
+**Form Layout Requirements (MANDATORY):**
+- All forms MUST have uniform field alignment and consistent spacing
+- Use responsive grid layouts that adapt to screen size
+- Implement proper field grouping with consistent spacing
+- Maintain visual hierarchy with appropriate field sizing
+
+**Form Implementation Standards:**
+```tsx
+// Uniform form layout
+<form className="space-y-6">
+  {/* Form section with consistent spacing */}
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+    <div className="space-y-2">
+      <Label htmlFor="name" className="text-sm font-medium">
+        Product Name *
+      </Label>
+      <Input
+        id="name"
+        placeholder="Enter product name"
+        className="w-full"
+        {...register('name')}
+      />
+      {errors.name && (
+        <p className="text-sm text-red-600 dark:text-red-400">
+          {errors.name.message}
+        </p>
+      )}
+    </div>
+    
+    <div className="space-y-2">
+      <Label htmlFor="price" className="text-sm font-medium">
+        Price (LKR) *
+      </Label>
+      <Input
+        id="price"
+        type="number"
+        placeholder="0.00"
+        className="w-full"
+        {...register('price')}
+      />
+    </div>
+  </div>
+  
+  {/* Full-width fields */}
+  <div className="space-y-2">
+    <Label htmlFor="description">Description</Label>
+    <Textarea
+      id="description"
+      placeholder="Enter product description"
+      className="w-full min-h-[100px]"
+      {...register('description')}
+    />
+  </div>
+  
+  {/* Form actions */}
+  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:justify-end pt-4">
+    <Button type="button" variant="outline" className="w-full sm:w-auto">
+      Cancel
+    </Button>
+    <Button type="submit" disabled={loading} className="w-full sm:w-auto">
+      {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+      Create Product
+    </Button>
+  </div>
+</form>
+```
+
+#### 5. Currency Standards
+
+**Sri Lankan Rupees (MANDATORY):**
+- ALL monetary values MUST be displayed in Sri Lankan Rupees (LKR)
+- Use consistent currency formatting throughout the application
+- Implement proper number formatting with thousand separators
+
+**Currency Implementation:**
+```tsx
+// Utility function for LKR formatting
+export const formatLKR = (amount: number): string => {
+  return new Intl.NumberFormat('si-LK', {
+    style: 'currency',
+    currency: 'LKR',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+};
+
+// Alternative simple formatting
+export const formatSimpleLKR = (amount: number): string => {
+  return `LKR ${amount.toLocaleString('en-US', { 
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2 
+  })}`;
+};
+
+// Usage in components
+<span className="font-semibold text-lg">
+  {formatLKR(product.price)}
+</span>
+```
+
+#### 6. Loading States & User Feedback
+
+**Loading Indicators (MANDATORY):**
+- Show loading states for ALL data fetching operations
+- Implement action loaders for ALL button interactions
+- Use skeleton loaders for better perceived performance
+- Display progress indicators for long-running operations
+
+**Loading Implementation Standards:**
+```tsx
+// Data loading with skeleton
+{isLoading ? (
+  <div className="space-y-4">
+    {[...Array(5)].map((_, i) => (
+      <div key={i} className="animate-pulse">
+        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
+        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+      </div>
+    ))}
+  </div>
+) : (
+  <ProductList products={products} />
+)}
+
+// Button with loading state
+<Button
+  onClick={handleAction}
+  disabled={isSubmitting}
+  className="w-full sm:w-auto"
+>
+  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+  {isSubmitting ? 'Saving...' : 'Save Changes'}
+</Button>
+
+// Page-level loading
+{isPageLoading && (
+  <div className="fixed inset-0 bg-background/50 backdrop-blur-sm z-50 flex items-center justify-center">
+    <div className="flex flex-col items-center space-y-4">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <p className="text-sm text-muted-foreground">Loading...</p>
+    </div>
+  </div>
+)}
+```
+
+#### 7. Data Grid Standards
+
+**Grid Design Requirements (MANDATORY):**
+- Implement uniform grid designs across all data views
+- Show action buttons directly in the grid (NO dropdown "..." menus)
+- Use consistent spacing and alignment for all grid elements
+- Maintain proper responsive behavior for all grid layouts
+
+**Grid Implementation Standards:**
+```tsx
+// Standard data grid with inline actions
+<div className="rounded-lg border bg-card">
+  <Table>
+    <TableHeader>
+      <TableRow>
+        <TableHead>Product Name</TableHead>
+        <TableHead>Category</TableHead>
+        <TableHead>Price</TableHead>
+        <TableHead>Stock</TableHead>
+        <TableHead className="w-[200px]">Actions</TableHead>
+      </TableRow>
+    </TableHeader>
+    <TableBody>
+      {products.map((product) => (
+        <TableRow key={product.id}>
+          <TableCell className="font-medium">{product.name}</TableCell>
+          <TableCell>{product.category?.name}</TableCell>
+          <TableCell>{formatLKR(product.price)}</TableCell>
+          <TableCell>
+            <Badge variant={product.stock > 0 ? "default" : "destructive"}>
+              {product.stock}
+            </Badge>
+          </TableCell>
+          <TableCell>
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="outline">
+                <Eye className="h-4 w-4" />
+                View
+              </Button>
+              <Button size="sm" variant="outline">
+                <Edit className="h-4 w-4" />
+                Edit
+              </Button>
+              <Button size="sm" variant="destructive">
+                <Trash className="h-4 w-4" />
+                Delete
+              </Button>
+            </div>
+          </TableCell>
+        </TableRow>
+      ))}
+    </TableBody>
+  </Table>
+</div>
+```
+
+#### 8. Theme Compatibility
+
+**Light & Dark Theme Support (MANDATORY):**
+- ALL components and views MUST support both light and dark themes
+- Use CSS custom properties from the theme system
+- Test all features in both theme modes before implementation
+- Ensure proper contrast ratios for accessibility
+
+**Theme Implementation:**
+```tsx
+// Use theme-aware styling
+<div className="bg-background text-foreground border-border">
+  <Card className="bg-card text-card-foreground border-border">
+    <CardHeader>
+      <CardTitle className="text-foreground">Title</CardTitle>
+      <CardDescription className="text-muted-foreground">
+        Description
+      </CardDescription>
+    </CardHeader>
+  </Card>
+</div>
+
+// Status colors that work in both themes
+<Badge className="bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200">
+  Success
+</Badge>
+```
+
+#### 9. Image Display Standards
+
+**Image Placeholder Requirements (MANDATORY):**
+- When displaying images, ALWAYS provide fallback for missing images
+- Use name initials as placeholders when actual images are not available
+- Implement consistent styling for both actual images and initial placeholders
+- Ensure placeholders work in both light and dark themes
+
+**Image Implementation Standards:**
+```tsx
+// Utility function for generating initials
+export const getInitials = (name: string): string => {
+  return name
+    .split(' ')
+    .map(word => word.charAt(0))
+    .join('')
+    .toUpperCase()
+    .slice(0, 2); // Limit to 2 characters for consistency
+};
+
+// Image component with initials fallback
+interface ImageWithFallbackProps {
+  src?: string | null;
+  name: string;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  className?: string;
+}
+
+const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({ 
+  src, 
+  name, 
+  size = 'md', 
+  className 
+}) => {
+  const [imageError, setImageError] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
+
+  const sizeClasses = {
+    sm: 'w-8 h-8 text-xs',
+    md: 'w-12 h-12 text-sm',
+    lg: 'w-16 h-16 text-base',
+    xl: 'w-24 h-24 text-lg'
+  };
+
+  const initials = getInitials(name);
+
+  if (!src || imageError) {
+    return (
+      <div
+        className={cn(
+          'flex items-center justify-center rounded-full font-semibold',
+          'bg-primary/10 text-primary border border-primary/20',
+          'dark:bg-primary/20 dark:text-primary-foreground dark:border-primary/30',
+          sizeClasses[size],
+          className
+        )}
+      >
+        {initials}
+      </div>
+    );
+  }
+
+  return (
+    <div className={cn('relative overflow-hidden rounded-full', sizeClasses[size], className)}>
+      {imageLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-muted">
+          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+        </div>
+      )}
+      <img
+        src={src}
+        alt={name}
+        className="w-full h-full object-cover"
+        onLoad={() => setImageLoading(false)}
+        onError={() => {
+          setImageError(true);
+          setImageLoading(false);
+        }}
+      />
+    </div>
+  );
+};
+
+// Usage examples
+// Product image with fallback
+<ImageWithFallback
+  src={product.images?.[0]?.url}
+  name={product.name}
+  size="lg"
+  className="border-2 border-border"
+/>
+
+// User avatar with initials
+<ImageWithFallback
+  src={user.avatar}
+  name={user.name}
+  size="md"
+  className="ring-2 ring-primary/20"
+/>
+
+// Category icon with fallback
+<ImageWithFallback
+  src={category.icon}
+  name={category.name}
+  size="sm"
+/>
+```
+
+**Advanced Implementation for Product Galleries:**
+```tsx
+// Product gallery with multiple images and initials fallback
+const ProductImageGallery: React.FC<{ product: Product }> = ({ product }) => {
+  const [selectedImage, setSelectedImage] = useState(0);
+  const hasImages = product.images && product.images.length > 0;
+
+  if (!hasImages) {
+    return (
+      <div className="space-y-4">
+        {/* Main placeholder */}
+        <div className="aspect-square w-full max-w-md mx-auto">
+          <div className="w-full h-full flex items-center justify-center rounded-lg border-2 border-dashed border-border bg-muted/50">
+            <div className="text-center space-y-2">
+              <div className="w-20 h-20 mx-auto flex items-center justify-center rounded-full bg-primary/10 text-primary text-2xl font-bold">
+                {getInitials(product.name)}
+              </div>
+              <p className="text-sm text-muted-foreground">No image available</p>
+            </div>
+          </div>
+        </div>
+        
+        {/* Thumbnail placeholders */}
+        <div className="flex gap-2 justify-center">
+          {[...Array(3)].map((_, i) => (
+            <div
+              key={i}
+              className="w-16 h-16 flex items-center justify-center rounded border bg-muted/30 text-xs font-medium text-muted-foreground"
+            >
+              {getInitials(product.name)}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Render actual images if available
+  return (
+    <div className="space-y-4">
+      {/* Main image */}
+      <div className="aspect-square w-full max-w-md mx-auto">
+        <img
+          src={product.images[selectedImage].url}
+          alt={`${product.name} - Image ${selectedImage + 1}`}
+          className="w-full h-full object-cover rounded-lg border"
+        />
+      </div>
+      
+      {/* Thumbnails */}
+      <div className="flex gap-2 justify-center">
+        {product.images.map((image, index) => (
+          <button
+            key={image.id}
+            onClick={() => setSelectedImage(index)}
+            className={cn(
+              "w-16 h-16 rounded border overflow-hidden",
+              selectedImage === index ? "ring-2 ring-primary" : "opacity-70 hover:opacity-100"
+            )}
+          >
+            <img
+              src={image.url}
+              alt={`${product.name} thumbnail ${index + 1}`}
+              className="w-full h-full object-cover"
+            />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+```
+
+**Grid/Table Implementation with Image Placeholders:**
+```tsx
+// Data grid with consistent image display
+<TableCell>
+  <div className="flex items-center gap-3">
+    <ImageWithFallback
+      src={product.images?.[0]?.url}
+      name={product.name}
+      size="md"
+    />
+    <div>
+      <p className="font-medium">{product.name}</p>
+      <p className="text-sm text-muted-foreground">{product.category?.name}</p>
+    </div>
+  </div>
+</TableCell>
+```
+
+### Implementation Verification Checklist
+
+Before considering any feature complete, verify ALL of the following:
+
+- [ ] **Toast Notifications**: Success, error, warning, and info toasts implemented
+- [ ] **Error Handling**: Comprehensive backend and frontend error handling
+- [ ] **Responsive Design**: Tested and working on mobile, tablet, desktop
+- [ ] **Standard Colors**: Using consistent semantic colors for status indicators
+- [ ] **Form Uniformity**: Consistent field alignment, spacing, and responsive layout
+- [ ] **LKR Currency**: All monetary values displayed in Sri Lankan Rupees
+- [ ] **Loading States**: Loading indicators for all data and action operations
+- [ ] **Grid Design**: Uniform grids with inline action buttons (no dropdown menus)
+- [ ] **Theme Support**: Fully tested in both light and dark themes
+- [ ] **Image Placeholders**: Name initials shown when images are unavailable
+- [ ] **User Feedback**: Appropriate feedback for all user interactions
+
+### Non-Compliance Consequences
+
+**Failing to implement these mandatory requirements will result in:**
+- Feature rejection and requirement for complete reimplementation
+- Inconsistent user experience across the application
+- Potential accessibility and usability issues
+- Maintenance difficulties and technical debt
+
+**These requirements are NON-NEGOTIABLE** and must be treated as essential components of any feature implementation in the ReztoBelle Admin Web application.
+
 ## Security Considerations
 
 ### Backend Security

@@ -438,7 +438,7 @@ export function CategoriesManagement() {
 													size="icon"
 													variant="outline"
 													onClick={() => openEditDialog(category)}
-													className="h-8 w-8 border-purple-200 dark:border-purple-800 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-700 dark:hover:text-purple-300 hover:border-purple-300 dark:hover:border-purple-700"
+													className="h-8 w-8 border-yellow-200 dark:border-yellow-800 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 hover:text-yellow-700 dark:hover:text-yellow-300 hover:border-yellow-300 dark:hover:border-yellow-700"
 													title="Edit Category"
 												>
 													<Edit2 className="h-4 w-4" />
@@ -613,7 +613,7 @@ export function CategoriesManagement() {
 									setIsViewDialogOpen(false);
 									setTimeout(() => openEditDialog(selectedCategory), 100);
 								}}
-								className="bg-purple-600 hover:bg-purple-700 dark:bg-purple-600 dark:hover:bg-purple-700 text-white"
+								className="bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-600 dark:hover:bg-yellow-700 text-white"
 							>
 								<Edit2 className="mr-2 h-4 w-4" />
 								Edit Category
@@ -635,7 +635,7 @@ export function CategoriesManagement() {
 					</AlertDialogHeader>
 					<AlertDialogFooter>
 						<AlertDialogCancel>Cancel</AlertDialogCancel>
-						<AlertDialogAction onClick={handleDeleteCategory} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+						<AlertDialogAction onClick={handleDeleteCategory} className="bg-red-600 text-white hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700">
 							Delete
 						</AlertDialogAction>
 					</AlertDialogFooter>

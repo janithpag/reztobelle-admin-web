@@ -22,6 +22,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
+	DialogBody,
 } from '@/components/ui/dialog';
 import {
 	AlertDialog,
@@ -257,38 +258,40 @@ export function CategoriesManagement() {
 								Add a new product category to organize your inventory.
 							</DialogDescription>
 						</DialogHeader>
-						<div className="space-y-6">
-							<div className="space-y-2">
-								<Label htmlFor="create-name" className="text-sm font-medium">Name *</Label>
-								<Input
-									id="create-name"
-									value={createForm.name}
-									onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
-									placeholder="Enter category name"
-									className="w-full"
-								/>
+						<DialogBody>
+							<div className="space-y-6">
+								<div className="space-y-2">
+									<Label htmlFor="create-name" className="text-sm font-medium">Name *</Label>
+									<Input
+										id="create-name"
+										value={createForm.name}
+										onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
+										placeholder="Enter category name"
+										className="w-full"
+									/>
+								</div>
+								<div className="space-y-2">
+									<Label htmlFor="create-description" className="text-sm font-medium">Description</Label>
+									<Textarea
+										id="create-description"
+										value={createForm.description}
+										onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
+										placeholder="Enter category description"
+										className="w-full min-h-[100px] resize-none"
+									/>
+								</div>
+								<div className="space-y-2">
+									<Label className="text-sm font-medium">Category Image (Optional)</Label>
+									<ImageUpload
+										onImagesChange={setCreateImages}
+										initialImages={createImages}
+										maxImages={1}
+										maxFileSize={5}
+										className="mt-2"
+									/>
+								</div>
 							</div>
-							<div className="space-y-2">
-								<Label htmlFor="create-description" className="text-sm font-medium">Description</Label>
-								<Textarea
-									id="create-description"
-									value={createForm.description}
-									onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
-									placeholder="Enter category description"
-									className="w-full min-h-[100px] resize-none"
-								/>
-							</div>
-							<div className="space-y-2">
-								<Label className="text-sm font-medium">Category Image (Optional)</Label>
-								<ImageUpload
-									onImagesChange={setCreateImages}
-									initialImages={createImages}
-									maxImages={1}
-									maxFileSize={5}
-									className="mt-2"
-								/>
-							</div>
-						</div>
+						</DialogBody>
 						<DialogFooter>
 							<Button variant="outline" onClick={() => {
 								setIsCreateDialogOpen(false);
@@ -473,38 +476,40 @@ export function CategoriesManagement() {
 							Update the category details below.
 						</DialogDescription>
 					</DialogHeader>
-					<div className="space-y-6">
-						<div className="space-y-2">
-							<Label htmlFor="edit-name" className="text-sm font-medium">Name *</Label>
-							<Input
-								id="edit-name"
-								value={editForm.name || ''}
-								onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-								placeholder="Enter category name"
-								className="w-full"
-							/>
+					<DialogBody>
+						<div className="space-y-6">
+							<div className="space-y-2">
+								<Label htmlFor="edit-name" className="text-sm font-medium">Name *</Label>
+								<Input
+									id="edit-name"
+									value={editForm.name || ''}
+									onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+									placeholder="Enter category name"
+									className="w-full"
+								/>
+							</div>
+							<div className="space-y-2">
+								<Label htmlFor="edit-description" className="text-sm font-medium">Description</Label>
+								<Textarea
+									id="edit-description"
+									value={editForm.description || ''}
+									onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+									placeholder="Enter category description"
+									className="w-full min-h-[100px] resize-none"
+								/>
+							</div>
+							<div className="space-y-2">
+								<Label className="text-sm font-medium">Category Image (Optional)</Label>
+								<ImageUpload
+									onImagesChange={setEditImages}
+									initialImages={editImages}
+									maxImages={1}
+									maxFileSize={5}
+									className="mt-2"
+								/>
+							</div>
 						</div>
-						<div className="space-y-2">
-							<Label htmlFor="edit-description" className="text-sm font-medium">Description</Label>
-							<Textarea
-								id="edit-description"
-								value={editForm.description || ''}
-								onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-								placeholder="Enter category description"
-								className="w-full min-h-[100px] resize-none"
-							/>
-						</div>
-						<div className="space-y-2">
-							<Label className="text-sm font-medium">Category Image (Optional)</Label>
-							<ImageUpload
-								onImagesChange={setEditImages}
-								initialImages={editImages}
-								maxImages={1}
-								maxFileSize={5}
-								className="mt-2"
-							/>
-						</div>
-					</div>
+					</DialogBody>
 					<DialogFooter>
 						<Button variant="outline" onClick={() => {
 							setIsEditDialogOpen(false);
@@ -519,7 +524,7 @@ export function CategoriesManagement() {
 
 			{/* View Category Dialog */}
 			<Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-				<DialogContent className="sm:max-w-[600px]">
+				<DialogContent className="sm:max-w-[600px] sm:w-[600px]">
 					<DialogHeader>
 						<DialogTitle>Category Details</DialogTitle>
 						<DialogDescription>
@@ -527,74 +532,76 @@ export function CategoriesManagement() {
 						</DialogDescription>
 					</DialogHeader>
 					{selectedCategory && (
-						<div className="space-y-6">
-							<div className="flex items-center gap-4">
-								{selectedCategory.imageUrl ? (
-									<Avatar className="h-16 w-16 rounded-lg">
-										<AvatarImage 
-											src={selectedCategory.imageUrl} 
-											alt={selectedCategory.name}
-											className="object-cover"
-										/>
-										<AvatarFallback className="rounded-lg text-lg font-semibold bg-primary/10 text-primary">
+						<DialogBody>
+							<div className="space-y-6">
+								<div className="flex items-center gap-4">
+									{selectedCategory.imageUrl ? (
+										<Avatar className="h-16 w-16 rounded-lg">
+											<AvatarImage 
+												src={selectedCategory.imageUrl} 
+												alt={selectedCategory.name}
+												className="object-cover"
+											/>
+											<AvatarFallback className="rounded-lg text-lg font-semibold bg-primary/10 text-primary">
+												{selectedCategory.name.charAt(0).toUpperCase()}
+											</AvatarFallback>
+										</Avatar>
+									) : (
+										<div className="h-16 w-16 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-lg font-semibold">
 											{selectedCategory.name.charAt(0).toUpperCase()}
-										</AvatarFallback>
-									</Avatar>
-								) : (
-									<div className="h-16 w-16 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-lg font-semibold">
-										{selectedCategory.name.charAt(0).toUpperCase()}
+										</div>
+									)}
+									<div className="flex-1">
+										<h3 className="text-xl font-semibold">{selectedCategory.name}</h3>
+										<p className="text-sm text-muted-foreground">
+											Slug: {selectedCategory.slug}
+										</p>
+										<Badge 
+											variant={selectedCategory.isActive ? 'default' : 'secondary'}
+											className={cn(
+												"mt-2",
+												selectedCategory.isActive 
+													? "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-green-300 dark:border-green-600" 
+													: "bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600"
+											)}
+										>
+											{selectedCategory.isActive ? 'Active' : 'Inactive'}
+										</Badge>
 									</div>
-								)}
-								<div className="flex-1">
-									<h3 className="text-xl font-semibold">{selectedCategory.name}</h3>
-									<p className="text-sm text-muted-foreground">
-										Slug: {selectedCategory.slug}
-									</p>
-									<Badge 
-										variant={selectedCategory.isActive ? 'default' : 'secondary'}
-										className={cn(
-											"mt-2",
-											selectedCategory.isActive 
-												? "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-green-300 dark:border-green-600" 
-												: "bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600"
-										)}
-									>
-										{selectedCategory.isActive ? 'Active' : 'Inactive'}
-									</Badge>
-								</div>
-							</div>
-
-							<div className="space-y-4">
-								<div>
-									<Label className="text-sm font-medium">Description</Label>
-									<p className="mt-2 text-sm text-muted-foreground min-h-[60px] p-3 rounded-md border bg-muted/50">
-										{selectedCategory.description || 'No description provided.'}
-									</p>
 								</div>
 
-								<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+								<div className="space-y-4">
 									<div>
-										<Label className="text-sm font-medium">Products Count</Label>
-										<p className="mt-2 text-sm">
-											<Badge variant="outline" className="text-xs">
-												{selectedCategory._count?.products || 0} products
-											</Badge>
+										<Label className="text-sm font-medium">Description</Label>
+										<p className="mt-2 text-sm text-muted-foreground min-h-[60px] p-3 rounded-md border bg-muted/50">
+											{selectedCategory.description || 'No description provided.'}
 										</p>
 									</div>
-									<div>
-										<Label className="text-sm font-medium">Created Date</Label>
-										<p className="mt-2 text-sm text-muted-foreground">
-											{new Date(selectedCategory.createdAt).toLocaleDateString('en-US', {
-												weekday: 'long',
-												year: 'numeric',
-												month: 'long',
-												day: 'numeric'
-											})}
-										</p>
+
+									<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+										<div>
+											<Label className="text-sm font-medium">Products Count</Label>
+											<p className="mt-2 text-sm">
+												<Badge variant="outline" className="text-xs">
+													{selectedCategory._count?.products || 0} products
+												</Badge>
+											</p>
+										</div>
+										<div>
+											<Label className="text-sm font-medium">Created Date</Label>
+											<p className="mt-2 text-sm text-muted-foreground">
+												{new Date(selectedCategory.createdAt).toLocaleDateString('en-US', {
+													weekday: 'long',
+													year: 'numeric',
+													month: 'long',
+													day: 'numeric'
+												})}
+											</p>
+										</div>
 									</div>
 								</div>
 							</div>
-						</div>
+						</DialogBody>
 					)}
 					<DialogFooter>
 						<Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>

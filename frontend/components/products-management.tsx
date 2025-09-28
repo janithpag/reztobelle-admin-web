@@ -14,6 +14,8 @@ import {
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
+	DialogBody,
+	DialogFooter,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -542,7 +544,7 @@ export function ProductsManagement() {
 
 			{/* Add Product Dialog */}
 			<Dialog open={isAddProductOpen} onOpenChange={setIsAddProductOpen}>
-				<DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+				<DialogContent>
 					<DialogHeader>
 						<DialogTitle>Add New Product</DialogTitle>
 						<DialogDescription>
@@ -550,250 +552,250 @@ export function ProductsManagement() {
 						</DialogDescription>
 					</DialogHeader>
 
-					<div className="grid gap-4 py-4">
-						{/* Basic Information */}
-						<div className="space-y-4">
-							<h3 className="text-sm font-medium">Basic Information</h3>
-							<div className="grid grid-cols-2 gap-4">
-								<div>
-									<Label htmlFor="name">Product Name *</Label>
-									<Input
-										id="name"
-										value={productForm.name}
-										onChange={(e) => setProductForm(prev => ({ ...prev, name: e.target.value }))}
-										placeholder="Enter product name"
-									/>
+					<DialogBody>
+						<div className="grid gap-4">
+							{/* Basic Information */}
+							<div className="space-y-4">
+								<h3 className="text-sm font-medium">Basic Information</h3>
+								<div className="grid grid-cols-2 gap-4">
+									<div>
+										<Label htmlFor="name">Product Name *</Label>
+										<Input
+											id="name"
+											value={productForm.name}
+											onChange={(e) => setProductForm(prev => ({ ...prev, name: e.target.value }))}
+											placeholder="Enter product name"
+										/>
+									</div>
+									<div>
+										<Label htmlFor="sku">SKU *</Label>
+										<Input
+											id="sku"
+											value={productForm.sku}
+											onChange={(e) => setProductForm(prev => ({ ...prev, sku: e.target.value }))}
+											placeholder="Enter SKU"
+										/>
+									</div>
 								</div>
-								<div>
-									<Label htmlFor="sku">SKU *</Label>
-									<Input
-										id="sku"
-										value={productForm.sku}
-										onChange={(e) => setProductForm(prev => ({ ...prev, sku: e.target.value }))}
-										placeholder="Enter SKU"
-									/>
-								</div>
-							</div>
 
-							<div>
-								<Label htmlFor="description">Description</Label>
-								<Textarea
-									id="description"
-									value={productForm.description}
-									onChange={(e) => setProductForm(prev => ({ ...prev, description: e.target.value }))}
-									placeholder="Enter product description"
-									rows={3}
-								/>
-							</div>
+								<div>
+									<Label htmlFor="description">Description</Label>
+									<Textarea
+										id="description"
+										value={productForm.description}
+										onChange={(e) => setProductForm(prev => ({ ...prev, description: e.target.value }))}
+										placeholder="Enter product description"
+										rows={3}
+									/>
+								</div>
 
-							<div>
-								<Label htmlFor="shortDescription">Short Description</Label>
-								<Input
-									id="shortDescription"
-									value={productForm.shortDescription}
-									onChange={(e) => setProductForm(prev => ({ ...prev, shortDescription: e.target.value }))}
-									placeholder="Brief product description"
-								/>
-							</div>
-						</div>
-
-						{/* Pricing & Category */}
-						<div className="space-y-4">
-							<h3 className="text-sm font-medium">Pricing & Category</h3>
-							<div className="grid grid-cols-3 gap-4">
 								<div>
-									<Label htmlFor="price">Selling Price *</Label>
+									<Label htmlFor="shortDescription">Short Description</Label>
 									<Input
-										id="price"
-										type="number"
-										step="0.01"
-										value={productForm.price}
-										onChange={(e) => setProductForm(prev => ({ ...prev, price: e.target.value }))}
-										placeholder="0.00"
+										id="shortDescription"
+										value={productForm.shortDescription}
+										onChange={(e) => setProductForm(prev => ({ ...prev, shortDescription: e.target.value }))}
+										placeholder="Brief product description"
 									/>
 								</div>
-								<div>
-									<Label htmlFor="costPrice">Cost Price *</Label>
-									<Input
-										id="costPrice"
-										type="number"
-										step="0.01"
-										value={productForm.costPrice}
-										onChange={(e) => setProductForm(prev => ({ ...prev, costPrice: e.target.value }))}
-										placeholder="0.00"
-									/>
-								</div>
-								<div>
-									<Label htmlFor="category">Category *</Label>
-									<Select
-										value={productForm.categoryId}
-										onValueChange={(value) => setProductForm(prev => ({ ...prev, categoryId: value }))}
-									>
-										<SelectTrigger>
-											<SelectValue placeholder="Select category" />
-										</SelectTrigger>
-										<SelectContent>
-											{categoriesData.map((category) => (
-												<SelectItem key={category.id} value={category.id.toString()}>
-													{category.name}
-												</SelectItem>
-											))}
-										</SelectContent>
-									</Select>
-								</div>
-							</div>
-						</div>
-
-						{/* Product Attributes */}
-						<div className="space-y-4">
-							<h3 className="text-sm font-medium">Product Attributes</h3>
-							<div className="grid grid-cols-2 gap-4">
-								<div>
-									<Label htmlFor="brand">Brand</Label>
-									<Input
-										id="brand"
-										value={productForm.brand}
-										onChange={(e) => setProductForm(prev => ({ ...prev, brand: e.target.value }))}
-										placeholder="Brand name"
-									/>
-								</div>
-								<div>
-									<Label htmlFor="material">Material</Label>
-									<Input
-										id="material"
-										value={productForm.material}
-										onChange={(e) => setProductForm(prev => ({ ...prev, material: e.target.value }))}
-										placeholder="Material type"
-									/>
-								</div>
-								<div>
-									<Label htmlFor="color">Color</Label>
-									<Input
-										id="color"
-										value={productForm.color}
-										onChange={(e) => setProductForm(prev => ({ ...prev, color: e.target.value }))}
-										placeholder="Color"
-									/>
-								</div>
-								<div>
-									<Label htmlFor="size">Size</Label>
-									<Input
-										id="size"
-										value={productForm.size}
-										onChange={(e) => setProductForm(prev => ({ ...prev, size: e.target.value }))}
-										placeholder="Size"
-									/>
-								</div>
-								<div>
-									<Label htmlFor="weight">Weight (g)</Label>
-									<Input
-										id="weight"
-										type="number"
-										step="0.01"
-										value={productForm.weight}
-										onChange={(e) => setProductForm(prev => ({ ...prev, weight: e.target.value }))}
-										placeholder="Weight in grams"
-									/>
-								</div>
-								<div>
-									<Label htmlFor="dimensions">Dimensions</Label>
-									<Input
-										id="dimensions"
-										value={productForm.dimensions}
-										onChange={(e) => setProductForm(prev => ({ ...prev, dimensions: e.target.value }))}
-										placeholder="L x W x H"
-									/>
-								</div>
-							</div>
-						</div>
-
-						{/* Inventory */}
-						<div className="space-y-4">
-							<h3 className="text-sm font-medium">Inventory</h3>
-							<div>
-								<Label htmlFor="initialStock">Initial Stock</Label>
-								<Input
-									id="initialStock"
-									type="number"
-									value={productForm.initialStock}
-									onChange={(e) => setProductForm(prev => ({ ...prev, initialStock: e.target.value }))}
-									placeholder="Initial stock quantity"
-								/>
-							</div>
-						</div>
-
-						{/* SEO */}
-						<div className="space-y-4">
-							<h3 className="text-sm font-medium">SEO</h3>
-							<div>
-								<Label htmlFor="metaTitle">Meta Title</Label>
-								<Input
-									id="metaTitle"
-									value={productForm.metaTitle}
-									onChange={(e) => setProductForm(prev => ({ ...prev, metaTitle: e.target.value }))}
-									placeholder="SEO meta title"
-								/>
-							</div>
-							<div>
-								<Label htmlFor="metaDescription">Meta Description</Label>
-								<Textarea
-									id="metaDescription"
-									value={productForm.metaDescription}
-									onChange={(e) => setProductForm(prev => ({ ...prev, metaDescription: e.target.value }))}
-									placeholder="SEO meta description"
-									rows={2}
-								/>
-							</div>
-						</div>
-
-						{/* Settings */}
-						<div className="space-y-4">
-							<h3 className="text-sm font-medium">Settings</h3>
-							<div className="flex items-center space-x-4">
-								<div className="flex items-center space-x-2">
-									<Switch
-										id="isActive"
-										checked={productForm.isActive}
-										onCheckedChange={(checked) => setProductForm(prev => ({ ...prev, isActive: checked }))}
-									/>
-									<Label htmlFor="isActive">Active</Label>
-								</div>
-								<div className="flex items-center space-x-2">
-									<Switch
-										id="isFeatured"
-										checked={productForm.isFeatured}
-										onCheckedChange={(checked) => setProductForm(prev => ({ ...prev, isFeatured: checked }))}
-									/>
-									<Label htmlFor="isFeatured">Featured</Label>
-								</div>
-							</div>
-						</div>
-
-						{/* Images */}
-						<div className="space-y-4">
-							<h3 className="text-sm font-medium">Product Images</h3>
-							<ImageUpload
-								initialImages={productForm.images}
-								onImagesChange={(images) => setProductForm(prev => ({ ...prev, images }))}
-								maxImages={5}
-							/>
-						</div>
+							</div>			{/* Pricing & Category */}
+			<div className="space-y-4">
+				<h3 className="text-sm font-medium">Pricing & Category</h3>
+				<div className="grid grid-cols-3 gap-4">
+					<div>
+						<Label htmlFor="price">Selling Price *</Label>
+						<Input
+							id="price"
+							type="number"
+							step="0.01"
+							value={productForm.price}
+							onChange={(e) => setProductForm(prev => ({ ...prev, price: e.target.value }))}
+							placeholder="0.00"
+						/>
 					</div>
-
-					<div className="flex justify-end space-x-2">
-						<Button variant="outline" onClick={() => setIsAddProductOpen(false)}>
-							Cancel
-						</Button>
-						<Button onClick={handleFormSubmit} disabled={isLoading}>
-							{isLoading ? 'Creating...' : 'Create Product'}
-						</Button>
+					<div>
+						<Label htmlFor="costPrice">Cost Price *</Label>
+						<Input
+							id="costPrice"
+							type="number"
+							step="0.01"
+							value={productForm.costPrice}
+							onChange={(e) => setProductForm(prev => ({ ...prev, costPrice: e.target.value }))}
+							placeholder="0.00"
+						/>
 					</div>
+					<div>
+						<Label htmlFor="category">Category *</Label>
+						<Select
+							value={productForm.categoryId}
+							onValueChange={(value) => setProductForm(prev => ({ ...prev, categoryId: value }))}
+						>
+							<SelectTrigger>
+								<SelectValue placeholder="Select category" />
+							</SelectTrigger>
+							<SelectContent>
+								{categoriesData.map((category) => (
+									<SelectItem key={category.id} value={category.id.toString()}>
+										{category.name}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					</div>
+				</div>
+			</div>
+
+			{/* Product Attributes */}
+			<div className="space-y-4">
+				<h3 className="text-sm font-medium">Product Attributes</h3>
+				<div className="grid grid-cols-2 gap-4">
+					<div>
+						<Label htmlFor="brand">Brand</Label>
+						<Input
+							id="brand"
+							value={productForm.brand}
+							onChange={(e) => setProductForm(prev => ({ ...prev, brand: e.target.value }))}
+							placeholder="Brand name"
+						/>
+					</div>
+					<div>
+						<Label htmlFor="material">Material</Label>
+						<Input
+							id="material"
+							value={productForm.material}
+							onChange={(e) => setProductForm(prev => ({ ...prev, material: e.target.value }))}
+							placeholder="Material type"
+						/>
+					</div>
+					<div>
+						<Label htmlFor="color">Color</Label>
+						<Input
+							id="color"
+							value={productForm.color}
+							onChange={(e) => setProductForm(prev => ({ ...prev, color: e.target.value }))}
+							placeholder="Color"
+						/>
+					</div>
+					<div>
+						<Label htmlFor="size">Size</Label>
+						<Input
+							id="size"
+							value={productForm.size}
+							onChange={(e) => setProductForm(prev => ({ ...prev, size: e.target.value }))}
+							placeholder="Size"
+						/>
+					</div>
+					<div>
+						<Label htmlFor="weight">Weight (g)</Label>
+						<Input
+							id="weight"
+							type="number"
+							step="0.01"
+							value={productForm.weight}
+							onChange={(e) => setProductForm(prev => ({ ...prev, weight: e.target.value }))}
+							placeholder="Weight in grams"
+						/>
+					</div>
+					<div>
+						<Label htmlFor="dimensions">Dimensions</Label>
+						<Input
+							id="dimensions"
+							value={productForm.dimensions}
+							onChange={(e) => setProductForm(prev => ({ ...prev, dimensions: e.target.value }))}
+							placeholder="L x W x H"
+						/>
+					</div>
+				</div>
+			</div>
+
+			{/* Inventory */}
+			<div className="space-y-4">
+				<h3 className="text-sm font-medium">Inventory</h3>
+				<div>
+					<Label htmlFor="initialStock">Initial Stock</Label>
+					<Input
+						id="initialStock"
+						type="number"
+						value={productForm.initialStock}
+						onChange={(e) => setProductForm(prev => ({ ...prev, initialStock: e.target.value }))}
+						placeholder="Initial stock quantity"
+					/>
+				</div>
+			</div>
+
+			{/* SEO */}
+			<div className="space-y-4">
+				<h3 className="text-sm font-medium">SEO</h3>
+				<div>
+					<Label htmlFor="metaTitle">Meta Title</Label>
+					<Input
+						id="metaTitle"
+						value={productForm.metaTitle}
+						onChange={(e) => setProductForm(prev => ({ ...prev, metaTitle: e.target.value }))}
+						placeholder="SEO meta title"
+					/>
+				</div>
+				<div>
+					<Label htmlFor="metaDescription">Meta Description</Label>
+					<Textarea
+						id="metaDescription"
+						value={productForm.metaDescription}
+						onChange={(e) => setProductForm(prev => ({ ...prev, metaDescription: e.target.value }))}
+						placeholder="SEO meta description"
+						rows={2}
+					/>
+				</div>
+			</div>
+
+			{/* Settings */}
+			<div className="space-y-4">
+				<h3 className="text-sm font-medium">Settings</h3>
+				<div className="flex items-center space-x-4">
+					<div className="flex items-center space-x-2">
+						<Switch
+							id="isActive"
+							checked={productForm.isActive}
+							onCheckedChange={(checked) => setProductForm(prev => ({ ...prev, isActive: checked }))}
+						/>
+						<Label htmlFor="isActive">Active</Label>
+					</div>
+					<div className="flex items-center space-x-2">
+						<Switch
+							id="isFeatured"
+							checked={productForm.isFeatured}
+							onCheckedChange={(checked) => setProductForm(prev => ({ ...prev, isFeatured: checked }))}
+						/>
+						<Label htmlFor="isFeatured">Featured</Label>
+					</div>
+				</div>
+			</div>
+
+			{/* Images */}
+			<div className="space-y-4">
+				<h3 className="text-sm font-medium">Product Images</h3>
+				<ImageUpload
+					initialImages={productForm.images}
+					onImagesChange={(images) => setProductForm(prev => ({ ...prev, images }))}
+					maxImages={5}
+				/>
+			</div>
+		</div>
+	</DialogBody>
+	
+	<DialogFooter>
+		<Button variant="outline" onClick={() => setIsAddProductOpen(false)}>
+			Cancel
+		</Button>
+		<Button onClick={handleFormSubmit} disabled={isLoading}>
+			{isLoading ? 'Creating...' : 'Create Product'}
+		</Button>
+	</DialogFooter>
 				</DialogContent>
 			</Dialog>
 
 			{/* Edit Product Dialog */}
 			<Dialog open={isEditProductOpen} onOpenChange={setIsEditProductOpen}>
-				<DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+				<DialogContent>
 					<DialogHeader>
 						<DialogTitle>Edit Product</DialogTitle>
 						<DialogDescription>
@@ -801,8 +803,9 @@ export function ProductsManagement() {
 						</DialogDescription>
 					</DialogHeader>
 
-					{/* Same form fields as Add Product */}
-					<div className="grid gap-4 py-4">
+					<DialogBody>
+						{/* Same form fields as Add Product */}
+						<div className="grid gap-4">
 						{/* Basic Information */}
 						<div className="space-y-4">
 							<h3 className="text-sm font-medium">Basic Information</h3>
@@ -928,22 +931,23 @@ export function ProductsManagement() {
 								maxImages={5}
 							/>
 						</div>
-					</div>
+						</div>
+					</DialogBody>
 
-					<div className="flex justify-end space-x-2">
+					<DialogFooter>
 						<Button variant="outline" onClick={() => setIsEditProductOpen(false)}>
 							Cancel
 						</Button>
 						<Button onClick={handleFormSubmit} disabled={isLoading}>
 							{isLoading ? 'Updating...' : 'Update Product'}
 						</Button>
-					</div>
+					</DialogFooter>
 				</DialogContent>
 			</Dialog>
 
 			{/* View Product Dialog */}
 			<Dialog open={isViewProductOpen} onOpenChange={setIsViewProductOpen}>
-				<DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+				<DialogContent className="sm:max-w-[600px] sm:w-[600px]">
 					<DialogHeader>
 						<DialogTitle>Product Details</DialogTitle>
 						<DialogDescription>
@@ -952,7 +956,8 @@ export function ProductsManagement() {
 					</DialogHeader>
 
 					{viewingProduct && (
-						<div className="grid gap-6 py-4">
+						<DialogBody>
+							<div className="grid gap-6">
 							{/* Images */}
 							<div className="space-y-2">
 								<h3 className="text-sm font-medium">Images</h3>
@@ -1043,14 +1048,15 @@ export function ProductsManagement() {
 									</Badge>
 								)}
 							</div>
-						</div>
+							</div>
+						</DialogBody>
 					)}
 
-					<div className="flex justify-end">
+					<DialogFooter>
 						<Button variant="outline" onClick={() => setIsViewProductOpen(false)}>
 							Close
 						</Button>
-					</div>
+					</DialogFooter>
 				</DialogContent>
 			</Dialog>
 		</div>

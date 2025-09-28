@@ -144,6 +144,14 @@ const productRoutes: FastifyPluginCallback = async (fastify) => {
 	}, async (request, reply) => {
 		try {
 			const data = createProductSchema.parse(request.body)
+			
+			// Ensure we have a valid user
+			if (!request.user?.userId) {
+				return reply.code(401).send({ 
+					error: 'Authentication required',
+					message: 'User information not found in request' 
+				})
+			}
 
 			// Generate slug from name
 			const slug = data.name.toLowerCase()
@@ -205,7 +213,7 @@ const productRoutes: FastifyPluginCallback = async (fastify) => {
 							referenceType: 'PURCHASE',
 							notes: 'Initial stock entry',
 							unitCost: data.costPrice,
-							createdBy: (request as any).user.id
+							createdBy: parseInt(request.user!.userId)
 						}
 					})
 				}
@@ -228,6 +236,13 @@ const productRoutes: FastifyPluginCallback = async (fastify) => {
 			return reply.code(201).send({ product })
 		} catch (error: any) {
 			console.error('Product creation error:', error)
+			if (error.name === 'ZodError') {
+				return reply.code(400).send({ 
+					error: 'Invalid request data',
+					message: 'Validation failed',
+					details: error.errors
+				})
+			}
 			return reply.code(400).send({ 
 				error: 'Invalid request data', 
 				message: error.message 

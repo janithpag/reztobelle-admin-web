@@ -1,5 +1,5 @@
 import { apiClient } from '@/lib/api';
-import { User } from '@/contexts/auth-context';
+import { FrontendUser } from '@/types';
 
 export interface LoginCredentials {
 	email: string;
@@ -7,12 +7,12 @@ export interface LoginCredentials {
 }
 
 export interface LoginResponse {
-	user: User;
+	user: FrontendUser;
 	token: string;
 }
 
 export interface UserResponse {
-	user: User;
+	user: FrontendUser;
 }
 
 /**
@@ -57,27 +57,16 @@ export const getCurrentUser = async (): Promise<UserResponse> => {
 	}
 };
 
-/**
- * Refresh user token (if implemented on backend)
- */
-export const refreshToken = async (): Promise<LoginResponse> => {
-	try {
-		const response = await apiClient.post<LoginResponse>('/auth/refresh');
-		return response.data;
-	} catch (error: any) {
-		if (error.response?.data?.error) {
-			throw new Error(error.response.data.error);
-		}
-		throw new Error('Failed to refresh token');
-	}
-};
-
 // Create an auth service object for those who prefer object notation
 export const authService = {
 	login,
 	logout,
 	getCurrentUser,
-	refreshToken,
 };
 
 export default authService;
+
+/**
+ * Note: Token refresh is handled automatically through the backend JWT expiration.
+ * The backend returns a 24-hour JWT token that should be renewed by re-logging in when expired.
+ */

@@ -9,6 +9,7 @@ import {
 	StockMovement,
 	Expense,
 	User,
+	FrontendUser,
 	ActivityLog,
 	DeliveryLog,
 	CreateProductForm,
@@ -612,12 +613,6 @@ export const authAPI = {
 	// Login
 	login: async (email: string, password: string): Promise<{ user: User; token: string }> => {
 		const response = await apiClient.post('/auth/login', { email, password });
-		return response.data;
-	},
-
-	// Refresh token
-	refreshToken: async (): Promise<{ user: User; token: string }> => {
-		const response = await apiClient.post('/auth/refresh');
 		return response.data;
 	},
 

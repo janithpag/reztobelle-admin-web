@@ -164,7 +164,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 										<Button variant="ghost" className="relative h-8 w-8 sm:h-10 sm:w-10 rounded-full">
 											<Avatar className="h-8 w-8 sm:h-10 sm:w-10 ring-2 ring-primary/20 shadow-md hover:ring-primary/40 transition-all">
 												<AvatarFallback className="bg-primary text-primary-foreground font-semibold text-xs sm:text-sm">
-													{user.name?.trim().charAt(0).toUpperCase()}
+													{user.firstName?.trim().charAt(0).toUpperCase()}
 												</AvatarFallback>
 											</Avatar>
 										</Button>
@@ -172,7 +172,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 									<DropdownMenuContent className="w-56" align="end" forceMount>
 										<DropdownMenuLabel className="font-normal">
 											<div className="flex flex-col space-y-1">
-												<p className="text-sm font-medium leading-none">{user.name}</p>
+												<p className="text-sm font-medium leading-none">{user.firstName} {user.lastName}</p>
 												<p className="text-xs leading-none text-muted-foreground">{user.email}</p>
 											</div>
 										</DropdownMenuLabel>

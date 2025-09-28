@@ -36,6 +36,10 @@ const envSchema = {
 		JWT_SECRET: {
 			type: 'string'
 		},
+		BCRYPT_SALT_ROUNDS: {
+			type: 'string',
+			default: '12'
+		},
 		NODE_ENV: {
 			type: 'string',
 			default: 'development'

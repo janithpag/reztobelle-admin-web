@@ -165,6 +165,16 @@ export interface User {
   passwordHash: string;
 }
 
+// Frontend-safe user interface matching backend API responses
+export interface FrontendUser {
+  id: number;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+  createdAt?: string;
+}
+
 export interface ActivityLog {
   id: number;
   userId: number;

@@ -3,16 +3,10 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import * as authService from '@/lib/auth-service';
-
-export interface User {
-	id: string;
-	email: string;
-	name: string;
-	role: string;
-}
+import { FrontendUser } from '@/types';
 
 interface AuthContextType {
-	user: User | null;
+	user: FrontendUser | null;
 	token: string | null;
 	isLoading: boolean;
 	isAuthenticated: boolean;
@@ -36,7 +30,7 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-	const [user, setUser] = useState<User | null>(null);
+	const [user, setUser] = useState<FrontendUser | null>(null);
 	const [token, setToken] = useState<string | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const router = useRouter();

@@ -75,7 +75,8 @@ const authRoutes: FastifyPluginCallback = async (fastify) => {
 				return reply.code(409).send({ error: 'User already exists' })
 			}
 
-			const hashedPassword = await bcrypt.hash(password, 12)
+			const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS!) || 12
+			const hashedPassword = await bcrypt.hash(password, saltRounds)
 
 			const user = await fastify.prisma.user.create({
 				data: {

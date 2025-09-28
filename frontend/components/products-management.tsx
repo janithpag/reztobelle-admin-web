@@ -1,21 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import {
-	Pagination,
-	PaginationContent,
-	PaginationItem,
-	PaginationLink,
-	PaginationNext,
-	PaginationPrevious,
-	PaginationEllipsis,
-} from '@/components/ui/pagination';
 import {
 	Dialog,
 	DialogContent,
@@ -29,6 +20,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ImageUpload } from '@/components/image-upload';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Switch } from '@/components/ui/switch';
 import {
 	Plus,
 	Search,
@@ -41,67 +33,66 @@ import {
 	TrendingUp,
 	AlertCircle,
 } from 'lucide-react';
-import { productsAPI } from '@/lib/api';
-
-// Types for product and uploaded image
-interface UploadedImage {
-	public_id: string;
-	url: string;
-	secure_url: string;
-	width: number;
-	height: number;
-	format: string;
-	bytes: number;
-}
-
-// Product interface matching backend Prisma model
-interface Product {
-	id: string;
-	name: string;
-	description?: string;
-	price: number;
-	sku: string;
-	category: string;
-	stock: number;
-	images: string[];
-	isActive: boolean;
-	createdAt: string;
-	updatedAt: string;
-}
+import { productsAPI, categoriesAPI } from '@/lib/api';
+import { Product, Category, UploadedImage, CreateProductForm, UpdateProductForm } from '@/types';
 
 interface ProductFormData {
 	name: string;
 	description: string;
+	shortDescription: string;
 	price: string;
+	costPrice: string;
 	sku: string;
-	category: string;
-	stock: string;
+	categoryId: string;
+	material: string;
+	color: string;
+	size: string;
+	weight: string;
+	dimensions: string;
+	brand: string;
+	metaTitle: string;
+	metaDescription: string;
+	initialStock: string;
+	isActive: boolean;
+	isFeatured: boolean;
 	images: UploadedImage[];
 }
-import { Loading } from '@/components/ui/loading';
 
 export function ProductsManagement() {
 	const [searchTerm, setSearchTerm] = useState('');
-	const [selectedCategory, setSelectedCategory] = useState('all');
+	const [selectedCategory, setSelectedCategory] = useState<number | 'all'>('all');
 	const [isAddProductOpen, setIsAddProductOpen] = useState(false);
 	const [isEditProductOpen, setIsEditProductOpen] = useState(false);
 	const [isViewProductOpen, setIsViewProductOpen] = useState(false);
 	const [currentPage, setCurrentPage] = useState(1);
-	const [itemsPerPage] = useState(5);
+	const [itemsPerPage] = useState(10);
 	const [isLoading, setIsLoading] = useState(true);
 	const [productsData, setProductsData] = useState<Product[]>([]);
+	const [categoriesData, setCategoriesData] = useState<Category[]>([]);
 	const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 	const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
 	const [error, setError] = useState<string | null>(null);
-	
-	// Form state for adding products
+
+	// Form state for adding/editing products with all new fields
 	const [productForm, setProductForm] = useState<ProductFormData>({
 		name: '',
 		description: '',
+		shortDescription: '',
 		price: '',
+		costPrice: '',
 		sku: '',
-		category: 'Press-On Nails', // Default category
-		stock: '',
+		categoryId: '',
+		material: '',
+		color: '',
+		size: '',
+		weight: '',
+		dimensions: '',
+		brand: '',
+		metaTitle: '',
+		metaDescription: '',
+		initialStock: '',
+		isActive: true,
+		isFeatured: false,
 		images: [],
 	});
 
@@ -109,19 +100,38 @@ export function ProductsManagement() {
 		setProductForm({
 			name: '',
 			description: '',
+			shortDescription: '',
 			price: '',
+			costPrice: '',
 			sku: '',
-			category: 'Press-On Nails', // Default category
-			stock: '',
+			categoryId: '',
+			material: '',
+			color: '',
+			size: '',
+			weight: '',
+			dimensions: '',
+			brand: '',
+			metaTitle: '',
+			metaDescription: '',
+			initialStock: '',
+			isActive: true,
+			isFeatured: false,
 			images: [],
 		});
 	};
 
-	const loadProducts = async () => {
+	const loadProducts = useCallback(async () => {
 		setIsLoading(true);
 		setError(null);
 		try {
-			const response = await productsAPI.getProducts();
+			const params: any = {};
+			if (selectedCategory !== 'all') {
+				params.categoryId = selectedCategory;
+			}
+			if (searchTerm) {
+				params.search = searchTerm;
+			}
+			const response = await productsAPI.getProducts(params);
 			setProductsData(response.products || []);
 		} catch (error) {
 			console.error('Failed to load products:', error);
@@ -129,32 +139,78 @@ export function ProductsManagement() {
 		} finally {
 			setIsLoading(false);
 		}
+	}, [selectedCategory, searchTerm]);
+
+	const loadCategories = async () => {
+		try {
+			const response = await categoriesAPI.getCategories();
+			setCategoriesData(response.categories || []);
+		} catch (error) {
+			console.error('Failed to load categories:', error);
+		}
 	};
+
+	// Load data on component mount and when filters change
+	useEffect(() => {
+		loadCategories();
+	}, []);
+
+	useEffect(() => {
+		loadProducts();
+	}, [loadProducts]);
 
 	const handleFormSubmit = async () => {
 		try {
 			setIsLoading(true);
-			
-			// Convert uploaded images to URLs
-			const imageUrls = productForm.images.map(img => img.secure_url);
-			
-			await productsAPI.createProduct({
+			setError(null);
+
+			// Validate required fields
+			if (!productForm.name || !productForm.price || !productForm.costPrice || !productForm.sku || !productForm.categoryId) {
+				setError('Please fill in all required fields (name, price, cost price, SKU, category)');
+				return;
+			}
+
+			const productData: CreateProductForm = {
 				name: productForm.name,
 				description: productForm.description || undefined,
+				shortDescription: productForm.shortDescription || undefined,
 				price: parseFloat(productForm.price),
+				costPrice: parseFloat(productForm.costPrice),
 				sku: productForm.sku,
-				category: productForm.category,
-				stock: parseInt(productForm.stock) || 0,
-				images: imageUrls,
-				isActive: true,
-			});
-			
-			setIsAddProductOpen(false);
+				categoryId: parseInt(productForm.categoryId),
+				material: productForm.material || undefined,
+				color: productForm.color || undefined,
+				size: productForm.size || undefined,
+				weight: productForm.weight ? parseFloat(productForm.weight) : undefined,
+				dimensions: productForm.dimensions || undefined,
+				brand: productForm.brand || undefined,
+				metaTitle: productForm.metaTitle || undefined,
+				metaDescription: productForm.metaDescription || undefined,
+				isActive: productForm.isActive,
+				isFeatured: productForm.isFeatured,
+				images: productForm.images,
+				initialStock: productForm.initialStock ? parseInt(productForm.initialStock) : 0
+			};
+
+			if (editingProduct) {
+				// Update existing product
+				const updateData: UpdateProductForm = { ...productData };
+				delete (updateData as any).initialStock; // Remove initialStock for updates
+				
+				await productsAPI.updateProduct(editingProduct.id, updateData);
+				setIsEditProductOpen(false);
+				setEditingProduct(null);
+			} else {
+				// Create new product
+				await productsAPI.createProduct(productData);
+				setIsAddProductOpen(false);
+			}
+
 			resetForm();
-			await loadProducts(); // Reload products
-		} catch (error) {
-			console.error('Error creating product:', error);
-			setError('Failed to create product. Please try again.');
+			loadProducts(); // Refresh products list
+		} catch (error: any) {
+			console.error('Failed to save product:', error);
+			setError(error.response?.data?.message || error.message || 'Failed to save product. Please try again.');
 		} finally {
 			setIsLoading(false);
 		}
@@ -165,14 +221,26 @@ export function ProductsManagement() {
 		setProductForm({
 			name: product.name,
 			description: product.description || '',
+			shortDescription: product.shortDescription || '',
 			price: product.price.toString(),
+			costPrice: product.costPrice.toString(),
 			sku: product.sku,
-			category: product.category,
-			stock: product.stock.toString(),
-			images: product.images.map(url => ({
-				public_id: '',
-				url,
-				secure_url: url,
+			categoryId: product.categoryId.toString(),
+			material: product.material || '',
+			color: product.color || '',
+			size: product.size || '',
+			weight: product.weight?.toString() || '',
+			dimensions: product.dimensions || '',
+			brand: product.brand || '',
+			metaTitle: product.metaTitle || '',
+			metaDescription: product.metaDescription || '',
+			initialStock: '0', // Not used for updates
+			isActive: product.isActive,
+			isFeatured: product.isFeatured,
+			images: (product.images || []).map(img => ({
+				public_id: img.cloudinaryId,
+				url: img.imageUrl,
+				secure_url: img.imageUrl,
 				width: 0,
 				height: 0,
 				format: '',
@@ -182,94 +250,112 @@ export function ProductsManagement() {
 		setIsEditProductOpen(true);
 	};
 
-	const handleUpdateProduct = async () => {
-		if (!editingProduct) return;
-		
-		try {
-			setIsLoading(true);
-			
-			// Convert uploaded images to URLs
-			const imageUrls = productForm.images.map(img => img.secure_url);
-			
-			await productsAPI.updateProduct(editingProduct.id, {
-				name: productForm.name,
-				description: productForm.description || undefined,
-				price: parseFloat(productForm.price),
-				sku: productForm.sku,
-				category: productForm.category,
-				stock: parseInt(productForm.stock) || 0,
-				images: imageUrls,
-			});
-			
-			setIsEditProductOpen(false);
-			setEditingProduct(null);
-			resetForm();
-			await loadProducts(); // Reload products
-		} catch (error) {
-			console.error('Error updating product:', error);
-			setError('Failed to update product. Please try again.');
-		} finally {
-			setIsLoading(false);
+	const handleViewProduct = (product: Product) => {
+		setViewingProduct(product);
+		setIsViewProductOpen(true);
+	};
+
+	const handleDeleteProduct = async (productId: number) => {
+		if (window.confirm('Are you sure you want to delete this product?')) {
+			try {
+				setIsLoading(true);
+				await productsAPI.deleteProduct(productId);
+				loadProducts(); // Refresh products list
+			} catch (error: any) {
+				console.error('Failed to delete product:', error);
+				setError(error.response?.data?.message || 'Failed to delete product. Please try again.');
+			} finally {
+				setIsLoading(false);
+			}
 		}
 	};
 
-	const handleViewProduct = (productId: string) => {
-		const product = productsData.find(p => p.id === productId);
-		if (product) {
-			setViewingProduct(product);
-			setIsViewProductOpen(true);
-		}
-	};
-
-	const handleDeleteProduct = async (productId: string) => {
-		if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
-			return;
-		}
-		
-		try {
-			setIsLoading(true);
-			await productsAPI.deleteProduct(productId);
-			await loadProducts(); // Reload products
-		} catch (error) {
-			console.error('Error deleting product:', error);
-			setError('Failed to delete product. Please try again.');
-		} finally {
-			setIsLoading(false);
-		}
-	};
-
-	// Load products on component mount
-	useEffect(() => {
-		loadProducts();
-	}, []);
-
+	// Filter products based on search term and category
 	const filteredProducts = productsData.filter((product) => {
-		const matchesSearch =
-			product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			product.sku.toLowerCase().includes(searchTerm.toLowerCase()); // Added SKU to search
-		const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
+		const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+			product.sku.toLowerCase().includes(searchTerm.toLowerCase());
+		const matchesCategory = selectedCategory === 'all' || product.categoryId === selectedCategory;
 		return matchesSearch && matchesCategory;
 	});
 
+	// Pagination
 	const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
-	const startIndex = (currentPage - 1) * itemsPerPage;
-	const endIndex = startIndex + itemsPerPage;
-	const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
+	const paginatedProducts = filteredProducts.slice(
+		(currentPage - 1) * itemsPerPage,
+		currentPage * itemsPerPage
+	);
 
-	useEffect(() => {
-		setCurrentPage(1);
-	}, [searchTerm, selectedCategory]);
-
-	// Calculate stats from products data
+	// Stats
 	const totalProducts = productsData.length;
-	const lowStockProducts = productsData.filter(product => product.stock <= 10);
-	const totalRevenue = productsData.reduce((sum, product) => sum + Number(product.price), 0);
-	const bestSellerProduct = productsData.length > 0 ? productsData[0] : null;
-
-	const categories = ['all', 'Press-On Nails', 'Earrings', 'Rings'];
+	const activeProducts = productsData.filter(product => product.isActive).length;
+	const lowStockProducts = productsData.filter(product => 
+		product.inventory && product.inventory.quantityAvailable <= product.inventory.reorderLevel
+	).length;
 
 	return (
-		<div className="space-y-4 sm:space-y-6">
+		<div className="flex-1 space-y-6 p-6">
+			{/* Header */}
+			<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+				<div>
+					<h1 className="text-2xl font-bold tracking-tight">Products Management</h1>
+					<p className="text-muted-foreground">
+						Manage your product catalog, inventory, and pricing
+					</p>
+				</div>
+				<Button
+					onClick={() => {
+						resetForm();
+						setIsAddProductOpen(true);
+					}}
+					className="font-semibold"
+				>
+					<Plus className="h-4 w-4 mr-2" />
+					Add Product
+				</Button>
+			</div>
+
+			{/* Stats Cards */}
+			<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+				<Card>
+					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+						<CardTitle className="text-sm font-medium">Total Products</CardTitle>
+						<Package className="h-4 w-4 text-muted-foreground" />
+					</CardHeader>
+					<CardContent>
+						<div className="text-2xl font-bold">{totalProducts}</div>
+						<p className="text-xs text-muted-foreground">
+							{activeProducts} active products
+						</p>
+					</CardContent>
+				</Card>
+				<Card>
+					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+						<CardTitle className="text-sm font-medium">Low Stock Alert</CardTitle>
+						<AlertCircle className="h-4 w-4 text-muted-foreground" />
+					</CardHeader>
+					<CardContent>
+						<div className="text-2xl font-bold">{lowStockProducts}</div>
+						<p className="text-xs text-muted-foreground">
+							Items need restocking
+						</p>
+					</CardContent>
+				</Card>
+				<Card>
+					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+						<CardTitle className="text-sm font-medium">Featured Products</CardTitle>
+						<Star className="h-4 w-4 text-muted-foreground" />
+					</CardHeader>
+					<CardContent>
+						<div className="text-2xl font-bold">
+							{productsData.filter(p => p.isFeatured).length}
+						</div>
+						<p className="text-xs text-muted-foreground">
+							Highlighted products
+						</p>
+					</CardContent>
+				</Card>
+			</div>
+
 			{/* Error Alert */}
 			{error && (
 				<Alert variant="destructive">
@@ -278,637 +364,695 @@ export function ProductsManagement() {
 				</Alert>
 			)}
 
-			{/* Header */}
-			<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-				<div>
-					<h1 className="text-2xl sm:text-3xl font-bold text-sidebar-foreground text-balance">Products</h1>
-					<p className="text-sm sm:text-base text-sidebar-foreground/70 font-medium">
-						Manage your fashion accessories inventory
-					</p>
+			{/* Filters */}
+			<div className="flex flex-col sm:flex-row gap-4">
+				<div className="relative flex-1">
+					<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+					<Input
+						placeholder="Search products by name or SKU..."
+						value={searchTerm}
+						onChange={(e) => setSearchTerm(e.target.value)}
+						className="pl-10"
+					/>
 				</div>
-				<Dialog open={isAddProductOpen} onOpenChange={setIsAddProductOpen}>
-					<DialogTrigger asChild>
-						<Button className="bg-primary hover:bg-primary/90 font-semibold w-full sm:w-auto" disabled={isLoading}>
-							<Plus className="mr-2 h-4 w-4" />
-							Add Product
-						</Button>
-					</DialogTrigger>
-					<DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto mx-4">
-						<DialogHeader>
-							<DialogTitle className="text-base sm:text-lg text-sidebar-foreground font-semibold">
-								Add New Product
-							</DialogTitle>
-							<DialogDescription className="text-sm text-sidebar-foreground/70 font-medium">
-								Create a new product for your ReztoBelle collection
-							</DialogDescription>
-						</DialogHeader>
-						<div className="grid gap-4 py-4">
-							<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-								<div className="space-y-2">
-									<Label htmlFor="name" className="text-sm text-sidebar-foreground font-semibold">
-										Product Name
-									</Label>
+				<Select
+					value={selectedCategory === 'all' ? 'all' : selectedCategory.toString()}
+					onValueChange={(value) => setSelectedCategory(value === 'all' ? 'all' : parseInt(value))}
+				>
+					<SelectTrigger className="w-[200px]">
+						<SelectValue placeholder="Filter by category" />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value="all">All Categories</SelectItem>
+						{categoriesData.map((category) => (
+							<SelectItem key={category.id} value={category.id.toString()}>
+								{category.name}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
+			</div>
+
+			{/* Products Table */}
+			<Card>
+				<CardHeader>
+					<CardTitle>Products ({filteredProducts.length})</CardTitle>
+					<CardDescription>
+						Manage your product catalog and inventory
+					</CardDescription>
+				</CardHeader>
+				<CardContent>
+					{isLoading ? (
+						<div className="text-center py-8">Loading products...</div>
+					) : paginatedProducts.length === 0 ? (
+						<div className="text-center py-8 text-muted-foreground">
+							{searchTerm || selectedCategory !== 'all' 
+								? 'No products match your search criteria.' 
+								: 'No products found. Add your first product to get started.'
+							}
+						</div>
+					) : (
+						<>
+							<Table>
+								<TableHeader>
+									<TableRow>
+										<TableHead>Product</TableHead>
+										<TableHead>Category</TableHead>
+										<TableHead>Price</TableHead>
+										<TableHead>Stock</TableHead>
+										<TableHead>Status</TableHead>
+										<TableHead className="text-right">Actions</TableHead>
+									</TableRow>
+								</TableHeader>
+								<TableBody>
+									{paginatedProducts.map((product) => (
+										<TableRow key={product.id}>
+											<TableCell>
+												<div className="flex items-center space-x-3">
+													<div className="relative w-10 h-10">
+														<Image
+															src={product.images?.[0]?.imageUrl || '/placeholder.svg'}
+															alt={product.name}
+															fill
+															className="object-cover rounded"
+														/>
+													</div>
+													<div>
+														<div className="font-medium">{product.name}</div>
+														<div className="text-sm text-muted-foreground">{product.sku}</div>
+													</div>
+												</div>
+											</TableCell>
+											<TableCell>
+												<span className="text-sm">{product.category?.name}</span>
+											</TableCell>
+											<TableCell>
+												<div className="font-medium">₹{product.price}</div>
+												<div className="text-sm text-muted-foreground">
+													Cost: ₹{product.costPrice}
+												</div>
+											</TableCell>
+											<TableCell>
+												<div className="flex items-center space-x-2">
+													<span className="font-medium">
+														{product.inventory?.quantityAvailable || 0}
+													</span>
+													{product.inventory && product.inventory.quantityAvailable <= product.inventory.reorderLevel && (
+														<Badge variant="destructive" className="text-xs">
+															Low Stock
+														</Badge>
+													)}
+												</div>
+											</TableCell>
+											<TableCell>
+												<div className="flex items-center space-x-2">
+													<Badge variant={product.isActive ? "default" : "secondary"}>
+														{product.isActive ? 'Active' : 'Inactive'}
+													</Badge>
+													{product.isFeatured && (
+														<Badge variant="outline">
+															<Star className="w-3 h-3 mr-1" />
+															Featured
+														</Badge>
+													)}
+												</div>
+											</TableCell>
+											<TableCell className="text-right">
+												<div className="flex justify-end space-x-2">
+													<Button
+														variant="outline"
+														size="sm"
+														onClick={() => handleViewProduct(product)}
+													>
+														<Eye className="h-4 w-4" />
+													</Button>
+													<Button
+														variant="outline"
+														size="sm"
+														onClick={() => handleEditProduct(product)}
+													>
+														<Edit className="h-4 w-4" />
+													</Button>
+													<Button
+														variant="outline"
+														size="sm"
+														onClick={() => handleDeleteProduct(product.id)}
+													>
+														<Trash2 className="h-4 w-4" />
+													</Button>
+												</div>
+											</TableCell>
+										</TableRow>
+									))}
+								</TableBody>
+							</Table>
+
+							{/* Pagination */}
+							{totalPages > 1 && (
+								<div className="flex items-center justify-between mt-4">
+									<div className="text-sm text-muted-foreground">
+										Showing {(currentPage - 1) * itemsPerPage + 1} to{' '}
+										{Math.min(currentPage * itemsPerPage, filteredProducts.length)} of{' '}
+										{filteredProducts.length} products
+									</div>
+									<div className="flex space-x-2">
+										<Button
+											variant="outline"
+											size="sm"
+											onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+											disabled={currentPage === 1}
+										>
+											Previous
+										</Button>
+										<Button
+											variant="outline"
+											size="sm"
+											onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+											disabled={currentPage === totalPages}
+										>
+											Next
+										</Button>
+									</div>
+								</div>
+							)}
+						</>
+					)}
+				</CardContent>
+			</Card>
+
+			{/* Add Product Dialog */}
+			<Dialog open={isAddProductOpen} onOpenChange={setIsAddProductOpen}>
+				<DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+					<DialogHeader>
+						<DialogTitle>Add New Product</DialogTitle>
+						<DialogDescription>
+							Create a new product with all the necessary details.
+						</DialogDescription>
+					</DialogHeader>
+
+					<div className="grid gap-4 py-4">
+						{/* Basic Information */}
+						<div className="space-y-4">
+							<h3 className="text-sm font-medium">Basic Information</h3>
+							<div className="grid grid-cols-2 gap-4">
+								<div>
+									<Label htmlFor="name">Product Name *</Label>
 									<Input
 										id="name"
-										placeholder="Enter product name"
 										value={productForm.name}
 										onChange={(e) => setProductForm(prev => ({ ...prev, name: e.target.value }))}
-										className="border-sidebar-border text-sm"
+										placeholder="Enter product name"
 									/>
 								</div>
-								<div className="space-y-2">
-									<Label htmlFor="sku" className="text-sm text-sidebar-foreground font-semibold">
-										SKU
-									</Label>
+								<div>
+									<Label htmlFor="sku">SKU *</Label>
 									<Input
 										id="sku"
-										placeholder="Enter product SKU"
 										value={productForm.sku}
 										onChange={(e) => setProductForm(prev => ({ ...prev, sku: e.target.value }))}
-										className="border-sidebar-border text-sm"
+										placeholder="Enter SKU"
 									/>
 								</div>
 							</div>
-							<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-								<div className="space-y-2">
-									<Label htmlFor="category" className="text-sm text-sidebar-foreground font-semibold">
-										Category
-									</Label>
-									<Select value={productForm.category} onValueChange={(value) => setProductForm(prev => ({ ...prev, category: value }))}>
-										<SelectTrigger className="border-sidebar-border">
-											<SelectValue placeholder="Select category" />
-										</SelectTrigger>
-										<SelectContent>
-											<SelectItem value="Press-On Nails">Press-On Nails</SelectItem>
-											<SelectItem value="Earrings">Earrings</SelectItem>
-											<SelectItem value="Rings">Rings</SelectItem>
-										</SelectContent>
-									</Select>
-								</div>
-								<div className="space-y-2">
-									<Label htmlFor="price" className="text-sm text-sidebar-foreground font-semibold">
-										Price (LKR)
-									</Label>
+
+							<div>
+								<Label htmlFor="description">Description</Label>
+								<Textarea
+									id="description"
+									value={productForm.description}
+									onChange={(e) => setProductForm(prev => ({ ...prev, description: e.target.value }))}
+									placeholder="Enter product description"
+									rows={3}
+								/>
+							</div>
+
+							<div>
+								<Label htmlFor="shortDescription">Short Description</Label>
+								<Input
+									id="shortDescription"
+									value={productForm.shortDescription}
+									onChange={(e) => setProductForm(prev => ({ ...prev, shortDescription: e.target.value }))}
+									placeholder="Brief product description"
+								/>
+							</div>
+						</div>
+
+						{/* Pricing & Category */}
+						<div className="space-y-4">
+							<h3 className="text-sm font-medium">Pricing & Category</h3>
+							<div className="grid grid-cols-3 gap-4">
+								<div>
+									<Label htmlFor="price">Selling Price *</Label>
 									<Input
 										id="price"
 										type="number"
 										step="0.01"
-										placeholder="0.00"
 										value={productForm.price}
 										onChange={(e) => setProductForm(prev => ({ ...prev, price: e.target.value }))}
-										className="border-sidebar-border text-sm"
+										placeholder="0.00"
 									/>
 								</div>
-							</div>
-							<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-								<div className="space-y-2">
-									<Label htmlFor="stock" className="text-sm text-sidebar-foreground font-semibold">
-										Stock Quantity
-									</Label>
+								<div>
+									<Label htmlFor="costPrice">Cost Price *</Label>
 									<Input
-										id="stock"
+										id="costPrice"
 										type="number"
-										placeholder="0"
-										value={productForm.stock}
-										onChange={(e) => setProductForm(prev => ({ ...prev, stock: e.target.value }))}
-										className="border-sidebar-border text-sm"
+										step="0.01"
+										value={productForm.costPrice}
+										onChange={(e) => setProductForm(prev => ({ ...prev, costPrice: e.target.value }))}
+										placeholder="0.00"
 									/>
 								</div>
-								<div className="space-y-2">
-									<Label htmlFor="description" className="text-sm text-sidebar-foreground font-semibold">
-										Description
-									</Label>
-									<Textarea
-										id="description"
-										placeholder="Enter product description"
-										value={productForm.description}
-										onChange={(e) => setProductForm(prev => ({ ...prev, description: e.target.value }))}
-										className="border-sidebar-border text-sm"
-									/>
-								</div>
-							</div>
-							<div className="space-y-2">
-								<Label className="text-sm text-sidebar-foreground font-semibold">
-									Product Images
-								</Label>
-								<ImageUpload
-									onImagesChange={(images) => setProductForm(prev => ({ ...prev, images }))}
-									initialImages={productForm.images}
-									maxImages={5}
-									maxFileSize={10}
-									className="w-full"
-								/>
-							</div>
-						</div>
-						<div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2">
-							<Button
-								variant="outline"
-								onClick={() => {
-									setIsAddProductOpen(false);
-									resetForm();
-								}}
-								className="border-sidebar-border text-sidebar-foreground hover:bg-muted/50 font-medium w-full sm:w-auto"
-							>
-								Cancel
-							</Button>
-							<Button onClick={handleFormSubmit} className="font-semibold w-full sm:w-auto">
-								Add Product
-							</Button>
-						</div>
-					</DialogContent>
-				</Dialog>
-
-				{/* Edit Product Dialog */}
-				<Dialog open={isEditProductOpen} onOpenChange={setIsEditProductOpen}>
-					<DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto mx-4">
-						<DialogHeader>
-							<DialogTitle className="text-base sm:text-lg text-sidebar-foreground font-semibold">
-								Edit Product
-							</DialogTitle>
-							<DialogDescription className="text-sm text-sidebar-foreground/70 font-medium">
-								Update the product details for your ReztoBelle collection
-							</DialogDescription>
-						</DialogHeader>
-						<div className="grid gap-4 py-4">
-							<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-								<div className="space-y-2">
-									<Label htmlFor="edit-name" className="text-sm text-sidebar-foreground font-semibold">
-										Product Name
-									</Label>
-									<Input
-										id="edit-name"
-										placeholder="Enter product name"
-										value={productForm.name}
-										onChange={(e) => setProductForm(prev => ({ ...prev, name: e.target.value }))}
-										className="border-sidebar-border text-sm"
-									/>
-								</div>
-								<div className="space-y-2">
-									<Label htmlFor="edit-sku" className="text-sm text-sidebar-foreground font-semibold">
-										SKU
-									</Label>
-									<Input
-										id="edit-sku"
-										placeholder="Enter product SKU"
-										value={productForm.sku}
-										onChange={(e) => setProductForm(prev => ({ ...prev, sku: e.target.value }))}
-										className="border-sidebar-border text-sm"
-									/>
-								</div>
-							</div>
-							<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-								<div className="space-y-2">
-									<Label htmlFor="edit-category" className="text-sm text-sidebar-foreground font-semibold">
-										Category
-									</Label>
-									<Select value={productForm.category} onValueChange={(value) => setProductForm(prev => ({ ...prev, category: value }))}>
-										<SelectTrigger className="border-sidebar-border">
+								<div>
+									<Label htmlFor="category">Category *</Label>
+									<Select
+										value={productForm.categoryId}
+										onValueChange={(value) => setProductForm(prev => ({ ...prev, categoryId: value }))}
+									>
+										<SelectTrigger>
 											<SelectValue placeholder="Select category" />
 										</SelectTrigger>
 										<SelectContent>
-											<SelectItem value="Press-On Nails">Press-On Nails</SelectItem>
-											<SelectItem value="Earrings">Earrings</SelectItem>
-											<SelectItem value="Rings">Rings</SelectItem>
+											{categoriesData.map((category) => (
+												<SelectItem key={category.id} value={category.id.toString()}>
+													{category.name}
+												</SelectItem>
+											))}
 										</SelectContent>
 									</Select>
 								</div>
-								<div className="space-y-2">
-									<Label htmlFor="edit-price" className="text-sm text-sidebar-foreground font-semibold">
-										Price (LKR)
-									</Label>
+							</div>
+						</div>
+
+						{/* Product Attributes */}
+						<div className="space-y-4">
+							<h3 className="text-sm font-medium">Product Attributes</h3>
+							<div className="grid grid-cols-2 gap-4">
+								<div>
+									<Label htmlFor="brand">Brand</Label>
+									<Input
+										id="brand"
+										value={productForm.brand}
+										onChange={(e) => setProductForm(prev => ({ ...prev, brand: e.target.value }))}
+										placeholder="Brand name"
+									/>
+								</div>
+								<div>
+									<Label htmlFor="material">Material</Label>
+									<Input
+										id="material"
+										value={productForm.material}
+										onChange={(e) => setProductForm(prev => ({ ...prev, material: e.target.value }))}
+										placeholder="Material type"
+									/>
+								</div>
+								<div>
+									<Label htmlFor="color">Color</Label>
+									<Input
+										id="color"
+										value={productForm.color}
+										onChange={(e) => setProductForm(prev => ({ ...prev, color: e.target.value }))}
+										placeholder="Color"
+									/>
+								</div>
+								<div>
+									<Label htmlFor="size">Size</Label>
+									<Input
+										id="size"
+										value={productForm.size}
+										onChange={(e) => setProductForm(prev => ({ ...prev, size: e.target.value }))}
+										placeholder="Size"
+									/>
+								</div>
+								<div>
+									<Label htmlFor="weight">Weight (g)</Label>
+									<Input
+										id="weight"
+										type="number"
+										step="0.01"
+										value={productForm.weight}
+										onChange={(e) => setProductForm(prev => ({ ...prev, weight: e.target.value }))}
+										placeholder="Weight in grams"
+									/>
+								</div>
+								<div>
+									<Label htmlFor="dimensions">Dimensions</Label>
+									<Input
+										id="dimensions"
+										value={productForm.dimensions}
+										onChange={(e) => setProductForm(prev => ({ ...prev, dimensions: e.target.value }))}
+										placeholder="L x W x H"
+									/>
+								</div>
+							</div>
+						</div>
+
+						{/* Inventory */}
+						<div className="space-y-4">
+							<h3 className="text-sm font-medium">Inventory</h3>
+							<div>
+								<Label htmlFor="initialStock">Initial Stock</Label>
+								<Input
+									id="initialStock"
+									type="number"
+									value={productForm.initialStock}
+									onChange={(e) => setProductForm(prev => ({ ...prev, initialStock: e.target.value }))}
+									placeholder="Initial stock quantity"
+								/>
+							</div>
+						</div>
+
+						{/* SEO */}
+						<div className="space-y-4">
+							<h3 className="text-sm font-medium">SEO</h3>
+							<div>
+								<Label htmlFor="metaTitle">Meta Title</Label>
+								<Input
+									id="metaTitle"
+									value={productForm.metaTitle}
+									onChange={(e) => setProductForm(prev => ({ ...prev, metaTitle: e.target.value }))}
+									placeholder="SEO meta title"
+								/>
+							</div>
+							<div>
+								<Label htmlFor="metaDescription">Meta Description</Label>
+								<Textarea
+									id="metaDescription"
+									value={productForm.metaDescription}
+									onChange={(e) => setProductForm(prev => ({ ...prev, metaDescription: e.target.value }))}
+									placeholder="SEO meta description"
+									rows={2}
+								/>
+							</div>
+						</div>
+
+						{/* Settings */}
+						<div className="space-y-4">
+							<h3 className="text-sm font-medium">Settings</h3>
+							<div className="flex items-center space-x-4">
+								<div className="flex items-center space-x-2">
+									<Switch
+										id="isActive"
+										checked={productForm.isActive}
+										onCheckedChange={(checked) => setProductForm(prev => ({ ...prev, isActive: checked }))}
+									/>
+									<Label htmlFor="isActive">Active</Label>
+								</div>
+								<div className="flex items-center space-x-2">
+									<Switch
+										id="isFeatured"
+										checked={productForm.isFeatured}
+										onCheckedChange={(checked) => setProductForm(prev => ({ ...prev, isFeatured: checked }))}
+									/>
+									<Label htmlFor="isFeatured">Featured</Label>
+								</div>
+							</div>
+						</div>
+
+						{/* Images */}
+						<div className="space-y-4">
+							<h3 className="text-sm font-medium">Product Images</h3>
+							<ImageUpload
+								initialImages={productForm.images}
+								onImagesChange={(images) => setProductForm(prev => ({ ...prev, images }))}
+								maxImages={5}
+							/>
+						</div>
+					</div>
+
+					<div className="flex justify-end space-x-2">
+						<Button variant="outline" onClick={() => setIsAddProductOpen(false)}>
+							Cancel
+						</Button>
+						<Button onClick={handleFormSubmit} disabled={isLoading}>
+							{isLoading ? 'Creating...' : 'Create Product'}
+						</Button>
+					</div>
+				</DialogContent>
+			</Dialog>
+
+			{/* Edit Product Dialog */}
+			<Dialog open={isEditProductOpen} onOpenChange={setIsEditProductOpen}>
+				<DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+					<DialogHeader>
+						<DialogTitle>Edit Product</DialogTitle>
+						<DialogDescription>
+							Update product information and settings.
+						</DialogDescription>
+					</DialogHeader>
+
+					{/* Same form fields as Add Product */}
+					<div className="grid gap-4 py-4">
+						{/* Basic Information */}
+						<div className="space-y-4">
+							<h3 className="text-sm font-medium">Basic Information</h3>
+							<div className="grid grid-cols-2 gap-4">
+								<div>
+									<Label htmlFor="edit-name">Product Name *</Label>
+									<Input
+										id="edit-name"
+										value={productForm.name}
+										onChange={(e) => setProductForm(prev => ({ ...prev, name: e.target.value }))}
+										placeholder="Enter product name"
+									/>
+								</div>
+								<div>
+									<Label htmlFor="edit-sku">SKU *</Label>
+									<Input
+										id="edit-sku"
+										value={productForm.sku}
+										onChange={(e) => setProductForm(prev => ({ ...prev, sku: e.target.value }))}
+										placeholder="Enter SKU"
+									/>
+								</div>
+							</div>
+
+							<div>
+								<Label htmlFor="edit-description">Description</Label>
+								<Textarea
+									id="edit-description"
+									value={productForm.description}
+									onChange={(e) => setProductForm(prev => ({ ...prev, description: e.target.value }))}
+									placeholder="Enter product description"
+									rows={3}
+								/>
+							</div>
+
+							<div>
+								<Label htmlFor="edit-shortDescription">Short Description</Label>
+								<Input
+									id="edit-shortDescription"
+									value={productForm.shortDescription}
+									onChange={(e) => setProductForm(prev => ({ ...prev, shortDescription: e.target.value }))}
+									placeholder="Brief product description"
+								/>
+							</div>
+						</div>
+
+						{/* Pricing & Category */}
+						<div className="space-y-4">
+							<h3 className="text-sm font-medium">Pricing & Category</h3>
+							<div className="grid grid-cols-3 gap-4">
+								<div>
+									<Label htmlFor="edit-price">Selling Price *</Label>
 									<Input
 										id="edit-price"
 										type="number"
 										step="0.01"
-										placeholder="0.00"
 										value={productForm.price}
 										onChange={(e) => setProductForm(prev => ({ ...prev, price: e.target.value }))}
-										className="border-sidebar-border text-sm"
+										placeholder="0.00"
 									/>
 								</div>
-							</div>
-							<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-								<div className="space-y-2">
-									<Label htmlFor="edit-stock" className="text-sm text-sidebar-foreground font-semibold">
-										Stock Quantity
-									</Label>
+								<div>
+									<Label htmlFor="edit-costPrice">Cost Price *</Label>
 									<Input
-										id="edit-stock"
+										id="edit-costPrice"
 										type="number"
-										placeholder="0"
-										value={productForm.stock}
-										onChange={(e) => setProductForm(prev => ({ ...prev, stock: e.target.value }))}
-										className="border-sidebar-border text-sm"
+										step="0.01"
+										value={productForm.costPrice}
+										onChange={(e) => setProductForm(prev => ({ ...prev, costPrice: e.target.value }))}
+										placeholder="0.00"
 									/>
 								</div>
-								<div className="space-y-2">
-									<Label htmlFor="edit-description" className="text-sm text-sidebar-foreground font-semibold">
-										Description
-									</Label>
-									<Textarea
-										id="edit-description"
-										placeholder="Enter product description"
-										value={productForm.description}
-										onChange={(e) => setProductForm(prev => ({ ...prev, description: e.target.value }))}
-										className="border-sidebar-border text-sm"
-									/>
-								</div>
-							</div>
-							<div className="space-y-2">
-								<Label className="text-sm text-sidebar-foreground font-semibold">
-									Product Images
-								</Label>
-								<ImageUpload
-									onImagesChange={(images) => setProductForm(prev => ({ ...prev, images }))}
-									initialImages={productForm.images}
-									maxImages={5}
-									maxFileSize={10}
-									className="w-full"
-								/>
-							</div>
-						</div>
-						<div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2">
-							<Button
-								variant="outline"
-								onClick={() => {
-									setIsEditProductOpen(false);
-									setEditingProduct(null);
-									resetForm();
-								}}
-								className="border-sidebar-border text-sidebar-foreground hover:bg-muted/50 font-medium w-full sm:w-auto"
-							>
-								Cancel
-							</Button>
-							<Button onClick={handleUpdateProduct} className="font-semibold w-full sm:w-auto">
-								Update Product
-							</Button>
-						</div>
-					</DialogContent>
-				</Dialog>
-
-				{/* View Product Dialog */}
-				<Dialog open={isViewProductOpen} onOpenChange={setIsViewProductOpen}>
-					<DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto mx-4">
-						<DialogHeader>
-							<DialogTitle className="text-base sm:text-lg text-sidebar-foreground font-semibold">
-								Product Details
-							</DialogTitle>
-							<DialogDescription className="text-sm text-sidebar-foreground/70 font-medium">
-								View detailed information about this product
-							</DialogDescription>
-						</DialogHeader>
-						{viewingProduct && (
-							<div className="grid gap-4 py-4">
-								<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-									<div>
-										<Label className="text-sm text-sidebar-foreground font-semibold">Product Name</Label>
-										<p className="text-sm text-sidebar-foreground/80 mt-1">{viewingProduct.name}</p>
-									</div>
-									<div>
-										<Label className="text-sm text-sidebar-foreground font-semibold">SKU</Label>
-										<p className="text-sm text-sidebar-foreground/80 mt-1">{viewingProduct.sku}</p>
-									</div>
-								</div>
-								<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-									<div>
-										<Label className="text-sm text-sidebar-foreground font-semibold">Category</Label>
-										<p className="text-sm text-sidebar-foreground/80 mt-1">{viewingProduct.category}</p>
-									</div>
-									<div>
-										<Label className="text-sm text-sidebar-foreground font-semibold">Price</Label>
-										<p className="text-sm text-sidebar-foreground/80 mt-1">LKR {Number(viewingProduct.price).toFixed(2)}</p>
-									</div>
-								</div>
-								<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-									<div>
-										<Label className="text-sm text-sidebar-foreground font-semibold">Stock</Label>
-										<p className="text-sm text-sidebar-foreground/80 mt-1">{viewingProduct.stock} units</p>
-									</div>
-									<div>
-										<Label className="text-sm text-sidebar-foreground font-semibold">Status</Label>
-										<Badge
-											variant={viewingProduct.isActive ? 'default' : 'secondary'}
-											className="mt-1"
-										>
-											{viewingProduct.isActive ? 'Active' : 'Inactive'}
-										</Badge>
-									</div>
-								</div>
-								{viewingProduct.description && (
-									<div>
-										<Label className="text-sm text-sidebar-foreground font-semibold">Description</Label>
-										<p className="text-sm text-sidebar-foreground/80 mt-1">{viewingProduct.description}</p>
-									</div>
-								)}
-								{viewingProduct.images && viewingProduct.images.length > 0 && (
-									<div>
-										<Label className="text-sm text-sidebar-foreground font-semibold">Images</Label>
-										<div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-2">
-											{viewingProduct.images.map((imageUrl, index) => (
-												<Image
-													key={index}
-													src={imageUrl}
-													alt={`${viewingProduct.name} ${index + 1}`}
-													className="w-full h-24 object-cover rounded-lg"
-													width={100}
-													height={100}
-												/>
+								<div>
+									<Label htmlFor="edit-category">Category *</Label>
+									<Select
+										value={productForm.categoryId}
+										onValueChange={(value) => setProductForm(prev => ({ ...prev, categoryId: value }))}
+									>
+										<SelectTrigger>
+											<SelectValue placeholder="Select category" />
+										</SelectTrigger>
+										<SelectContent>
+											{categoriesData.map((category) => (
+												<SelectItem key={category.id} value={category.id.toString()}>
+													{category.name}
+												</SelectItem>
 											))}
-										</div>
-									</div>
-								)}
-								<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-									<div>
-										<Label className="text-sm text-sidebar-foreground font-semibold">Created</Label>
-										<p className="text-sm text-sidebar-foreground/80 mt-1">{new Date(viewingProduct.createdAt).toLocaleDateString()}</p>
-									</div>
-									<div>
-										<Label className="text-sm text-sidebar-foreground font-semibold">Last Updated</Label>
-										<p className="text-sm text-sidebar-foreground/80 mt-1">{new Date(viewingProduct.updatedAt).toLocaleDateString()}</p>
-									</div>
+										</SelectContent>
+									</Select>
 								</div>
 							</div>
-						)}
-						<div className="flex justify-end">
-							<Button
-								variant="outline"
-								onClick={() => {
-									setIsViewProductOpen(false);
-									setViewingProduct(null);
-								}}
-								className="border-sidebar-border text-sidebar-foreground hover:bg-muted/50 font-medium"
-							>
-								Close
-							</Button>
 						</div>
-					</DialogContent>
-				</Dialog>
-			</div>
 
-			{/* Loading State */}
-			{isLoading ? (
-				<div className="relative min-h-[600px] w-full">
-					<Loading variant="overlay" text="Loading products..." />
-				</div>
-			) : (
-				<>
-			{/* Stats Cards */}
-			<div className="grid gap-3 sm:gap-4 lg:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-				<Card className="border-sidebar-border">
-					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-						<CardTitle className="text-xs font-semibold text-sidebar-foreground">Total Products</CardTitle>
-						<Package className="h-3 w-3 text-sidebar-foreground/70" />
-					</CardHeader>
-					<CardContent className="pt-1">
-						<div className="text-lg sm:text-xl font-bold text-sidebar-foreground">{totalProducts}</div>
-						<p className="text-xs text-sidebar-foreground/70 font-medium">Active inventory items</p>
-					</CardContent>
-				</Card>
-
-				<Card className="border-sidebar-border">
-					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-						<CardTitle className="text-xs font-semibold text-sidebar-foreground">Best Seller</CardTitle>
-						<Star className="h-3 w-3 text-sidebar-foreground/70" />
-					</CardHeader>
-					<CardContent className="pt-1">
-						<div className="text-sm sm:text-lg lg:text-xl font-bold text-sidebar-foreground">
-							{bestSellerProduct ? bestSellerProduct.name : 'No products'}
+						{/* Settings */}
+						<div className="space-y-4">
+							<h3 className="text-sm font-medium">Settings</h3>
+							<div className="flex items-center space-x-4">
+								<div className="flex items-center space-x-2">
+									<Switch
+										id="edit-isActive"
+										checked={productForm.isActive}
+										onCheckedChange={(checked) => setProductForm(prev => ({ ...prev, isActive: checked }))}
+									/>
+									<Label htmlFor="edit-isActive">Active</Label>
+								</div>
+								<div className="flex items-center space-x-2">
+									<Switch
+										id="edit-isFeatured"
+										checked={productForm.isFeatured}
+										onCheckedChange={(checked) => setProductForm(prev => ({ ...prev, isFeatured: checked }))}
+									/>
+									<Label htmlFor="edit-isFeatured">Featured</Label>
+								</div>
+							</div>
 						</div>
-						<p className="text-xs text-sidebar-foreground/70 font-medium">
-							{bestSellerProduct ? `Stock: ${bestSellerProduct.stock}` : 'Add products to see data'}
-						</p>
-					</CardContent>
-				</Card>
 
-				<Card className="border-sidebar-border">
-					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-						<CardTitle className="text-xs font-semibold text-sidebar-foreground">Total Value</CardTitle>
-						<TrendingUp className="h-3 w-3 text-sidebar-foreground/70" />
-					</CardHeader>
-					<CardContent className="pt-1">
-						<div className="text-lg sm:text-xl font-bold text-sidebar-foreground">LKR {totalRevenue.toFixed(2)}</div>
-						<p className="text-xs text-sidebar-foreground/70 font-medium">Inventory value</p>
-					</CardContent>
-				</Card>
-
-				<Card className="border-orange-200 dark:border-orange-800">
-					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-						<CardTitle className="text-xs font-semibold text-sidebar-foreground">Low Stock</CardTitle>
-						<AlertCircle className="h-3 w-3 text-orange-500" />
-					</CardHeader>
-					<CardContent className="pt-1">
-						<div className="text-lg sm:text-xl font-bold text-orange-600">{lowStockProducts.length}</div>
-						<p className="text-xs text-orange-600 font-medium">Items need restocking</p>
-					</CardContent>
-				</Card>
-			</div>			{/* Filters and Search */}
-			<Card className="border-sidebar-border">
-				<CardHeader>
-					<CardTitle className="text-base sm:text-lg text-sidebar-foreground font-semibold">
-						Product Inventory
-					</CardTitle>
-					<CardDescription className="text-sm text-sidebar-foreground/70 font-medium">
-						View and manage all your products
-					</CardDescription>
-				</CardHeader>
-				<CardContent>
-					<div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 mb-6">
-						<div className="relative flex-1 max-w-full sm:max-w-sm">
-							<Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-sidebar-foreground/70" />
-							<Input
-								placeholder="Search products..."
-								value={searchTerm}
-								onChange={(e) => setSearchTerm(e.target.value)}
-								className="pl-10 border-sidebar-border text-sm"
+						{/* Images */}
+						<div className="space-y-4">
+							<h3 className="text-sm font-medium">Product Images</h3>
+							<ImageUpload
+								initialImages={productForm.images}
+								onImagesChange={(images) => setProductForm(prev => ({ ...prev, images }))}
+								maxImages={5}
 							/>
 						</div>
-						<Select value={selectedCategory} onValueChange={setSelectedCategory}>
-							<SelectTrigger className="w-full sm:w-[180px] border-sidebar-border">
-								<Filter className="mr-2 h-4 w-4" />
-								<SelectValue />
-							</SelectTrigger>
-							<SelectContent>
-								{categories.map((category) => (
-									<SelectItem key={category} value={category}>
-										{category === 'all' ? 'All Categories' : category}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
 					</div>
 
-					{/* Products Table */}
-					<div className="overflow-x-auto">
-						<Table>
-							<TableHeader>
-								<TableRow className="border-sidebar-border">
-									<TableHead className="text-sidebar-foreground font-semibold text-xs sm:text-sm">Product</TableHead>
-									<TableHead className="text-sidebar-foreground font-semibold text-xs sm:text-sm hidden lg:table-cell">
-										SKU
-									</TableHead>
-									<TableHead className="text-sidebar-foreground font-semibold text-xs sm:text-sm hidden md:table-cell">
-										Category
-									</TableHead>
-									<TableHead className="text-sidebar-foreground font-semibold text-xs sm:text-sm">Price</TableHead>
-									<TableHead className="text-sidebar-foreground font-semibold text-xs sm:text-sm">Stock</TableHead>
-									<TableHead className="text-sidebar-foreground font-semibold text-xs sm:text-sm hidden sm:table-cell">
-										Created
-									</TableHead>
-									<TableHead className="text-sidebar-foreground font-semibold text-xs sm:text-sm">Status</TableHead>
-									<TableHead className="text-right text-sidebar-foreground font-semibold text-xs sm:text-sm">
-										Actions
-									</TableHead>
-								</TableRow>
-							</TableHeader>
-							<TableBody>
-								{paginatedProducts.map((product) => (
-									<TableRow key={product.id} className="border-sidebar-border">
-										<TableCell>
-											<div className="flex items-center space-x-2 sm:space-x-3">
+					<div className="flex justify-end space-x-2">
+						<Button variant="outline" onClick={() => setIsEditProductOpen(false)}>
+							Cancel
+						</Button>
+						<Button onClick={handleFormSubmit} disabled={isLoading}>
+							{isLoading ? 'Updating...' : 'Update Product'}
+						</Button>
+					</div>
+				</DialogContent>
+			</Dialog>
+
+			{/* View Product Dialog */}
+			<Dialog open={isViewProductOpen} onOpenChange={setIsViewProductOpen}>
+				<DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+					<DialogHeader>
+						<DialogTitle>Product Details</DialogTitle>
+						<DialogDescription>
+							View complete product information
+						</DialogDescription>
+					</DialogHeader>
+
+					{viewingProduct && (
+						<div className="grid gap-6 py-4">
+							{/* Images */}
+							<div className="space-y-2">
+								<h3 className="text-sm font-medium">Images</h3>
+								<div className="grid grid-cols-3 gap-2">
+									{viewingProduct.images && viewingProduct.images.length > 0 ? (
+										viewingProduct.images.map((image, index) => (
+											<div key={index} className="relative aspect-square rounded-lg overflow-hidden border">
 												<Image
-													src={(product.images && product.images[0]) || '/placeholder.svg'}
-													alt={product.name}
-													className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg object-cover flex-shrink-0"
-													width={40}
-													height={40}
+													src={image.imageUrl}
+													alt={`${viewingProduct.name} ${index + 1}`}
+													fill
+													className="object-cover"
 												/>
-												<div className="min-w-0">
-													<div className="font-semibold text-sidebar-foreground text-xs sm:text-sm truncate">
-														{product.name}
-													</div>
-													<div className="text-xs text-sidebar-foreground/70 font-medium truncate max-w-[120px] sm:max-w-[200px] hidden sm:block">
-														{product.description}
-													</div>
-													<div className="text-xs text-sidebar-foreground/70 font-medium sm:hidden md:hidden">
-														{product.category} • {product.sku}
-													</div>
-												</div>
 											</div>
-										</TableCell>
-										<TableCell className="text-sidebar-foreground font-medium text-xs sm:text-sm hidden lg:table-cell">
-											{product.sku}
-										</TableCell>
-										<TableCell className="text-sidebar-foreground font-medium text-xs sm:text-sm hidden md:table-cell">
-											{product.category}
-										</TableCell>
-										<TableCell className="text-sidebar-foreground font-semibold text-xs sm:text-sm">
-											LKR {Number(product.price).toFixed(2)}
-										</TableCell>
-										<TableCell>
-											<div className="flex items-center space-x-1 sm:space-x-2">
-												<span className="text-sidebar-foreground font-medium text-xs sm:text-sm">{product.stock}</span>
-												{product.stock <= 10 && (
-													<Badge variant="destructive" className="text-xs font-medium">
-														Low
-													</Badge>
-												)}
-											</div>
-										</TableCell>
-										<TableCell className="text-sidebar-foreground font-medium text-xs sm:text-sm hidden sm:table-cell">
-											{new Date(product.createdAt).toLocaleDateString()}
-										</TableCell>
-										<TableCell>
-											<Badge
-												variant={product.isActive ? 'default' : 'secondary'}
-												className={
-													product.isActive
-														? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 font-medium text-xs'
-														: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300 font-medium text-xs'
-												}
-											>
-												{product.isActive ? 'Active' : 'Inactive'}
-											</Badge>
-										</TableCell>
-										<TableCell className="text-right">
-											<div className="flex items-center justify-end space-x-1">
-												<Button
-													variant="ghost"
-													size="sm"
-													className="h-8 w-8 p-0 hover:bg-muted/50"
-													onClick={() => handleViewProduct(product.id)}
-													title="View Product"
-												>
-													<Eye className="h-4 w-4" />
-												</Button>
-												<Button
-													variant="ghost"
-													size="sm"
-													className="h-8 w-8 p-0 hover:bg-muted/50"
-													onClick={() => handleEditProduct(product)}
-													title="Edit Product"
-												>
-													<Edit className="h-4 w-4" />
-												</Button>
-												<Button
-													variant="ghost"
-													size="sm"
-													className="h-8 w-8 p-0 hover:bg-muted/50 text-red-600 hover:text-red-700"
-													onClick={() => handleDeleteProduct(product.id)}
-													title="Delete Product"
-												>
-													<Trash2 className="h-4 w-4" />
-												</Button>
-											</div>
-										</TableCell>
-									</TableRow>
-								))}
-							</TableBody>
-						</Table>
-					</div>
-
-					{/* Pagination Controls */}
-					{totalPages > 1 && (
-						<div className="flex items-center justify-between space-x-2 py-4">
-							<div className="text-sm text-muted-foreground">
-								Showing {startIndex + 1} to {Math.min(endIndex, filteredProducts.length)} of {filteredProducts.length}{' '}
-								products
+										))
+									) : (
+										<div className="text-sm text-muted-foreground">No images available</div>
+									)}
+								</div>
 							</div>
-							<Pagination>
-								<PaginationContent>
-									<PaginationItem>
-										<PaginationPrevious
-											onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-											className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-										/>
-									</PaginationItem>
 
-									{Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-										if (page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1)) {
-											return (
-												<PaginationItem key={page}>
-													<PaginationLink
-														onClick={() => setCurrentPage(page)}
-														isActive={currentPage === page}
-														className="cursor-pointer"
-													>
-														{page}
-													</PaginationLink>
-												</PaginationItem>
-											);
-										} else if (page === currentPage - 2 || page === currentPage + 2) {
-											return (
-												<PaginationItem key={page}>
-													<PaginationEllipsis />
-												</PaginationItem>
-											);
-										}
-										return null;
-									})}
+							{/* Basic Info */}
+							<div className="grid grid-cols-2 gap-4">
+								<div>
+									<h3 className="text-sm font-medium">Product Name</h3>
+									<p className="text-sm">{viewingProduct.name}</p>
+								</div>
+								<div>
+									<h3 className="text-sm font-medium">SKU</h3>
+									<p className="text-sm">{viewingProduct.sku}</p>
+								</div>
+								<div>
+									<h3 className="text-sm font-medium">Category</h3>
+									<p className="text-sm">{viewingProduct.category?.name}</p>
+								</div>
+								<div>
+									<h3 className="text-sm font-medium">Brand</h3>
+									<p className="text-sm">{viewingProduct.brand || 'N/A'}</p>
+								</div>
+							</div>
 
-									<PaginationItem>
-										<PaginationNext
-											onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-											className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-										/>
-									</PaginationItem>
-								</PaginationContent>
-							</Pagination>
+							{/* Pricing */}
+							<div className="grid grid-cols-2 gap-4">
+								<div>
+									<h3 className="text-sm font-medium">Selling Price</h3>
+									<p className="text-lg font-semibold">₹{viewingProduct.price}</p>
+								</div>
+								<div>
+									<h3 className="text-sm font-medium">Cost Price</h3>
+									<p className="text-lg font-semibold">₹{viewingProduct.costPrice}</p>
+								</div>
+							</div>
+
+							{/* Description */}
+							{viewingProduct.description && (
+								<div>
+									<h3 className="text-sm font-medium">Description</h3>
+									<p className="text-sm">{viewingProduct.description}</p>
+								</div>
+							)}
+
+							{/* Inventory */}
+							{viewingProduct.inventory && (
+								<div>
+									<h3 className="text-sm font-medium">Inventory</h3>
+									<div className="grid grid-cols-2 gap-4 mt-2">
+										<div>
+											<p className="text-xs text-muted-foreground">Available</p>
+											<p className="text-sm font-medium">{viewingProduct.inventory.quantityAvailable}</p>
+										</div>
+										<div>
+											<p className="text-xs text-muted-foreground">Reserved</p>
+											<p className="text-sm font-medium">{viewingProduct.inventory.quantityReserved}</p>
+										</div>
+									</div>
+								</div>
+							)}
+
+							{/* Status */}
+							<div className="flex items-center space-x-4">
+								<Badge variant={viewingProduct.isActive ? "default" : "secondary"}>
+									{viewingProduct.isActive ? 'Active' : 'Inactive'}
+								</Badge>
+								{viewingProduct.isFeatured && (
+									<Badge variant="outline">
+										<Star className="w-3 h-3 mr-1" />
+										Featured
+									</Badge>
+								)}
+							</div>
 						</div>
 					)}
-				</CardContent>
-			</Card>
-				</>
-			)}
+
+					<div className="flex justify-end">
+						<Button variant="outline" onClick={() => setIsViewProductOpen(false)}>
+							Close
+						</Button>
+					</div>
+				</DialogContent>
+			</Dialog>
 		</div>
 	);
 }

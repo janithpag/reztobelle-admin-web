@@ -64,8 +64,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
 	const baseNavigation = [
 		{ name: 'Dashboard', href: '/', icon: Home },
-		{ name: 'Products', href: '/products', icon: Package },
 		{ name: 'Categories', href: '/categories', icon: Tag },
+		{ name: 'Products', href: '/products', icon: Package },
 		{ name: 'Inventory', href: '/inventory', icon: Warehouse },
 		{ name: 'Orders', href: '/orders', icon: ShoppingCart },
 		{ name: 'Customers', href: '/customers', icon: Users },

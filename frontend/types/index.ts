@@ -157,6 +157,7 @@ export interface User {
   firstName: string;
   lastName: string;
   role: UserRole;
+  status: UserStatus;
   isActive: boolean;
   emailVerifiedAt?: string;
   lastLoginAt?: string;
@@ -172,6 +173,7 @@ export interface FrontendUser {
   firstName: string;
   lastName: string;
   role: string;
+  status?: string;
   createdAt?: string;
 }
 
@@ -310,6 +312,12 @@ export enum UserRole {
   ADMIN = 'ADMIN',
   MANAGER = 'MANAGER',
   STAFF = 'STAFF'
+}
+
+export enum UserStatus {
+  PENDING = 'PENDING',
+  ACTIVE = 'ACTIVE',
+  SUSPENDED = 'SUSPENDED'
 }
 
 // Form interfaces for creating/updating records

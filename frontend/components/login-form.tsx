@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useAuth } from '@/contexts/auth-context';
+import Link from 'next/link';
 
 interface LoginFormData {
 	email: string;
@@ -83,7 +84,7 @@ export function LoginForm() {
 									type="email"
 									value={formData.email}
 									onChange={handleInputChange}
-									placeholder="admin@reztobelle.com"
+									placeholder="Enter your email"
 									required
 									disabled={isLoading}
 									className="w-full"
@@ -130,6 +131,13 @@ export function LoginForm() {
 								)}
 							</Button>
 						</form>
+
+						<div className="text-center mt-4 text-sm text-muted-foreground">
+							Don&apos;t have an account?{' '}
+							<Link href="/signup" className="text-primary hover:underline font-medium">
+								Sign up here
+							</Link>
+						</div>
 					</CardContent>
 				</Card>
 			</div>

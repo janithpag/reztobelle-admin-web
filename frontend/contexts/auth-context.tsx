@@ -66,12 +66,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 	useEffect(() => {
 		if (isLoading) return;
 
-		const publicPaths = ['/login'];
+		const publicPaths = ['/login', '/signup'];
 		const isPublicPath = publicPaths.includes(pathname);
 
 		if (!isAuthenticated && !isPublicPath) {
 			router.push('/login');
-		} else if (isAuthenticated && pathname === '/login') {
+		} else if (isAuthenticated && (pathname === '/login' || pathname === '/signup')) {
 			router.push('/');
 		}
 	}, [isAuthenticated, pathname, router, isLoading]);

@@ -189,6 +189,7 @@ model User {
   passwordHash         String               @db.VarChar(255)
   id                   Int                  @id @default(autoincrement())
   role                 UserRole
+  status               UserStatus           @default(PENDING)
   activityLogs         ActivityLog[]
   deliveryLogs         DeliveryLog[]
   expenses             Expense[]
@@ -339,4 +340,10 @@ enum UserRole {
   ADMIN
   MANAGER
   STAFF
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
 }

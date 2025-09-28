@@ -47,6 +47,7 @@ import {
 	User,
 	LogOut,
 	Receipt,
+	UserCheck,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import { useTheme } from 'next-themes';
@@ -55,22 +56,31 @@ interface AdminLayoutProps {
 	children: React.ReactNode;
 }
 
-const navigation = [
-	{ name: 'Dashboard', href: '/', icon: Home },
-	{ name: 'Products', href: '/products', icon: Package },
-	{ name: 'Inventory', href: '/inventory', icon: Warehouse },
-	{ name: 'Orders', href: '/orders', icon: ShoppingCart },
-	{ name: 'Customers', href: '/customers', icon: Users },
-	{ name: 'Deliveries', href: '/delivery', icon: Truck },
-	{ name: 'Expenses', href: '/expenses', icon: Receipt },
-	{ name: 'Reports', href: '/reports', icon: BarChart3 },
-	{ name: 'Settings', href: '/settings', icon: Settings },
-];
-
 export function AdminLayout({ children }: AdminLayoutProps) {
 	const pathname = usePathname();
 	const { user, logout } = useAuth();
 	const { theme, setTheme } = useTheme();
+
+	const baseNavigation = [
+		{ name: 'Dashboard', href: '/', icon: Home },
+		{ name: 'Products', href: '/products', icon: Package },
+		{ name: 'Inventory', href: '/inventory', icon: Warehouse },
+		{ name: 'Orders', href: '/orders', icon: ShoppingCart },
+		{ name: 'Customers', href: '/customers', icon: Users },
+		{ name: 'Deliveries', href: '/delivery', icon: Truck },
+		{ name: 'Expenses', href: '/expenses', icon: Receipt },
+		{ name: 'Reports', href: '/reports', icon: BarChart3 },
+		{ name: 'Settings', href: '/settings', icon: Settings },
+	];
+
+	// Add user management for Super Admins only
+	const navigation = user?.role === 'SUPER_ADMIN' 
+		? [
+			...baseNavigation.slice(0, -1), // All items except Settings
+			{ name: 'Users', href: '/users', icon: UserCheck },
+			baseNavigation[baseNavigation.length - 1], // Settings at the end
+		] 
+		: baseNavigation;
 
 	const handleLogout = () => {
 		logout();

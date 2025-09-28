@@ -6,13 +6,29 @@ export interface LoginCredentials {
 	password: string;
 }
 
+export interface RegisterCredentials {
+	email: string;
+	password: string;
+	firstName: string;
+	lastName: string;
+}
+
 export interface LoginResponse {
 	user: FrontendUser;
 	token: string;
 }
 
+export interface RegisterResponse {
+	message: string;
+	user: FrontendUser;
+}
+
 export interface UserResponse {
 	user: FrontendUser;
+}
+
+export interface UsersResponse {
+	users: FrontendUser[];
 }
 
 /**
@@ -27,6 +43,21 @@ export const login = async (credentials: LoginCredentials): Promise<LoginRespons
 			throw new Error(error.response.data.error);
 		}
 		throw new Error('Login failed. Please try again.');
+	}
+};
+
+/**
+ * Register new user
+ */
+export const register = async (credentials: RegisterCredentials): Promise<RegisterResponse> => {
+	try {
+		const response = await apiClient.post<RegisterResponse>('/auth/register', credentials);
+		return response.data;
+	} catch (error: any) {
+		if (error.response?.data?.error) {
+			throw new Error(error.response.data.error);
+		}
+		throw new Error('Registration failed. Please try again.');
 	}
 };
 
@@ -57,11 +88,44 @@ export const getCurrentUser = async (): Promise<UserResponse> => {
 	}
 };
 
+/**
+ * Get all users (Super Admin only)
+ */
+export const getAllUsers = async (): Promise<UsersResponse> => {
+	try {
+		const response = await apiClient.get<UsersResponse>('/auth/users');
+		return response.data;
+	} catch (error: any) {
+		if (error.response?.data?.error) {
+			throw new Error(error.response.data.error);
+		}
+		throw new Error('Failed to fetch users');
+	}
+};
+
+/**
+ * Update user status (Super Admin only)
+ */
+export const updateUserStatus = async (userId: number, status: string): Promise<{ user: FrontendUser }> => {
+	try {
+		const response = await apiClient.patch<{ user: FrontendUser }>(`/auth/users/${userId}/status`, { status });
+		return response.data;
+	} catch (error: any) {
+		if (error.response?.data?.error) {
+			throw new Error(error.response.data.error);
+		}
+		throw new Error('Failed to update user status');
+	}
+};
+
 // Create an auth service object for those who prefer object notation
 export const authService = {
 	login,
+	register,
 	logout,
 	getCurrentUser,
+	getAllUsers,
+	updateUserStatus,
 };
 
 export default authService;

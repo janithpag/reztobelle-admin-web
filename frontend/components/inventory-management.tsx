@@ -303,6 +303,84 @@ export function InventoryManagement() {
 								Add Stock
 							</Button>
 						</DialogTrigger>
+						<DialogContent className="max-w-md">
+							<DialogHeader>
+								<DialogTitle>Add Stock</DialogTitle>
+								<DialogDescription>Increase inventory for a product</DialogDescription>
+							</DialogHeader>
+
+							{error && (
+								<Alert>
+									<AlertCircle className="h-4 w-4" />
+									<AlertDescription>{error}</AlertDescription>
+								</Alert>
+							)}
+
+							<div className="space-y-4">
+								<div>
+									<Label htmlFor="addProduct">Product</Label>
+									<Select
+										value={stockForm.productId}
+										onValueChange={(value) => setStockForm({...stockForm, productId: value})}
+									>
+										<SelectTrigger>
+											<SelectValue placeholder="Select product" />
+										</SelectTrigger>
+										<SelectContent>
+											{inventoryData.map((inventory) => (
+												<SelectItem key={inventory.productId} value={inventory.productId.toString()}>
+													{inventory.product.name} (SKU: {inventory.product.sku})
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+								</div>
+
+								<div>
+									<Label htmlFor="addQuantity">Quantity to Add *</Label>
+									<Input
+										id="addQuantity"
+										type="number"
+										min="1"
+										value={stockForm.quantity}
+										onChange={(e) => setStockForm({...stockForm, quantity: e.target.value})}
+										placeholder="Enter quantity"
+									/>
+								</div>
+
+								<div>
+									<Label htmlFor="addUnitCost">Unit Cost</Label>
+									<Input
+										id="addUnitCost"
+										type="number"
+										step="0.01"
+										value={stockForm.unitCost}
+										onChange={(e) => setStockForm({...stockForm, unitCost: e.target.value})}
+										placeholder="Cost per unit"
+									/>
+								</div>
+
+								<div>
+									<Label htmlFor="addNotes">Notes</Label>
+									<Textarea
+										id="addNotes"
+										value={stockForm.notes}
+										onChange={(e) => setStockForm({...stockForm, notes: e.target.value})}
+										placeholder="Optional notes about this stock addition"
+										rows={3}
+									/>
+								</div>
+							</div>
+
+							<div className="flex justify-end space-x-2">
+								<Button variant="outline" onClick={() => setIsAddStockOpen(false)}>
+									Cancel
+								</Button>
+								<Button onClick={handleAddStock} disabled={isLoading}>
+									{isLoading ? 'Adding...' : 'Add Stock'}
+								</Button>
+							</div>
+						</DialogContent>
 					</Dialog>
 					<Dialog open={isRemoveStockOpen} onOpenChange={setIsRemoveStockOpen}>
 						<DialogTrigger asChild>
@@ -311,6 +389,90 @@ export function InventoryManagement() {
 								Remove Stock
 							</Button>
 						</DialogTrigger>
+						<DialogContent className="max-w-md">
+							<DialogHeader>
+								<DialogTitle>Remove Stock</DialogTitle>
+								<DialogDescription>Reduce inventory for a product</DialogDescription>
+							</DialogHeader>
+
+							{error && (
+								<Alert>
+									<AlertCircle className="h-4 w-4" />
+									<AlertDescription>{error}</AlertDescription>
+								</Alert>
+							)}
+
+							<div className="space-y-4">
+								<div>
+									<Label htmlFor="removeProduct">Product</Label>
+									<Select
+										value={stockForm.productId}
+										onValueChange={(value) => setStockForm({...stockForm, productId: value})}
+									>
+										<SelectTrigger>
+											<SelectValue placeholder="Select product" />
+										</SelectTrigger>
+										<SelectContent>
+											{inventoryData.map((inventory) => (
+												<SelectItem key={inventory.productId} value={inventory.productId.toString()}>
+													{inventory.product.name} (Available: {inventory.quantityAvailable})
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+								</div>
+
+								<div>
+									<Label htmlFor="removeQuantity">Quantity to Remove *</Label>
+									<Input
+										id="removeQuantity"
+										type="number"
+										min="1"
+										value={stockForm.quantity}
+										onChange={(e) => setStockForm({...stockForm, quantity: e.target.value})}
+										placeholder="Enter quantity"
+									/>
+								</div>
+
+								<div>
+									<Label htmlFor="removeReason">Reason *</Label>
+									<Select
+										value={stockForm.reason}
+										onValueChange={(value) => setStockForm({...stockForm, reason: value as StockReferenceType})}
+									>
+										<SelectTrigger>
+											<SelectValue />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectItem value={StockReferenceType.SALE}>Sale</SelectItem>
+											<SelectItem value={StockReferenceType.DAMAGE}>Damage</SelectItem>
+											<SelectItem value={StockReferenceType.RETURN}>Return</SelectItem>
+											<SelectItem value={StockReferenceType.ADJUSTMENT}>Adjustment</SelectItem>
+										</SelectContent>
+									</Select>
+								</div>
+
+								<div>
+									<Label htmlFor="removeNotes">Notes</Label>
+									<Textarea
+										id="removeNotes"
+										value={stockForm.notes}
+										onChange={(e) => setStockForm({...stockForm, notes: e.target.value})}
+										placeholder="Optional notes about this stock removal"
+										rows={3}
+									/>
+								</div>
+							</div>
+
+							<div className="flex justify-end space-x-2">
+								<Button variant="outline" onClick={() => setIsRemoveStockOpen(false)}>
+									Cancel
+								</Button>
+								<Button onClick={handleRemoveStock} disabled={isLoading} variant="destructive">
+									{isLoading ? 'Removing...' : 'Remove Stock'}
+								</Button>
+							</div>
+						</DialogContent>
 					</Dialog>
 				</div>
 			</div>
@@ -521,173 +683,7 @@ export function InventoryManagement() {
 				</CardContent>
 			</Card>
 
-			{/* Add Stock Dialog */}
-			<DialogContent className="max-w-md">
-				<DialogHeader>
-					<DialogTitle>Add Stock</DialogTitle>
-					<DialogDescription>Increase inventory for a product</DialogDescription>
-				</DialogHeader>
 
-				{error && (
-					<Alert>
-						<AlertCircle className="h-4 w-4" />
-						<AlertDescription>{error}</AlertDescription>
-					</Alert>
-				)}
-
-				<div className="space-y-4">
-					<div>
-						<Label htmlFor="addProduct">Product</Label>
-						<Select
-							value={stockForm.productId}
-							onValueChange={(value) => setStockForm({...stockForm, productId: value})}
-						>
-							<SelectTrigger>
-								<SelectValue placeholder="Select product" />
-							</SelectTrigger>
-							<SelectContent>
-								{inventoryData.map((inventory) => (
-									<SelectItem key={inventory.productId} value={inventory.productId.toString()}>
-										{inventory.product.name} (SKU: {inventory.product.sku})
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-					</div>
-
-					<div>
-						<Label htmlFor="addQuantity">Quantity to Add *</Label>
-						<Input
-							id="addQuantity"
-							type="number"
-							min="1"
-							value={stockForm.quantity}
-							onChange={(e) => setStockForm({...stockForm, quantity: e.target.value})}
-							placeholder="Enter quantity"
-						/>
-					</div>
-
-					<div>
-						<Label htmlFor="addUnitCost">Unit Cost</Label>
-						<Input
-							id="addUnitCost"
-							type="number"
-							step="0.01"
-							value={stockForm.unitCost}
-							onChange={(e) => setStockForm({...stockForm, unitCost: e.target.value})}
-							placeholder="Cost per unit"
-						/>
-					</div>
-
-					<div>
-						<Label htmlFor="addNotes">Notes</Label>
-						<Textarea
-							id="addNotes"
-							value={stockForm.notes}
-							onChange={(e) => setStockForm({...stockForm, notes: e.target.value})}
-							placeholder="Optional notes about this stock addition"
-							rows={3}
-						/>
-					</div>
-				</div>
-
-				<div className="flex justify-end space-x-2">
-					<Button variant="outline" onClick={() => setIsAddStockOpen(false)}>
-						Cancel
-					</Button>
-					<Button onClick={handleAddStock} disabled={isLoading}>
-						{isLoading ? 'Adding...' : 'Add Stock'}
-					</Button>
-				</div>
-			</DialogContent>
-
-			{/* Remove Stock Dialog */}
-			<Dialog open={isRemoveStockOpen} onOpenChange={setIsRemoveStockOpen}>
-				<DialogContent className="max-w-md">
-					<DialogHeader>
-						<DialogTitle>Remove Stock</DialogTitle>
-						<DialogDescription>Reduce inventory for a product</DialogDescription>
-					</DialogHeader>
-
-					{error && (
-						<Alert>
-							<AlertCircle className="h-4 w-4" />
-							<AlertDescription>{error}</AlertDescription>
-						</Alert>
-					)}
-
-					<div className="space-y-4">
-						<div>
-							<Label htmlFor="removeProduct">Product</Label>
-							<Select
-								value={stockForm.productId}
-								onValueChange={(value) => setStockForm({...stockForm, productId: value})}
-							>
-								<SelectTrigger>
-									<SelectValue placeholder="Select product" />
-								</SelectTrigger>
-								<SelectContent>
-									{inventoryData.map((inventory) => (
-										<SelectItem key={inventory.productId} value={inventory.productId.toString()}>
-											{inventory.product.name} (Available: {inventory.quantityAvailable})
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-						</div>
-
-						<div>
-							<Label htmlFor="removeQuantity">Quantity to Remove *</Label>
-							<Input
-								id="removeQuantity"
-								type="number"
-								min="1"
-								value={stockForm.quantity}
-								onChange={(e) => setStockForm({...stockForm, quantity: e.target.value})}
-								placeholder="Enter quantity"
-							/>
-						</div>
-
-						<div>
-							<Label htmlFor="removeReason">Reason *</Label>
-							<Select
-								value={stockForm.reason}
-								onValueChange={(value) => setStockForm({...stockForm, reason: value as StockReferenceType})}
-							>
-								<SelectTrigger>
-									<SelectValue />
-								</SelectTrigger>
-								<SelectContent>
-									<SelectItem value={StockReferenceType.SALE}>Sale</SelectItem>
-									<SelectItem value={StockReferenceType.DAMAGE}>Damage</SelectItem>
-									<SelectItem value={StockReferenceType.RETURN}>Return</SelectItem>
-									<SelectItem value={StockReferenceType.ADJUSTMENT}>Adjustment</SelectItem>
-								</SelectContent>
-							</Select>
-						</div>
-
-						<div>
-							<Label htmlFor="removeNotes">Notes</Label>
-							<Textarea
-								id="removeNotes"
-								value={stockForm.notes}
-								onChange={(e) => setStockForm({...stockForm, notes: e.target.value})}
-								placeholder="Optional notes about this stock removal"
-								rows={3}
-							/>
-						</div>
-					</div>
-
-					<div className="flex justify-end space-x-2">
-						<Button variant="outline" onClick={() => setIsRemoveStockOpen(false)}>
-							Cancel
-						</Button>
-						<Button onClick={handleRemoveStock} disabled={isLoading} variant="destructive">
-							{isLoading ? 'Removing...' : 'Remove Stock'}
-						</Button>
-					</div>
-				</DialogContent>
-			</Dialog>
 
 			{/* View Stock Movements Dialog */}
 			<Dialog open={isViewMovementsOpen} onOpenChange={setIsViewMovementsOpen}>

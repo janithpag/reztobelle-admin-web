@@ -203,7 +203,7 @@ export function CategoriesManagement() {
 			description: category.description || '',
 			imageUrl: category.imageUrl || '',
 		});
-		
+
 		// Set initial images for edit
 		if (category.imageUrl) {
 			setEditImages([{
@@ -218,7 +218,7 @@ export function CategoriesManagement() {
 		} else {
 			setEditImages([]);
 		}
-		
+
 		setIsEditDialogOpen(true);
 	};
 
@@ -239,12 +239,12 @@ export function CategoriesManagement() {
 					</p>
 				</div>
 				<Dialog open={isCreateDialogOpen} onOpenChange={(open) => {
-				setIsCreateDialogOpen(open);
-				if (!open) {
-					setCreateForm({ name: '', description: '', imageUrl: '' });
-					setCreateImages([]);
-				}
-			}}>
+					setIsCreateDialogOpen(open);
+					if (!open) {
+						setCreateForm({ name: '', description: '', imageUrl: '' });
+						setCreateImages([]);
+					}
+				}}>
 					<DialogTrigger asChild>
 						<Button className="bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 text-white">
 							<Plus className="mr-2 h-4 w-4" />
@@ -344,7 +344,7 @@ export function CategoriesManagement() {
 									: 'Try adjusting your search terms to find what you\'re looking for.'}
 							</p>
 							{categories.length === 0 && (
-								<Button 
+								<Button
 									onClick={() => setIsCreateDialogOpen(true)}
 									className="bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 text-white"
 								>
@@ -403,12 +403,12 @@ export function CategoriesManagement() {
 											</Badge>
 										</TableCell>
 										<TableCell>
-											<Badge 
+											<Badge
 												variant={category.isActive ? 'default' : 'secondary'}
 												className={cn(
 													"text-xs",
-													category.isActive 
-														? "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-green-300 dark:border-green-600" 
+													category.isActive
+														? "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-green-300 dark:border-green-600"
 														: "bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600"
 												)}
 											>
@@ -422,7 +422,7 @@ export function CategoriesManagement() {
 										</TableCell>
 										<TableCell>
 											<div className="flex items-center justify-center gap-1">
-												<Button 
+												<Button
 													size="icon"
 													variant="outline"
 													onClick={() => {
@@ -434,7 +434,7 @@ export function CategoriesManagement() {
 												>
 													<Eye className="h-4 w-4" />
 												</Button>
-												<Button 
+												<Button
 													size="icon"
 													variant="outline"
 													onClick={() => openEditDialog(category)}
@@ -443,7 +443,7 @@ export function CategoriesManagement() {
 												>
 													<Edit2 className="h-4 w-4" />
 												</Button>
-												<Button 
+												<Button
 													size="icon"
 													variant="outline"
 													onClick={() => openDeleteDialog(category)}
@@ -537,8 +537,8 @@ export function CategoriesManagement() {
 								<div className="flex items-center gap-4">
 									{selectedCategory.imageUrl ? (
 										<Avatar className="h-16 w-16 rounded-lg">
-											<AvatarImage 
-												src={selectedCategory.imageUrl} 
+											<AvatarImage
+												src={selectedCategory.imageUrl}
 												alt={selectedCategory.name}
 												className="object-cover"
 											/>
@@ -556,12 +556,12 @@ export function CategoriesManagement() {
 										<p className="text-sm text-muted-foreground">
 											Slug: {selectedCategory.slug}
 										</p>
-										<Badge 
+										<Badge
 											variant={selectedCategory.isActive ? 'default' : 'secondary'}
 											className={cn(
 												"mt-2",
-												selectedCategory.isActive 
-													? "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-green-300 dark:border-green-600" 
+												selectedCategory.isActive
+													? "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-green-300 dark:border-green-600"
 													: "bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600"
 											)}
 										>
@@ -608,7 +608,7 @@ export function CategoriesManagement() {
 							Close
 						</Button>
 						{selectedCategory && (
-							<Button 
+							<Button
 								onClick={() => {
 									setIsViewDialogOpen(false);
 									setTimeout(() => openEditDialog(selectedCategory), 100);

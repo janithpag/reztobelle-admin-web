@@ -303,6 +303,484 @@ lib/
 - `POST /uploads/organize` - Organize images in folders
 - `GET /uploads/usage` - Cloudinary usage statistics
 
+## UI Design Guidelines
+
+### Overview
+The ReztoBelle Admin Web follows a consistent design system based on **shadcn/ui** components, **Tailwind CSS** utility classes, and modern React patterns. These guidelines ensure consistency across all management interfaces based on the implemented **Categories Management** design patterns.
+
+### Color Scheme & Theming
+
+#### Primary Action Colors
+- **Create/Success Actions**: `bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 text-white`
+- **Edit/Warning Actions**: `bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-600 dark:hover:bg-yellow-700 text-white`
+- **Delete/Danger Actions**: `bg-red-600 text-white hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700`
+
+#### Status Badge Colors
+- **Active/Success Status**: `bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-green-300 dark:border-green-600`
+- **Inactive/Neutral Status**: `bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600`
+
+#### Action Button Colors (Table Actions)
+- **View/Info**: `border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20`
+- **Edit/Warning**: `border-yellow-200 dark:border-yellow-800 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20`
+- **Delete/Danger**: `border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20`
+
+### Layout Structure
+
+#### Page Header Pattern
+```tsx
+<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+  <div>
+    <h1 className="text-2xl font-bold tracking-tight">Page Title</h1>
+    <p className="text-muted-foreground">
+      Page description explaining the functionality
+    </p>
+  </div>
+  <Dialog> {/* Create/Add Button */}
+    <DialogTrigger asChild>
+      <Button className="bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 text-white">
+        <Plus className="mr-2 h-4 w-4" />
+        Add Item
+      </Button>
+    </DialogTrigger>
+  </Dialog>
+</div>
+```
+
+#### Search Section Pattern
+```tsx
+<div className="flex items-center space-x-2">
+  <div className="relative flex-1 max-w-sm">
+    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+    <Input
+      placeholder="Search items..."
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+      className="pl-10"
+    />
+  </div>
+</div>
+```
+
+### Table Design Patterns
+
+#### Table Structure
+```tsx
+<Card>
+  <CardHeader>
+    <CardTitle>Items ({filteredItems.length})</CardTitle>
+    <CardDescription>
+      Description of the table contents
+    </CardDescription>
+  </CardHeader>
+  <CardContent>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Column 1</TableHead>
+          <TableHead>Column 2</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead>Date</TableHead>
+          <TableHead className="w-[70px]">Actions</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {/* Table rows */}
+      </TableBody>
+    </Table>
+  </CardContent>
+</Card>
+```
+
+#### Action Buttons in Tables
+```tsx
+<div className="flex items-center justify-center gap-1">
+  <Button 
+    size="icon"
+    variant="outline"
+    onClick={() => handleView(item)}
+    className="h-8 w-8 border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-700 dark:hover:text-blue-300 hover:border-blue-300 dark:hover:border-blue-700"
+    title="View Item"
+  >
+    <Eye className="h-4 w-4" />
+  </Button>
+  <Button 
+    size="icon"
+    variant="outline"
+    onClick={() => handleEdit(item)}
+    className="h-8 w-8 border-yellow-200 dark:border-yellow-800 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 hover:text-yellow-700 dark:hover:text-yellow-300 hover:border-yellow-300 dark:hover:border-yellow-700"
+    title="Edit Item"
+  >
+    <Edit2 className="h-4 w-4" />
+  </Button>
+  <Button 
+    size="icon"
+    variant="outline"
+    onClick={() => handleDelete(item)}
+    className="h-8 w-8 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700 dark:hover:text-red-300 hover:border-red-300 dark:hover:border-red-700"
+    title="Delete Item"
+  >
+    <Trash2 className="h-4 w-4" />
+  </Button>
+</div>
+```
+
+#### Empty State Pattern
+```tsx
+{filteredItems.length === 0 ? (
+  <div className="flex flex-col items-center justify-center py-8 text-center">
+    <Package className="h-12 w-12 text-muted-foreground mb-4" />
+    <h3 className="text-lg font-medium text-muted-foreground mb-2">
+      {items.length === 0 ? 'No items yet' : 'No items match your search'}
+    </h3>
+    <p className="text-sm text-muted-foreground max-w-sm mb-4">
+      {items.length === 0
+        ? 'Get started by creating your first item.'
+        : 'Try adjusting your search terms to find what you\'re looking for.'}
+    </p>
+    {items.length === 0 && (
+      <Button 
+        onClick={() => setIsCreateDialogOpen(true)}
+        className="bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 text-white"
+      >
+        <Plus className="mr-2 h-4 w-4" />
+        Create First Item
+      </Button>
+    )}
+  </div>
+) : (
+  // Table content
+)}
+```
+
+### Form Design Patterns
+
+#### Dialog Form Structure
+```tsx
+<Dialog open={isCreateDialogOpen} onOpenChange={(open) => {
+  setIsCreateDialogOpen(open);
+  if (!open) {
+    // Reset form state
+  }
+}}>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>Create New Item</DialogTitle>
+      <DialogDescription>
+        Description of the form action.
+      </DialogDescription>
+    </DialogHeader>
+    <DialogBody>
+      <div className="space-y-6">
+        {/* Form fields */}
+      </div>
+    </DialogBody>
+    <DialogFooter>
+      <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+        Cancel
+      </Button>
+      <Button 
+        onClick={handleCreate}
+        className="bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 text-white"
+      >
+        Create Item
+      </Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
+```
+
+#### Form Field Patterns
+```tsx
+{/* Required Text Input */}
+<div className="space-y-2">
+  <Label htmlFor="field-name" className="text-sm font-medium">Name *</Label>
+  <Input
+    id="field-name"
+    value={form.name}
+    onChange={(e) => setForm({ ...form, name: e.target.value })}
+    placeholder="Enter item name"
+    className="w-full"
+  />
+</div>
+
+{/* Optional Textarea */}
+<div className="space-y-2">
+  <Label htmlFor="field-description" className="text-sm font-medium">Description</Label>
+  <Textarea
+    id="field-description"
+    value={form.description}
+    onChange={(e) => setForm({ ...form, description: e.target.value })}
+    placeholder="Enter item description"
+    className="w-full min-h-[100px] resize-none"
+  />
+</div>
+
+{/* Image Upload */}
+<div className="space-y-2">
+  <Label className="text-sm font-medium">Item Image (Optional)</Label>
+  <ImageUpload
+    onImagesChange={setImages}
+    initialImages={images}
+    maxImages={1}
+    maxFileSize={5}
+    className="mt-2"
+  />
+</div>
+```
+
+### View Dialog Patterns
+
+#### Detailed View Structure
+```tsx
+<Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+  <DialogContent className="sm:max-w-[600px] sm:w-[600px]">
+    <DialogHeader>
+      <DialogTitle>Item Details</DialogTitle>
+      <DialogDescription>
+        View complete information about this item.
+      </DialogDescription>
+    </DialogHeader>
+    {selectedItem && (
+      <DialogBody>
+        <div className="space-y-6">
+          {/* Header with image and basic info */}
+          <div className="flex items-center gap-4">
+            {selectedItem.imageUrl ? (
+              <Avatar className="h-16 w-16 rounded-lg">
+                <AvatarImage src={selectedItem.imageUrl} alt={selectedItem.name} />
+                <AvatarFallback className="rounded-lg text-lg font-semibold bg-primary/10 text-primary">
+                  {selectedItem.name.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            ) : (
+              <div className="h-16 w-16 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-lg font-semibold">
+                {selectedItem.name.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <div className="flex-1">
+              <h3 className="text-xl font-semibold">{selectedItem.name}</h3>
+              <p className="text-sm text-muted-foreground">Additional info</p>
+              {/* Status badge */}
+            </div>
+          </div>
+
+          {/* Details section */}
+          <div className="space-y-4">
+            <div>
+              <Label className="text-sm font-medium">Description</Label>
+              <p className="mt-2 text-sm text-muted-foreground min-h-[60px] p-3 rounded-md border bg-muted/50">
+                {selectedItem.description || 'No description provided.'}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Additional fields in grid */}
+            </div>
+          </div>
+        </div>
+      </DialogBody>
+    )}
+    <DialogFooter>
+      <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>
+        Close
+      </Button>
+      {selectedItem && (
+        <Button 
+          onClick={() => {
+            setIsViewDialogOpen(false);
+            setTimeout(() => openEditDialog(selectedItem), 100);
+          }}
+          className="bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-600 dark:hover:bg-yellow-700 text-white"
+        >
+          <Edit2 className="mr-2 h-4 w-4" />
+          Edit Item
+        </Button>
+      )}
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
+```
+
+### Error Handling & Toast Notifications
+
+#### Toast Usage Patterns
+```tsx
+import { toast } from 'sonner';
+
+// Success notifications
+toast.success('Item created successfully');
+toast.success('Item updated successfully');
+toast.success('Item deleted successfully');
+
+// Error notifications
+toast.error('Item name is required');
+toast.error(error.response?.data?.error || 'Failed to create item');
+toast.error(error.response?.data?.error || 'Failed to update item');
+toast.error(error.response?.data?.error || 'Failed to delete item');
+
+// Loading states (if needed)
+toast.loading('Processing...');
+```
+
+#### Form Validation Pattern
+```tsx
+const handleCreate = async () => {
+  try {
+    // Client-side validation
+    if (!form.name.trim()) {
+      toast.error('Item name is required');
+      return;
+    }
+
+    // Prepare data
+    const itemData: any = {
+      name: form.name,
+      description: form.description || undefined
+    };
+
+    // Handle optional image
+    if (images.length > 0) {
+      itemData.imageUrl = images[0].secure_url;
+    }
+
+    // Remove undefined values
+    Object.keys(itemData).forEach(key => {
+      if (itemData[key] === undefined || itemData[key] === '') {
+        delete itemData[key];
+      }
+    });
+
+    // API call
+    await itemsAPI.createItem(itemData);
+    
+    // Success handling
+    toast.success('Item created successfully');
+    setIsCreateDialogOpen(false);
+    resetForm();
+    loadItems();
+    
+  } catch (error: any) {
+    console.error('Error creating item:', error);
+    toast.error(error.response?.data?.error || 'Failed to create item');
+  }
+};
+```
+
+### Delete Confirmation Pattern
+
+```tsx
+<AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+  <AlertDialogContent>
+    <AlertDialogHeader>
+      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+      <AlertDialogDescription>
+        This action cannot be undone. This will permanently delete the item
+        &ldquo;{selectedItem?.name}&rdquo; and may affect associated data.
+      </AlertDialogDescription>
+    </AlertDialogHeader>
+    <AlertDialogFooter>
+      <AlertDialogCancel>Cancel</AlertDialogCancel>
+      <AlertDialogAction 
+        onClick={handleDelete} 
+        className="bg-red-600 text-white hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700"
+      >
+        Delete
+      </AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
+```
+
+### Loading States Pattern
+
+```tsx
+{loading ? (
+  <div className="flex items-center justify-center py-8">
+    <div className="text-muted-foreground">Loading items...</div>
+  </div>
+) : (
+  // Content
+)}
+```
+
+### Avatar/Image Display Pattern
+
+```tsx
+<Avatar className="h-10 w-10">
+  <AvatarImage src={item.imageUrl} alt={item.name} />
+  <AvatarFallback>
+    {item.name.slice(0, 2).toUpperCase()}
+  </AvatarFallback>
+</Avatar>
+```
+
+### Status Badge Pattern
+
+```tsx
+<Badge 
+  variant={item.isActive ? 'default' : 'secondary'}
+  className={cn(
+    "text-xs",
+    item.isActive 
+      ? "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-green-300 dark:border-green-600" 
+      : "bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600"
+  )}
+>
+  {item.isActive ? 'Active' : 'Inactive'}
+</Badge>
+```
+
+### Date Display Pattern
+
+```tsx
+{/* Short date format */}
+<div className="text-sm text-muted-foreground">
+  {new Date(item.createdAt).toLocaleDateString()}
+</div>
+
+{/* Long date format for detailed views */}
+<p className="mt-2 text-sm text-muted-foreground">
+  {new Date(item.createdAt).toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  })}
+</p>
+```
+
+### Key Implementation Guidelines
+
+1. **Consistent Color Usage**: Always use the defined color schemes for actions and status indicators
+2. **Responsive Design**: Use `flex-col sm:flex-row` patterns for mobile-first responsive layouts
+3. **Icon Consistency**: Use Lucide React icons with consistent sizing (`h-4 w-4` for buttons, `h-12 w-12` for empty states)
+4. **Loading States**: Always provide loading indicators for asynchronous operations
+5. **Error Boundaries**: Implement proper try-catch blocks with user-friendly error messages
+6. **Accessibility**: Use proper ARIA labels, titles, and semantic HTML elements
+7. **Form Validation**: Implement both client-side validation and server error handling
+8. **State Management**: Clean up form states when dialogs close
+9. **User Feedback**: Provide immediate feedback through toast notifications
+10. **Progressive Enhancement**: Ensure core functionality works without JavaScript
+
+### Component Imports Standard
+```tsx
+import React, { useState, useEffect } from 'react';
+import { Plus, Search, Edit2, Trash2, Eye, Package } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogBody } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ImageUpload } from '@/components/image-upload';
+import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
+```
+
 ## Image Management System
 
 ### Overview

@@ -5,6 +5,7 @@ import { Analytics } from '@vercel/analytics/next';
 import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/contexts/auth-context';
 import { LayoutWrapper } from '@/components/layout-wrapper';
+import { Toaster } from '@/components/ui/sonner';
 import { Suspense } from 'react';
 import './globals.css';
 
@@ -34,6 +35,7 @@ export default function RootLayout({
 						</AuthProvider>
 					</ThemeProvider>
 				</Suspense>
+				<Toaster />
 				<Analytics />
 			</body>
 		</html>

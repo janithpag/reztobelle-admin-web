@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Trash2, MoreHorizontal, Package } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Eye, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,12 +24,6 @@ import {
 	DialogTrigger,
 } from '@/components/ui/dialog';
 import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
 	AlertDialog,
 	AlertDialogAction,
 	AlertDialogCancel,
@@ -46,6 +40,7 @@ import { ImageUpload } from '@/components/image-upload';
 import { categoriesAPI } from '@/lib/api';
 import type { Category, CreateCategoryForm, UpdateCategoryForm } from '@/types';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 interface UploadedImage {
 	public_id: string;
@@ -63,6 +58,7 @@ export function CategoriesManagement() {
 	const [searchTerm, setSearchTerm] = useState('');
 	const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+	const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 	const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
 
@@ -249,7 +245,7 @@ export function CategoriesManagement() {
 				}
 			}}>
 					<DialogTrigger asChild>
-						<Button>
+						<Button className="bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 text-white">
 							<Plus className="mr-2 h-4 w-4" />
 							Add Category
 						</Button>
@@ -261,28 +257,29 @@ export function CategoriesManagement() {
 								Add a new product category to organize your inventory.
 							</DialogDescription>
 						</DialogHeader>
-						<div className="space-y-4">
-							<div>
-								<Label htmlFor="create-name">Name *</Label>
+						<div className="space-y-6">
+							<div className="space-y-2">
+								<Label htmlFor="create-name" className="text-sm font-medium">Name *</Label>
 								<Input
 									id="create-name"
 									value={createForm.name}
 									onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
 									placeholder="Enter category name"
+									className="w-full"
 								/>
 							</div>
-							<div>
-								<Label htmlFor="create-description">Description</Label>
+							<div className="space-y-2">
+								<Label htmlFor="create-description" className="text-sm font-medium">Description</Label>
 								<Textarea
 									id="create-description"
 									value={createForm.description}
 									onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
 									placeholder="Enter category description"
-									rows={3}
+									className="w-full min-h-[100px] resize-none"
 								/>
 							</div>
-							<div>
-								<Label>Category Image (Optional)</Label>
+							<div className="space-y-2">
+								<Label className="text-sm font-medium">Category Image (Optional)</Label>
 								<ImageUpload
 									onImagesChange={setCreateImages}
 									initialImages={createImages}
@@ -300,7 +297,7 @@ export function CategoriesManagement() {
 							}}>
 								Cancel
 							</Button>
-							<Button onClick={handleCreateCategory}>Create Category</Button>
+							<Button onClick={handleCreateCategory} className="bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 text-white">Create Category</Button>
 						</DialogFooter>
 					</DialogContent>
 				</Dialog>
@@ -338,11 +335,20 @@ export function CategoriesManagement() {
 							<h3 className="text-lg font-medium text-muted-foreground mb-2">
 								{categories.length === 0 ? 'No categories yet' : 'No categories match your search'}
 							</h3>
-							<p className="text-sm text-muted-foreground max-w-sm">
+							<p className="text-sm text-muted-foreground max-w-sm mb-4">
 								{categories.length === 0
 									? 'Get started by creating your first product category.'
 									: 'Try adjusting your search terms to find what you\'re looking for.'}
 							</p>
+							{categories.length === 0 && (
+								<Button 
+									onClick={() => setIsCreateDialogOpen(true)}
+									className="bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 text-white"
+								>
+									<Plus className="mr-2 h-4 w-4" />
+									Create First Category
+								</Button>
+							)}
 						</div>
 					) : (
 						<Table>
@@ -394,7 +400,15 @@ export function CategoriesManagement() {
 											</Badge>
 										</TableCell>
 										<TableCell>
-											<Badge variant={category.isActive ? 'default' : 'secondary'}>
+											<Badge 
+												variant={category.isActive ? 'default' : 'secondary'}
+												className={cn(
+													"text-xs",
+													category.isActive 
+														? "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-green-300 dark:border-green-600" 
+														: "bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600"
+												)}
+											>
 												{category.isActive ? 'Active' : 'Inactive'}
 											</Badge>
 										</TableCell>
@@ -404,26 +418,38 @@ export function CategoriesManagement() {
 											</div>
 										</TableCell>
 										<TableCell>
-											<DropdownMenu>
-												<DropdownMenuTrigger asChild>
-													<Button variant="ghost" size="sm">
-														<MoreHorizontal className="h-4 w-4" />
-													</Button>
-												</DropdownMenuTrigger>
-												<DropdownMenuContent align="end">
-													<DropdownMenuItem onClick={() => openEditDialog(category)}>
-														<Edit2 className="mr-2 h-4 w-4" />
-														Edit
-													</DropdownMenuItem>
-													<DropdownMenuItem 
-														onClick={() => openDeleteDialog(category)}
-														className="text-destructive"
-													>
-														<Trash2 className="mr-2 h-4 w-4" />
-														Delete
-													</DropdownMenuItem>
-												</DropdownMenuContent>
-											</DropdownMenu>
+											<div className="flex items-center justify-center gap-1">
+												<Button 
+													size="icon"
+													variant="outline"
+													onClick={() => {
+														setSelectedCategory(category);
+														setIsViewDialogOpen(true);
+													}}
+													className="h-8 w-8 border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-700 dark:hover:text-blue-300 hover:border-blue-300 dark:hover:border-blue-700"
+													title="View Category"
+												>
+													<Eye className="h-4 w-4" />
+												</Button>
+												<Button 
+													size="icon"
+													variant="outline"
+													onClick={() => openEditDialog(category)}
+													className="h-8 w-8 border-purple-200 dark:border-purple-800 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-700 dark:hover:text-purple-300 hover:border-purple-300 dark:hover:border-purple-700"
+													title="Edit Category"
+												>
+													<Edit2 className="h-4 w-4" />
+												</Button>
+												<Button 
+													size="icon"
+													variant="outline"
+													onClick={() => openDeleteDialog(category)}
+													className="h-8 w-8 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700 dark:hover:text-red-300 hover:border-red-300 dark:hover:border-red-700"
+													title="Delete Category"
+												>
+													<Trash2 className="h-4 w-4" />
+												</Button>
+											</div>
 										</TableCell>
 									</TableRow>
 								))}
@@ -447,28 +473,29 @@ export function CategoriesManagement() {
 							Update the category details below.
 						</DialogDescription>
 					</DialogHeader>
-					<div className="space-y-4">
-						<div>
-							<Label htmlFor="edit-name">Name *</Label>
+					<div className="space-y-6">
+						<div className="space-y-2">
+							<Label htmlFor="edit-name" className="text-sm font-medium">Name *</Label>
 							<Input
 								id="edit-name"
 								value={editForm.name || ''}
 								onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
 								placeholder="Enter category name"
+								className="w-full"
 							/>
 						</div>
-						<div>
-							<Label htmlFor="edit-description">Description</Label>
+						<div className="space-y-2">
+							<Label htmlFor="edit-description" className="text-sm font-medium">Description</Label>
 							<Textarea
 								id="edit-description"
 								value={editForm.description || ''}
 								onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
 								placeholder="Enter category description"
-								rows={3}
+								className="w-full min-h-[100px] resize-none"
 							/>
 						</div>
-						<div>
-							<Label>Category Image (Optional)</Label>
+						<div className="space-y-2">
+							<Label className="text-sm font-medium">Category Image (Optional)</Label>
 							<ImageUpload
 								onImagesChange={setEditImages}
 								initialImages={editImages}
@@ -485,7 +512,106 @@ export function CategoriesManagement() {
 						}}>
 							Cancel
 						</Button>
-						<Button onClick={handleEditCategory}>Update Category</Button>
+						<Button onClick={handleEditCategory} className="bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 text-white">Update Category</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+
+			{/* View Category Dialog */}
+			<Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+				<DialogContent className="sm:max-w-[600px]">
+					<DialogHeader>
+						<DialogTitle>Category Details</DialogTitle>
+						<DialogDescription>
+							View complete information about this category.
+						</DialogDescription>
+					</DialogHeader>
+					{selectedCategory && (
+						<div className="space-y-6">
+							<div className="flex items-center gap-4">
+								{selectedCategory.imageUrl ? (
+									<Avatar className="h-16 w-16 rounded-lg">
+										<AvatarImage 
+											src={selectedCategory.imageUrl} 
+											alt={selectedCategory.name}
+											className="object-cover"
+										/>
+										<AvatarFallback className="rounded-lg text-lg font-semibold bg-primary/10 text-primary">
+											{selectedCategory.name.charAt(0).toUpperCase()}
+										</AvatarFallback>
+									</Avatar>
+								) : (
+									<div className="h-16 w-16 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-lg font-semibold">
+										{selectedCategory.name.charAt(0).toUpperCase()}
+									</div>
+								)}
+								<div className="flex-1">
+									<h3 className="text-xl font-semibold">{selectedCategory.name}</h3>
+									<p className="text-sm text-muted-foreground">
+										Slug: {selectedCategory.slug}
+									</p>
+									<Badge 
+										variant={selectedCategory.isActive ? 'default' : 'secondary'}
+										className={cn(
+											"mt-2",
+											selectedCategory.isActive 
+												? "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-green-300 dark:border-green-600" 
+												: "bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600"
+										)}
+									>
+										{selectedCategory.isActive ? 'Active' : 'Inactive'}
+									</Badge>
+								</div>
+							</div>
+
+							<div className="space-y-4">
+								<div>
+									<Label className="text-sm font-medium">Description</Label>
+									<p className="mt-2 text-sm text-muted-foreground min-h-[60px] p-3 rounded-md border bg-muted/50">
+										{selectedCategory.description || 'No description provided.'}
+									</p>
+								</div>
+
+								<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+									<div>
+										<Label className="text-sm font-medium">Products Count</Label>
+										<p className="mt-2 text-sm">
+											<Badge variant="outline" className="text-xs">
+												{selectedCategory._count?.products || 0} products
+											</Badge>
+										</p>
+									</div>
+									<div>
+										<Label className="text-sm font-medium">Created Date</Label>
+										<p className="mt-2 text-sm text-muted-foreground">
+											{new Date(selectedCategory.createdAt).toLocaleDateString('en-US', {
+												weekday: 'long',
+												year: 'numeric',
+												month: 'long',
+												day: 'numeric'
+											})}
+										</p>
+									</div>
+								</div>
+							</div>
+						</div>
+					)}
+					<DialogFooter>
+						<Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>
+							Close
+						</Button>
+						{selectedCategory && (
+							<Button 
+								onClick={() => {
+									setIsViewDialogOpen(false);
+									setTimeout(() => openEditDialog(selectedCategory), 100);
+								}}
+								className="bg-purple-600 hover:bg-purple-700 dark:bg-purple-600 dark:hover:bg-purple-700 text-white"
+							>
+								<Edit2 className="mr-2 h-4 w-4" />
+								Edit Category
+							</Button>
+						)}
 					</DialogFooter>
 				</DialogContent>
 			</Dialog>

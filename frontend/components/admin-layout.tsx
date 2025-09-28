@@ -48,6 +48,7 @@ import {
 	LogOut,
 	Receipt,
 	UserCheck,
+	Tag,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import { useTheme } from 'next-themes';
@@ -64,6 +65,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 	const baseNavigation = [
 		{ name: 'Dashboard', href: '/', icon: Home },
 		{ name: 'Products', href: '/products', icon: Package },
+		{ name: 'Categories', href: '/categories', icon: Tag },
 		{ name: 'Inventory', href: '/inventory', icon: Warehouse },
 		{ name: 'Orders', href: '/orders', icon: ShoppingCart },
 		{ name: 'Customers', href: '/customers', icon: Users },

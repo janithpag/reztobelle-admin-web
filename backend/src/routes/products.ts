@@ -1,6 +1,6 @@
 import { FastifyPluginCallback } from 'fastify'
 import { z } from 'zod'
-import { authenticateToken, requireManagerOrAdmin } from '../middleware/auth'
+import { authRequired, managerOrAdmin } from '../middleware/route-helpers'
 
 const createProductSchema = z.object({
 	name: z.string().min(1).max(200),
@@ -37,7 +37,7 @@ const updateProductSchema = createProductSchema.partial().omit({ initialStock: t
 const productRoutes: FastifyPluginCallback = async (fastify) => {
 	// Get all products
 	fastify.get('/', {
-		preHandler: authenticateToken
+		preHandler: authRequired
 	}, async (request, reply) => {
 		try {
 			const { categoryId, isActive, isFeatured, search } = request.query as {
@@ -92,7 +92,7 @@ const productRoutes: FastifyPluginCallback = async (fastify) => {
 
 	// Get product by ID
 	fastify.get('/:id', {
-		preHandler: authenticateToken
+		preHandler: authRequired
 	}, async (request, reply) => {
 		try {
 			const { id } = request.params as { id: string }
@@ -140,7 +140,7 @@ const productRoutes: FastifyPluginCallback = async (fastify) => {
 
 	// Create product
 	fastify.post('/', {
-		preHandler: [authenticateToken, requireManagerOrAdmin]
+		preHandler: managerOrAdmin
 	}, async (request, reply) => {
 		try {
 			const data = createProductSchema.parse(request.body)
@@ -237,7 +237,7 @@ const productRoutes: FastifyPluginCallback = async (fastify) => {
 
 	// Update product
 	fastify.put('/:id', {
-		preHandler: [authenticateToken, requireManagerOrAdmin]
+		preHandler: managerOrAdmin
 	}, async (request, reply) => {
 		try {
 			const { id } = request.params as { id: string }
@@ -333,7 +333,7 @@ const productRoutes: FastifyPluginCallback = async (fastify) => {
 
 	// Delete product
 	fastify.delete('/:id', {
-		preHandler: [authenticateToken, requireManagerOrAdmin]
+		preHandler: managerOrAdmin
 	}, async (request, reply) => {
 		try {
 			const { id } = request.params as { id: string }

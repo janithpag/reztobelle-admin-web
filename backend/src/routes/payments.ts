@@ -1,11 +1,11 @@
 import { FastifyPluginCallback } from 'fastify'
 import { z } from 'zod'
-import { authenticateToken, requireManagerOrAdmin } from '../middleware/auth'
+import { authRequired, managerOrAdmin } from '../middleware/route-helpers'
 
 const paymentRoutes: FastifyPluginCallback = async (fastify) => {
 	// Get all payment transactions
 	fastify.get('/', {
-		preHandler: authenticateToken
+		preHandler: authRequired
 	}, async (request, reply) => {
 		try {
 			const {
@@ -59,7 +59,7 @@ const paymentRoutes: FastifyPluginCallback = async (fastify) => {
 
 	// Get pending payment transactions
 	fastify.get('/pending', {
-		preHandler: authenticateToken
+		preHandler: authRequired
 	}, async (request, reply) => {
 		try {
 			const pendingTransactions = await fastify.prisma.paymentTransaction.findMany({
@@ -91,7 +91,7 @@ const paymentRoutes: FastifyPluginCallback = async (fastify) => {
 
 	// Upload deposit slip for order
 	fastify.post('/orders/:orderId/deposit-slip', {
-		preHandler: authenticateToken,
+		preHandler: authRequired,
 		schema: {
 			body: {
 				type: 'object',
@@ -199,7 +199,7 @@ const paymentRoutes: FastifyPluginCallback = async (fastify) => {
 
 	// Verify payment transaction (Admin only)
 	fastify.put('/transactions/:transactionId/verify', {
-		preHandler: [authenticateToken, requireManagerOrAdmin],
+		preHandler: managerOrAdmin,
 		schema: {
 			body: {
 				type: 'object',
@@ -290,7 +290,7 @@ const paymentRoutes: FastifyPluginCallback = async (fastify) => {
 
 	// Get payment transaction by ID
 	fastify.get('/transactions/:transactionId', {
-		preHandler: authenticateToken
+		preHandler: authRequired
 	}, async (request, reply) => {
 		try {
 			const { transactionId } = request.params as { transactionId: string }
@@ -336,7 +336,7 @@ const paymentRoutes: FastifyPluginCallback = async (fastify) => {
 
 	// Get payment statistics
 	fastify.get('/statistics', {
-		preHandler: authenticateToken
+		preHandler: authRequired
 	}, async (request, reply) => {
 		try {
 			const { startDate, endDate } = request.query as {

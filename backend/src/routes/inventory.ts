@@ -1,6 +1,6 @@
 import { FastifyPluginCallback } from 'fastify'
 import { z } from 'zod'
-import { authenticateToken, requireManagerOrAdmin } from '../middleware/auth'
+import { authRequired, managerOrAdmin } from '../middleware/route-helpers'
 import InventoryService from '../services/inventory.service'
 
 const inventoryRoutes: FastifyPluginCallback = async (fastify) => {
@@ -8,7 +8,7 @@ const inventoryRoutes: FastifyPluginCallback = async (fastify) => {
 
 	// Get all inventory levels
 	fastify.get('/', {
-		preHandler: authenticateToken
+		preHandler: authRequired
 	}, async (request, reply) => {
 		try {
 			const { includeInactive } = request.query as { includeInactive?: string }
@@ -27,7 +27,7 @@ const inventoryRoutes: FastifyPluginCallback = async (fastify) => {
 
 	// Get low stock items
 	fastify.get('/low-stock', {
-		preHandler: authenticateToken
+		preHandler: authRequired
 	}, async (request, reply) => {
 		try {
 			const lowStockItems = await inventoryService.getLowStockItems()
@@ -43,7 +43,7 @@ const inventoryRoutes: FastifyPluginCallback = async (fastify) => {
 
 	// Get inventory summary for dashboard
 	fastify.get('/summary', {
-		preHandler: authenticateToken
+		preHandler: authRequired
 	}, async (request, reply) => {
 		try {
 			const summary = await inventoryService.getInventorySummary()
@@ -59,7 +59,7 @@ const inventoryRoutes: FastifyPluginCallback = async (fastify) => {
 
 	// Adjust stock levels
 	fastify.put('/:id/adjust', {
-		preHandler: [authenticateToken, requireManagerOrAdmin],
+		preHandler: managerOrAdmin,
 		schema: {
 			body: {
 				type: 'object',
@@ -130,7 +130,7 @@ const inventoryRoutes: FastifyPluginCallback = async (fastify) => {
 
 	// Get stock movement history
 	fastify.get('/movements', {
-		preHandler: authenticateToken
+		preHandler: authRequired
 	}, async (request, reply) => {
 		try {
 			const {
@@ -163,7 +163,7 @@ const inventoryRoutes: FastifyPluginCallback = async (fastify) => {
 
 	// Reserve stock for an order
 	fastify.post('/reserve', {
-		preHandler: [authenticateToken, requireManagerOrAdmin],
+		preHandler: managerOrAdmin,
 		schema: {
 			body: {
 				type: 'object',
@@ -209,7 +209,7 @@ const inventoryRoutes: FastifyPluginCallback = async (fastify) => {
 
 	// Release reserved stock
 	fastify.post('/release', {
-		preHandler: [authenticateToken, requireManagerOrAdmin],
+		preHandler: managerOrAdmin,
 		schema: {
 			body: {
 				type: 'object',
@@ -255,7 +255,7 @@ const inventoryRoutes: FastifyPluginCallback = async (fastify) => {
 
 	// Confirm reserved stock (convert reserved to sold)
 	fastify.post('/confirm', {
-		preHandler: [authenticateToken, requireManagerOrAdmin],
+		preHandler: managerOrAdmin,
 		schema: {
 			body: {
 				type: 'object',

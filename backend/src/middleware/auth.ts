@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken'
-import { FastifyRequest, FastifyReply } from 'fastify'
+import { FastifyRequest, FastifyReply, preHandlerHookHandler } from 'fastify'
 
 export interface AuthenticatedUser {
 	userId: string
@@ -13,47 +13,38 @@ declare module 'fastify' {
 	}
 }
 
-export const authenticateToken = async (request: FastifyRequest, reply: FastifyReply) => {
+// Fixed authentication middleware using proper Fastify preHandler pattern
+export const authenticateToken: preHandlerHookHandler = async (request, reply) => {
+	const authHeader = request.headers.authorization
+	const token = authHeader && authHeader.startsWith('Bearer ')
+		? authHeader.split(' ')[1]
+		: null
+
+	if (!token) {
+		throw { statusCode: 401, message: 'Access denied. No token provided.', code: 'NO_TOKEN' }
+	}
+
 	try {
-		const authHeader = request.headers.authorization
-		const token = authHeader && authHeader.startsWith('Bearer ')
-			? authHeader.split(' ')[1]
-			: null
-
-		if (!token) {
-			return reply.code(401).send({
-				error: 'Access denied. No token provided.',
-				code: 'NO_TOKEN'
-			})
-		}
-
 		const decoded = jwt.verify(token, process.env.JWT_SECRET!) as AuthenticatedUser
 		request.user = decoded
 	} catch (error) {
-		return reply.code(401).send({
-			error: 'Invalid token.',
-			code: 'INVALID_TOKEN'
-		})
+		console.error('Token verification failed:', error)
+		throw { statusCode: 401, message: 'Invalid token.', code: 'INVALID_TOKEN' }
 	}
 }
 
-export const requireRole = (allowedRoles: string[]) => {
-	return async (request: FastifyRequest, reply: FastifyReply) => {
+export const requireRole = (allowedRoles: string[]): preHandlerHookHandler => {
+	return async (request, reply) => {
 		if (!request.user) {
-			return reply.code(401).send({
-				error: 'Authentication required.',
-				code: 'UNAUTHENTICATED'
-			})
+			throw { statusCode: 401, message: 'Authentication required.', code: 'UNAUTHENTICATED' }
 		}
 
 		if (!allowedRoles.includes(request.user.role)) {
-			return reply.code(403).send({
-				error: 'Insufficient permissions.',
-				code: 'INSUFFICIENT_PERMISSIONS'
-			})
+			console.warn(`Access denied for user ${request.user.email}: role ${request.user.role} not in [${allowedRoles.join(', ')}]`)
+			throw { statusCode: 403, message: 'Insufficient permissions.', code: 'INSUFFICIENT_PERMISSIONS' }
 		}
 	}
 }
 
 export const requireAdmin = () => requireRole(['ADMIN'])
-export const requireManagerOrAdmin = () => requireRole(['ADMIN', 'MANAGER'])
+export const requireManagerOrAdmin = () => requireRole(['ADMIN', 'MANAGER', 'SUPER_ADMIN'])

@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { z } from 'zod'
 import { UserStatus } from '@prisma/client'
-import { authenticateToken } from '../middleware/auth'
+import { authRequired } from '../middleware/route-helpers'
 
 const loginSchema = z.object({
 	email: z.string().email(),
@@ -114,7 +114,7 @@ const authRoutes: FastifyPluginCallback = async (fastify) => {
 
 	// Get current user
 	fastify.get('/me', {
-		preHandler: authenticateToken
+		preHandler: authRequired
 	}, async (request, reply) => {
 		const user = await fastify.prisma.user.findUnique({
 			where: { id: parseInt(request.user!.userId) },
@@ -137,7 +137,7 @@ const authRoutes: FastifyPluginCallback = async (fastify) => {
 
 	// Logout (client-side token invalidation)
 	fastify.post('/logout', {
-		preHandler: authenticateToken
+		preHandler: authRequired
 	}, async (request, reply) => {
 		// In a production app, you might want to maintain a blacklist of tokens
 		// For now, we'll just return success and let the client handle token removal
@@ -146,7 +146,7 @@ const authRoutes: FastifyPluginCallback = async (fastify) => {
 
 	// Get all users (Super Admin only)
 	fastify.get('/users', {
-		preHandler: authenticateToken
+		preHandler: authRequired
 	}, async (request, reply) => {
 		const currentUser = await fastify.prisma.user.findUnique({
 			where: { id: parseInt(request.user!.userId) }
@@ -175,7 +175,7 @@ const authRoutes: FastifyPluginCallback = async (fastify) => {
 
 	// Update user status (Super Admin only)
 	fastify.patch('/users/:id/status', {
-		preHandler: authenticateToken
+		preHandler: authRequired
 	}, async (request, reply) => {
 		const currentUser = await fastify.prisma.user.findUnique({
 			where: { id: parseInt(request.user!.userId) }

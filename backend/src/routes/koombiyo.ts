@@ -1,14 +1,14 @@
 import { FastifyPluginCallback } from 'fastify'
 import { z } from 'zod'
 import KoombiyoService from '../services/koombiyo.service'
-import { authenticateToken, requireManagerOrAdmin } from '../middleware/auth'
+import { authRequired, managerOrAdmin } from '../middleware/route-helpers'
 
 const koombiyoRoutes: FastifyPluginCallback = async (fastify) => {
 	const koombiyoService = new KoombiyoService()
 
 	// Get districts (real-time from Koombiyo API)
 	fastify.get('/districts', {
-		preHandler: authenticateToken
+		preHandler: authRequired
 	}, async (request, reply) => {
 		try {
 			const result = await koombiyoService.getDistricts()
@@ -31,7 +31,7 @@ const koombiyoRoutes: FastifyPluginCallback = async (fastify) => {
 
 	// Get cities by district (real-time from Koombiyo API)
 	fastify.get('/cities/:districtId', {
-		preHandler: authenticateToken
+		preHandler: authRequired
 	}, async (request, reply) => {
 		try {
 			const { districtId } = request.params as { districtId: string }
@@ -61,7 +61,7 @@ const koombiyoRoutes: FastifyPluginCallback = async (fastify) => {
 
 	// Get available waybills (real-time from Koombiyo API)
 	fastify.get('/waybills/available', {
-		preHandler: authenticateToken
+		preHandler: authRequired
 	}, async (request, reply) => {
 		try {
 			const { limit } = request.query as { limit?: string }
@@ -87,7 +87,7 @@ const koombiyoRoutes: FastifyPluginCallback = async (fastify) => {
 
 	// Validate district and city combination
 	fastify.post('/validate-location', {
-		preHandler: authenticateToken,
+		preHandler: authRequired,
 		schema: {
 			body: {
 				type: 'object',
@@ -132,7 +132,7 @@ const koombiyoRoutes: FastifyPluginCallback = async (fastify) => {
 
 	// Send order to Koombiyo
 	fastify.post('/orders/:orderId/send', {
-		preHandler: [authenticateToken, requireManagerOrAdmin]
+		preHandler: managerOrAdmin
 	}, async (request, reply) => {
 		try {
 			const { orderId } = request.params as { orderId: string }
@@ -227,7 +227,7 @@ const koombiyoRoutes: FastifyPluginCallback = async (fastify) => {
 
 	// Track order status
 	fastify.get('/orders/:orderId/track', {
-		preHandler: authenticateToken
+		preHandler: authRequired
 	}, async (request, reply) => {
 		try {
 			const { orderId } = request.params as { orderId: string }
@@ -293,7 +293,7 @@ const koombiyoRoutes: FastifyPluginCallback = async (fastify) => {
 
 	// Get order delivery history
 	fastify.get('/orders/:orderId/history', {
-		preHandler: authenticateToken
+		preHandler: authRequired
 	}, async (request, reply) => {
 		try {
 			const { orderId } = request.params as { orderId: string }
@@ -367,7 +367,7 @@ const koombiyoRoutes: FastifyPluginCallback = async (fastify) => {
 
 	// Request pickup
 	fastify.post('/pickup/request', {
-		preHandler: [authenticateToken, requireManagerOrAdmin],
+		preHandler: managerOrAdmin,
 		schema: {
 			body: {
 				type: 'object',
@@ -427,7 +427,7 @@ const koombiyoRoutes: FastifyPluginCallback = async (fastify) => {
 
 	// Get return notes
 	fastify.get('/returns', {
-		preHandler: authenticateToken
+		preHandler: authRequired
 	}, async (request, reply) => {
 		try {
 			const result = await koombiyoService.getReturnNotes()
@@ -447,7 +447,7 @@ const koombiyoRoutes: FastifyPluginCallback = async (fastify) => {
 
 	// Get return items by note ID
 	fastify.get('/returns/:noteId/items', {
-		preHandler: authenticateToken
+		preHandler: authRequired
 	}, async (request, reply) => {
 		try {
 			const { noteId } = request.params as { noteId: string }
@@ -469,7 +469,7 @@ const koombiyoRoutes: FastifyPluginCallback = async (fastify) => {
 
 	// Mark return as received
 	fastify.post('/returns/:waybillId/receive', {
-		preHandler: [authenticateToken, requireManagerOrAdmin]
+		preHandler: managerOrAdmin
 	}, async (request, reply) => {
 		try {
 			const { waybillId } = request.params as { waybillId: string }

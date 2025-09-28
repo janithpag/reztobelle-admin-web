@@ -51,7 +51,9 @@ async function buildApp() {
 	const app = fastify({
 		logger: {
 			level: process.env.NODE_ENV === 'production' ? 'info' : 'debug'
-		}
+		},
+		requestTimeout: 25000, // 25 second timeout for requests
+		keepAliveTimeout: 30000 // 30 second keep-alive timeout
 	})
 
 	// Register environment variables
@@ -108,6 +110,19 @@ async function buildApp() {
 
 	// Add Prisma to app context
 	app.decorate('prisma', prisma)
+
+	// Error logging and handling middleware
+	app.addHook('onError', async (request, reply, error) => {
+		console.error(`${request.method} ${request.url} - Error:`, error.message)
+		
+		// Handle authentication/authorization errors from middleware
+		if (error.statusCode && error.code) {
+			return reply.code(error.statusCode).send({
+				error: error.message,
+				code: error.code
+			})
+		}
+	})
 
 	// Health check
 	app.get('/health', async (request, reply) => {

@@ -16,6 +16,9 @@ import {
 	UpdateCategoryForm,
 	CreateOrderForm,
 	UploadedImage,
+	Customer,
+	CustomerDetails,
+	CustomerStats,
 } from '@/types';
 
 // API Base URL configuration
@@ -569,6 +572,39 @@ export const usersAPI = {
 		limit?: number;
 	}): Promise<{ logs: ActivityLog[] }> => {
 		const response = await apiClient.get('/users/activity-logs', { params });
+		return response.data;
+	},
+};
+
+// Customers API
+export const customersAPI = {
+	// Get all customers with pagination
+	getCustomers: async (params?: {
+		search?: string;
+		sortBy?: 'name' | 'totalSpent' | 'orderCount' | 'lastOrderDate';
+		sortOrder?: 'asc' | 'desc';
+		page?: number;
+		limit?: number;
+	}): Promise<{ 
+		customers: Customer[]; 
+		pagination: { page: number; limit: number; total: number; totalPages: number } 
+	}> => {
+		const response = await apiClient.get('/customers', { params });
+		return response.data;
+	},
+
+	// Get customer details by phone or email
+	getCustomerDetails: async (params: {
+		phone?: string;
+		email?: string;
+	}): Promise<{ customer: CustomerDetails; orders: any[] }> => {
+		const response = await apiClient.get('/customers/details', { params });
+		return response.data;
+	},
+
+	// Get customer statistics
+	getCustomerStats: async (): Promise<CustomerStats> => {
+		const response = await apiClient.get('/customers/stats');
 		return response.data;
 	},
 };

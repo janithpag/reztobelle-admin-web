@@ -139,6 +139,41 @@ export interface DeliveryLog {
   createdAt: string;
 }
 
+export interface Customer {
+  customerName: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  address: string;
+  cityName: string;
+  districtName: string;
+  orderCount: number;
+  totalSpent: number;
+  lastOrderDate: string;
+  firstOrderDate: string;
+}
+
+export interface CustomerDetails extends Customer {
+  cityId: number;
+  districtId: number;
+  orders?: {
+    id: number;
+    orderNumber: string;
+    status: OrderStatus;
+    totalAmount: number;
+    paymentMethod: PaymentMethod;
+    paymentStatus: PaymentStatus;
+    createdAt: string;
+    itemCount: number;
+  }[];
+}
+
+export interface CustomerStats {
+  totalCustomers: number;
+  totalOrders: number;
+  avgOrdersPerCustomer: number;
+  avgSpentPerCustomer: number;
+}
+
 export interface User {
   id: number;
   email: string;

@@ -268,8 +268,15 @@ export function ProductsManagement() {
 		try {
 			if (!selectedProduct) return;
 
-			await productsAPI.deleteProduct(selectedProduct.id);
-			toast.success('Product deleted successfully');
+			const response = await productsAPI.deleteProduct(selectedProduct.id);
+			
+			// Check if product was deactivated instead of deleted
+			if (response?.message) {
+				toast.warning(response.message);
+			} else {
+				toast.success('Product deleted successfully');
+			}
+			
 			setIsDeleteDialogOpen(false);
 			setSelectedProduct(null);
 			loadProducts();

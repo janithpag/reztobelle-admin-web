@@ -361,26 +361,34 @@ const productRoutes: FastifyPluginCallback = async (fastify) => {
 			// Check if product exists
 			const existingProduct = await fastify.prisma.product.findUnique({
 				where: { id: productId },
-				include: { orderItems: true }
+				include: { 
+					orderItems: true,
+					stockMovements: true
+				}
 			})
 
 			if (!existingProduct) {
 				return reply.code(404).send({ error: 'Product not found' })
 			}
 
-			// Check if product has been ordered - if so, deactivate instead of delete
-			if (existingProduct.orderItems.length > 0) {
+			// Check if product has order history or stock movements - if so, deactivate instead of delete
+			if (existingProduct.orderItems.length > 0 || existingProduct.stockMovements.length > 0) {
 				const product = await fastify.prisma.product.update({
 					where: { id: productId },
 					data: { isActive: false }
 				})
+				
+				const reason = existingProduct.orderItems.length > 0 
+					? 'order history' 
+					: 'inventory movement history';
+				
 				return reply.send({ 
-					message: 'Product has order history and has been deactivated instead of deleted',
+					message: `Product has ${reason} and has been deactivated instead of deleted`,
 					product 
 				})
 			}
 
-			// Safe to delete - will cascade to related records
+			// Safe to delete - will cascade to related records (inventory and images)
 			await fastify.prisma.product.delete({
 				where: { id: productId }
 			})

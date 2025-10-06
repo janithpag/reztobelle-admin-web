@@ -237,7 +237,7 @@ export const productsAPI = {
 	},
 
 	// Delete product
-	deleteProduct: async (id: number): Promise<void> => {
+	deleteProduct: async (id: number): Promise<{ message?: string; product?: any }> => {
 		const response = await apiClient.delete(`/products/${id}`);
 		return response.data;
 	},

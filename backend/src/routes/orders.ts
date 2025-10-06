@@ -1,5 +1,6 @@
 import { FastifyPluginCallback } from 'fastify'
 import { z } from 'zod'
+import { generateOrderNumber } from '../utils/order-number'
 
 const createOrderSchema = z.object({
     customerName: z.string().min(1, "Customer name is required"),
@@ -105,8 +106,8 @@ const orderRoutes: FastifyPluginCallback = async (fastify) => {
             const discountAmount = orderData.discountAmount || 0
             const totalAmount = subtotal + shippingAmount - discountAmount
 
-            // Generate order number
-            const orderNumber = `ORD-${Date.now()}`
+            // Generate order number in format RBO00001
+            const orderNumber = await generateOrderNumber(fastify.prisma)
 
             // Determine initial status based on markAsReadyForDelivery flag
             const initialStatus = orderData.markAsReadyForDelivery ? 'READY_FOR_DELIVERY' : 'PENDING'

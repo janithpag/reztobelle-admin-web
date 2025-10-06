@@ -244,6 +244,7 @@ export enum OrderStatus {
   CANCELLED = 'CANCELLED',
   READY_FOR_DELIVERY = 'READY_FOR_DELIVERY',
   SENT_TO_DELIVERY = 'SENT_TO_DELIVERY',
+  RETURNED = 'RETURNED',
   REFUNDED = 'REFUNDED'
 }
 
@@ -387,11 +388,15 @@ export interface CreateOrderForm {
   items: {
     productId: number;
     quantity: number;
+    unitPrice: number;
+    productName: string;
+    sku: string;
   }[];
   notes?: string;
   specialNotes?: string;
   shippingAmount?: number;
   discountAmount?: number;
+  markAsReadyForDelivery?: boolean;
 }
 
 // Image upload interface

@@ -322,6 +322,12 @@ export const ordersAPI = {
 		const response = await apiClient.patch(`/orders/${id}/cancel`, { reason });
 		return response.data;
 	},
+
+	// Attach waybill and send to Koombiyo
+	attachWaybill: async (id: number, waybillId: string): Promise<{ order: Order; message: string; koombiyoOrderId?: string }> => {
+		const response = await apiClient.patch(`/orders/${id}/attach-waybill`, { waybillId });
+		return response.data;
+	},
 };
 
 // Inventory API

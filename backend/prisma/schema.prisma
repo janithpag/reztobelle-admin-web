@@ -47,7 +47,7 @@ model Product {
   inventory        Inventory?
   orderItems       OrderItem[]
   images           ProductImage[]
-  category         Category        @relation(fields: [categoryId], references: [id])
+  category         Category        @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   stockMovements   StockMovement[]
 
   @@map("products")
@@ -93,8 +93,8 @@ model StockMovement {
   unitCost      Decimal?           @db.Decimal(10, 2)
   createdBy     Int
   createdAt     DateTime           @default(now())
-  createdByUser User               @relation(fields: [createdBy], references: [id])
-  product       Product            @relation(fields: [productId], references: [id])
+  createdByUser User               @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  product       Product            @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@map("stock_movements")
 }
@@ -152,7 +152,7 @@ model OrderItem {
   orderId     Int
   productId   Int
   order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product     Product  @relation(fields: [productId], references: [id])
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@map("order_items")
 }
@@ -171,8 +171,8 @@ model PaymentTransaction {
   notes          String?
   processedAt    DateTime?
   createdAt      DateTime          @default(now())
-  order          Order             @relation(fields: [orderId], references: [id])
-  verifiedByUser User?             @relation(fields: [verifiedBy], references: [id])
+  order          Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  verifiedByUser User?             @relation(fields: [verifiedBy], references: [id], onDelete: Cascade)
 
   @@map("payment_transactions")
 }
@@ -209,7 +209,7 @@ model ActivityLog {
   ipAddress   String?  @db.VarChar(45)
   userAgent   String?
   createdAt   DateTime @default(now())
-  user        User     @relation(fields: [userId], references: [id])
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("activity_logs")
 }
@@ -223,8 +223,8 @@ model DeliveryLog {
   response      Json?
   createdBy     Int?
   createdAt     DateTime       @default(now())
-  createdByUser User?          @relation(fields: [createdBy], references: [id])
-  order         Order          @relation(fields: [orderId], references: [id])
+  createdByUser User?          @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  order         Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@map("delivery_logs")
 }
@@ -244,7 +244,7 @@ model Expense {
   supplierName       String?             @db.VarChar(200)
   id                 Int                 @id @default(autoincrement())
   category           ExpenseCategory
-  createdByUser      User                @relation(fields: [createdBy], references: [id])
+  createdByUser      User                @relation(fields: [createdBy], references: [id], onDelete: Cascade)
 
   @@map("expenses")
 }
@@ -272,6 +272,7 @@ enum OrderStatus {
   CANCELLED
   READY_FOR_DELIVERY
   SENT_TO_DELIVERY
+  RETURNED
   REFUNDED
 }
 

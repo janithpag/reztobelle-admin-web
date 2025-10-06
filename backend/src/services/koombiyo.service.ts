@@ -19,9 +19,7 @@ interface City {
 }
 
 interface Waybill {
-	id: string
-	waybill_number: string
-	available: boolean
+	waybill_id: string
 }
 
 interface OrderData {
@@ -162,22 +160,46 @@ class KoombiyoService {
 	}
 
 	// Get available waybills in real-time
-	async getAvailableWaybills(limit: number = 50): Promise<KoombiyoApiResponse<Waybill[]>> {
-		const response = await this.makeRequest<any[]>('/Waybils/users', {
-			limit: limit.toString()
-		})
+	async getAvailableWaybills(limit: number = 100): Promise<KoombiyoApiResponse<Waybill[]>> {
+		try {
+			console.log(`[Koombiyo] Fetching waybills with limit ${limit}...`)
+			const response = await this.makeRequest<any>('/Waybils/users', {
+				limit: limit.toString()
+			})
 
-		if (response.success && response.data) {
+			if (!response.success) {
+				return { success: false, message: response.message || 'Failed to fetch waybills' }
+			}
+
+			if (!response.data) {
+				console.error('[Koombiyo] Invalid waybills data:', response.data)
+				return { success: false, message: 'Invalid waybills data format' }
+			}
+
+			// Handle both array response and object with waybills array
+			let waybillsArray: any[] = [];
+			if (Array.isArray(response.data)) {
+				waybillsArray = response.data;
+			} else if (response.data.waybills && Array.isArray(response.data.waybills)) {
+				waybillsArray = response.data.waybills;
+			} else {
+				console.error('[Koombiyo] Unexpected waybills data structure:', response.data)
+				return { success: false, message: 'Unexpected waybills data structure' }
+			}
+
+			const waybills = waybillsArray.map((waybill: any) => ({
+				waybill_id: waybill.waybill_id || waybill.id
+			}))
+
+			console.log(`[Koombiyo] Successfully fetched ${waybills.length} waybills`)
 			return {
 				success: true,
-				data: response.data.map((waybill: any) => ({
-					id: waybill.id,
-					waybill_number: waybill.waybill_number || waybill.id,
-					available: true
-				}))
+				data: waybills
 			}
+		} catch (error: any) {
+			console.error('[Koombiyo] Error in getAvailableWaybills:', error.message)
+			return { success: false, message: error.message }
 		}
-		return { success: false, message: 'No waybills available' }
 	}
 
 	// Validate district and city combination

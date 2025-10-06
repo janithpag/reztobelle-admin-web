@@ -54,13 +54,20 @@ const deliveryRoutes: FastifyPluginCallback = async (fastify) => {
 				return reply.code(400).send({ error: 'Order already sent to delivery' })
 			}
 
+			// Validate order status - must be READY_FOR_DELIVERY
+			if (order.status !== 'READY_FOR_DELIVERY') {
+				return reply.code(400).send({ 
+					error: 'Order must be in READY_FOR_DELIVERY status before sending to delivery service' 
+				})
+			}
+
 			// Update order as sent to delivery
 			const updatedOrder = await fastify.prisma.order.update({
 				where: { id: parseInt(orderId) },
 				data: {
 					deliveryStatus: 'SENT_TO_KOOMBIYO',
 					sentToDeliveryAt: new Date(),
-					status: 'PROCESSING'
+					status: 'SENT_TO_DELIVERY'
 				}
 			})
 

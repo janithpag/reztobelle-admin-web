@@ -89,6 +89,16 @@ const orderRoutes: FastifyPluginCallback = async (fastify) => {
         try {
             const orderData = createOrderSchema.parse(request.body)
 
+            // Fetch product cost prices for all items
+            const productIds = orderData.items.map(item => item.productId)
+            const products = await fastify.prisma.product.findMany({
+                where: { id: { in: productIds } },
+                select: { id: true, costPrice: true }
+            })
+            
+            // Create a map of productId to costPrice for easy lookup
+            const costPriceMap = new Map(products.map(p => [p.id, p.costPrice]))
+
             // Calculate totals
             const subtotal = orderData.items.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0)
             const shippingAmount = orderData.shippingAmount || 0
@@ -124,8 +134,8 @@ const orderRoutes: FastifyPluginCallback = async (fastify) => {
                         create: orderData.items.map((item) => ({
                             productId: item.productId,
                             quantity: item.quantity,
-                            unitPrice: item.unitPrice,
-                            unitCost: item.unitPrice,
+                            unitPrice: item.unitPrice, // Selling price (what customer pays)
+                            unitCost: costPriceMap.get(item.productId) || 0, // Cost price (for profit calculation)
                             totalPrice: item.quantity * item.unitPrice,
                             productName: item.productName,
                             sku: item.sku

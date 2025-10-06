@@ -77,7 +77,7 @@ export function ProductsManagement() {
 	const [isViewProductOpen, setIsViewProductOpen] = useState(false);
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 	const [currentPage, setCurrentPage] = useState(1);
-	const [itemsPerPage] = useState(10);
+	const [itemsPerPage] = useState(5);
 	const [isLoading, setIsLoading] = useState(true);
 	const [productsData, setProductsData] = useState<Product[]>([]);
 	const [categoriesData, setCategoriesData] = useState<Category[]>([]);
@@ -441,6 +441,62 @@ export function ProductsManagement() {
 									/>
 								</div>
 								<div className="space-y-2">
+									<Label htmlFor="material" className="text-sm font-medium">Material</Label>
+									<Input
+										id="material"
+										value={productForm.material}
+										onChange={(e) => setProductForm(prev => ({ ...prev, material: e.target.value }))}
+										placeholder="e.g., Gold, Silver, Steel"
+										className="w-full"
+									/>
+								</div>
+								<div className="space-y-2">
+									<Label htmlFor="color" className="text-sm font-medium">Color</Label>
+									<Input
+										id="color"
+										value={productForm.color}
+										onChange={(e) => setProductForm(prev => ({ ...prev, color: e.target.value }))}
+										placeholder="e.g., Rose Gold, Silver"
+										className="w-full"
+									/>
+								</div>
+							</div>
+
+							<div className="grid grid-cols-4 gap-6">
+								<div className="space-y-2">
+									<Label htmlFor="size" className="text-sm font-medium">Size</Label>
+									<Input
+										id="size"
+										value={productForm.size}
+										onChange={(e) => setProductForm(prev => ({ ...prev, size: e.target.value }))}
+										placeholder="e.g., M, L, 18mm"
+										className="w-full"
+									/>
+								</div>
+								<div className="space-y-2">
+									<Label htmlFor="weight" className="text-sm font-medium">Weight (grams)</Label>
+									<Input
+										id="weight"
+										type="number"
+										step="0.01"
+										min="0"
+										value={productForm.weight}
+										onChange={(e) => setProductForm(prev => ({ ...prev, weight: e.target.value }))}
+										placeholder="0.00"
+										className="w-full"
+									/>
+								</div>
+								<div className="space-y-2">
+									<Label htmlFor="dimensions" className="text-sm font-medium">Dimensions</Label>
+									<Input
+										id="dimensions"
+										value={productForm.dimensions}
+										onChange={(e) => setProductForm(prev => ({ ...prev, dimensions: e.target.value }))}
+										placeholder="e.g., 20x15mm"
+										className="w-full"
+									/>
+								</div>
+								<div className="space-y-2">
 									<Label htmlFor="initialStock" className="text-sm font-medium">Initial Stock</Label>
 									<Input
 										id="initialStock"
@@ -452,6 +508,32 @@ export function ProductsManagement() {
 										className="w-full"
 									/>
 								</div>
+							</div>
+
+							<div className="grid grid-cols-2 gap-6">
+								<div className="space-y-2">
+									<Label htmlFor="metaTitle" className="text-sm font-medium">Meta Title (SEO)</Label>
+									<Input
+										id="metaTitle"
+										value={productForm.metaTitle}
+										onChange={(e) => setProductForm(prev => ({ ...prev, metaTitle: e.target.value }))}
+										placeholder="SEO title for search engines"
+										className="w-full"
+									/>
+								</div>
+								<div className="space-y-2">
+									<Label htmlFor="metaDescription" className="text-sm font-medium">Meta Description (SEO)</Label>
+									<Textarea
+										id="metaDescription"
+										value={productForm.metaDescription}
+										onChange={(e) => setProductForm(prev => ({ ...prev, metaDescription: e.target.value }))}
+										placeholder="SEO description for search engines"
+										className="w-full min-h-[60px] resize-none"
+									/>
+								</div>
+							</div>
+
+							<div className="grid grid-cols-3 gap-6">
 								<div className="space-y-2">
 									<Label className="text-sm font-medium">Status Options</Label>
 									<div className="flex flex-col space-y-3 pt-2">
@@ -501,41 +583,47 @@ export function ProductsManagement() {
 
 			{/* Stats Cards */}
 			<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-				<Card>
+				<Card className="border-none shadow-md bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/40 dark:to-blue-800/40 dark:shadow-lg dark:shadow-blue-900/20">
 					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-						<CardTitle className="text-sm font-medium">Total Products</CardTitle>
-						<Package className="h-4 w-4 text-muted-foreground" />
+						<CardTitle className="text-sm font-medium text-blue-900 dark:text-blue-200">Total Products</CardTitle>
+						<div className="h-10 w-10 rounded-full bg-blue-500 dark:bg-blue-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
+							<Package className="h-5 w-5 text-white" />
+						</div>
 					</CardHeader>
 					<CardContent>
-						<div className="text-2xl font-bold">{totalProducts}</div>
-						<p className="text-xs text-muted-foreground">
-							{activeProducts} active products
+						<div className="text-3xl font-bold text-blue-900 dark:text-blue-50">{totalProducts}</div>
+						<p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+							{activeProducts} active
 						</p>
 					</CardContent>
 				</Card>
-				<Card>
+				<Card className="border-none shadow-md bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/40 dark:to-amber-800/40 dark:shadow-lg dark:shadow-amber-900/20">
 					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-						<CardTitle className="text-sm font-medium">Low Stock Alert</CardTitle>
-						<AlertCircle className="h-4 w-4 text-muted-foreground" />
+						<CardTitle className="text-sm font-medium text-amber-900 dark:text-amber-200">Low Stock Alert</CardTitle>
+						<div className="h-10 w-10 rounded-full bg-amber-500 dark:bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/30">
+							<AlertCircle className="h-5 w-5 text-white" />
+						</div>
 					</CardHeader>
 					<CardContent>
-						<div className="text-2xl font-bold">{lowStockProducts}</div>
-						<p className="text-xs text-muted-foreground">
-							Items need restocking
+						<div className="text-3xl font-bold text-amber-900 dark:text-amber-50">{lowStockProducts}</div>
+						<p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+							Need restocking
 						</p>
 					</CardContent>
 				</Card>
-				<Card>
+				<Card className="border-none shadow-md bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/40 dark:to-purple-800/40 dark:shadow-lg dark:shadow-purple-900/20">
 					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-						<CardTitle className="text-sm font-medium">Featured Products</CardTitle>
-						<Star className="h-4 w-4 text-muted-foreground" />
+						<CardTitle className="text-sm font-medium text-purple-900 dark:text-purple-200">Featured Products</CardTitle>
+						<div className="h-10 w-10 rounded-full bg-purple-500 dark:bg-purple-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
+							<Star className="h-5 w-5 text-white fill-white" />
+						</div>
 					</CardHeader>
 					<CardContent>
-						<div className="text-2xl font-bold">
+						<div className="text-3xl font-bold text-purple-900 dark:text-purple-50">
 							{productsData.filter(p => p.isFeatured).length}
 						</div>
-						<p className="text-xs text-muted-foreground">
-							Highlighted products
+						<p className="text-sm text-purple-700 dark:text-purple-300 mt-1">
+							Highlighted
 						</p>
 					</CardContent>
 				</Card>
@@ -597,118 +685,130 @@ export function ProductsManagement() {
 						</div>
 					) : (
 						<>
-							<Table>
-								<TableHeader>
-									<TableRow>
-										<TableHead>Product</TableHead>
-										<TableHead>Category</TableHead>
-										<TableHead>Price</TableHead>
-										<TableHead>Stock</TableHead>
-										<TableHead>Status</TableHead>
-										<TableHead className="w-[70px]">Actions</TableHead>
-									</TableRow>
-								</TableHeader>
-								<TableBody>
-									{paginatedProducts.map((product) => (
-										<TableRow key={product.id}>
-											<TableCell>
-												<div className="flex items-center gap-3">
-													<div className="relative w-10 h-10">
-														<Image
-															src={product.images?.[0]?.imageUrl || '/placeholder.svg'}
-															alt={product.name}
-															fill
-															className="object-cover rounded"
-														/>
-													</div>
-													<div>
-														<div className="font-medium">{product.name}</div>
-														<div className="text-sm text-muted-foreground">
-															SKU: {product.sku}
+							<div className="border rounded-lg overflow-hidden">
+								<div className="overflow-x-auto">
+									<Table>
+										<TableHeader>
+											<TableRow className="bg-muted/50">
+												<TableHead className="w-[250px]">Product</TableHead>
+												<TableHead className="w-[120px]">SKU</TableHead>
+												<TableHead className="w-[150px]">Category</TableHead>
+												<TableHead className="w-[130px] text-right">Selling Price</TableHead>
+												<TableHead className="w-[130px] text-right">Cost Price</TableHead>
+												<TableHead className="w-[100px] text-center">Stock</TableHead>
+												<TableHead className="w-[150px]">Status</TableHead>
+												<TableHead className="w-[140px] text-center">
+													Actions
+												</TableHead>
+											</TableRow>
+										</TableHeader>
+										<TableBody>
+											{paginatedProducts.map((product) => (
+												<TableRow key={product.id} className="hover:bg-muted/50">
+													<TableCell className="w-[250px]">
+														<div className="flex items-center gap-2">
+															<div className="relative w-10 h-10 flex-shrink-0">
+																<Image
+																	src={product.images?.[0]?.imageUrl || '/placeholder.svg'}
+																	alt={product.name}
+																	fill
+																	className="object-cover rounded"
+																/>
+															</div>
+															<div className="min-w-0">
+																<div className="font-medium text-sm truncate">{product.name}</div>
+																{product.shortDescription && (
+																	<div className="text-xs text-muted-foreground truncate">
+																		{product.shortDescription}
+																	</div>
+																)}
+															</div>
 														</div>
-													</div>
-												</div>
-											</TableCell>
-											<TableCell>
-												<span className="text-sm">{product.category?.name}</span>
-											</TableCell>
-											<TableCell>
-												<div className="font-medium">LKR {product.price}</div>
-												<div className="text-sm text-muted-foreground">
-													Cost: LKR {product.costPrice}
-												</div>
-											</TableCell>
-											<TableCell>
-												<div className="flex items-center space-x-2">
-													<span className="font-medium">
-														{product.inventory?.quantityAvailable || 0}
-													</span>
-													{product.inventory && product.inventory.quantityAvailable <= product.inventory.reorderLevel && (
-														<Badge variant="destructive" className="text-xs">
-															Low Stock
-														</Badge>
-													)}
-												</div>
-											</TableCell>
-											<TableCell>
-												<div className="flex items-center space-x-2">
-													<Badge
-														variant={product.isActive ? 'default' : 'secondary'}
-														className={cn(
-															"text-xs",
-															product.isActive
-																? "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-green-300 dark:border-green-600"
-																: "bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600"
-														)}
-													>
-														{product.isActive ? 'Active' : 'Inactive'}
-													</Badge>
-													{product.isFeatured && (
-														<Badge 
-															variant="outline"
-															className="text-xs font-medium bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300 border-yellow-300 dark:border-yellow-600"
-														>
-															<Star className="w-3 h-3 mr-1 fill-current" />
-															Featured
-														</Badge>
-													)}
-												</div>
-											</TableCell>
-											<TableCell>
-												<div className="flex items-center justify-center gap-1">
-													<Button
-														size="icon"
-														variant="outline"
-														onClick={() => handleViewProduct(product)}
-														className="h-8 w-8 border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-700 dark:hover:text-blue-300 hover:border-blue-300 dark:hover:border-blue-700"
-														title="View Product"
-													>
-														<Eye className="h-4 w-4" />
-													</Button>
-													<Button
-														size="icon"
-														variant="outline"
-														onClick={() => handleEditProduct(product)}
-														className="h-8 w-8 border-yellow-200 dark:border-yellow-800 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 hover:text-yellow-700 dark:hover:text-yellow-300 hover:border-yellow-300 dark:hover:border-yellow-700"
-														title="Edit Product"
-													>
-														<Edit2 className="h-4 w-4" />
-													</Button>
-													<Button
-														size="icon"
-														variant="outline"
-														onClick={() => openDeleteDialog(product)}
-														className="h-8 w-8 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700 dark:hover:text-red-300 hover:border-red-300 dark:hover:border-red-700"
-														title="Delete Product"
-													>
-														<Trash2 className="h-4 w-4" />
-													</Button>
-												</div>
-											</TableCell>
-										</TableRow>
-									))}
-								</TableBody>
-							</Table>
+													</TableCell>
+													<TableCell className="w-[120px]">
+														<span className="text-xs font-mono">{product.sku}</span>
+													</TableCell>
+													<TableCell className="w-[150px]">
+														<span className="text-sm truncate block">{product.category?.name || '-'}</span>
+													</TableCell>
+													<TableCell className="w-[130px] text-right">
+														<div className="font-medium text-sm whitespace-nowrap">LKR {Number(product.price).toFixed(2)}</div>
+													</TableCell>
+													<TableCell className="w-[130px] text-right">
+														<div className="text-sm text-muted-foreground whitespace-nowrap">LKR {Number(product.costPrice).toFixed(2)}</div>
+													</TableCell>
+													<TableCell className="w-[100px]">
+														<div className="flex items-center justify-center gap-1">
+															<span className="font-medium text-sm">
+																{product.inventory?.quantityAvailable || 0}
+															</span>
+															{product.inventory && product.inventory.quantityAvailable <= product.inventory.reorderLevel && (
+																<Badge variant="destructive" className="text-[10px] px-1 py-0">
+																	Low
+																</Badge>
+															)}
+														</div>
+													</TableCell>
+													<TableCell className="w-[150px]">
+														<div className="flex items-center gap-1">
+															<Badge
+																variant={product.isActive ? 'default' : 'secondary'}
+																className={cn(
+																	"text-[10px] px-1.5 py-0",
+																	product.isActive
+																		? "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-green-300 dark:border-green-600"
+																		: "bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600"
+																)}
+															>
+																{product.isActive ? 'Active' : 'Inactive'}
+															</Badge>
+															{product.isFeatured && (
+																<Badge 
+																	variant="outline"
+																	className="text-[10px] px-1 py-0 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300 border-yellow-300 dark:border-yellow-600"
+																>
+																	<Star className="w-3 h-3 fill-current" />
+																</Badge>
+															)}
+														</div>
+													</TableCell>
+													<TableCell className="w-[140px]">
+														<div className="flex items-center justify-center gap-1">
+															<Button
+																size="icon"
+																variant="outline"
+																onClick={() => handleViewProduct(product)}
+																className="h-7 w-7 border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+																title="View"
+															>
+																<Eye className="h-3.5 w-3.5" />
+															</Button>
+															<Button
+																size="icon"
+																variant="outline"
+																onClick={() => handleEditProduct(product)}
+																className="h-7 w-7 border-yellow-200 dark:border-yellow-800 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20"
+																title="Edit"
+															>
+																<Edit2 className="h-3.5 w-3.5" />
+															</Button>
+															<Button
+																size="icon"
+																variant="outline"
+																onClick={() => openDeleteDialog(product)}
+																className="h-7 w-7 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+																title="Delete"
+															>
+																<Trash2 className="h-3.5 w-3.5" />
+															</Button>
+														</div>
+													</TableCell>
+												</TableRow>
+											))}
+										</TableBody>
+									</Table>
+								</div>
+							</div>
 
 							{/* Pagination */}
 							{totalPages > 1 && (
@@ -850,6 +950,98 @@ export function ProductsManagement() {
 							</div>
 						</div>
 
+						<div className="grid grid-cols-3 gap-6">
+							<div className="space-y-2">
+								<Label htmlFor="edit-brand" className="text-sm font-medium">Brand</Label>
+								<Input
+									id="edit-brand"
+									value={productForm.brand}
+									onChange={(e) => setProductForm(prev => ({ ...prev, brand: e.target.value }))}
+									placeholder="Enter brand name"
+									className="w-full"
+								/>
+							</div>
+							<div className="space-y-2">
+								<Label htmlFor="edit-material" className="text-sm font-medium">Material</Label>
+								<Input
+									id="edit-material"
+									value={productForm.material}
+									onChange={(e) => setProductForm(prev => ({ ...prev, material: e.target.value }))}
+									placeholder="e.g., Gold, Silver, Steel"
+									className="w-full"
+								/>
+							</div>
+							<div className="space-y-2">
+								<Label htmlFor="edit-color" className="text-sm font-medium">Color</Label>
+								<Input
+									id="edit-color"
+									value={productForm.color}
+									onChange={(e) => setProductForm(prev => ({ ...prev, color: e.target.value }))}
+									placeholder="e.g., Rose Gold, Silver"
+									className="w-full"
+								/>
+							</div>
+						</div>
+
+						<div className="grid grid-cols-3 gap-6">
+							<div className="space-y-2">
+								<Label htmlFor="edit-size" className="text-sm font-medium">Size</Label>
+								<Input
+									id="edit-size"
+									value={productForm.size}
+									onChange={(e) => setProductForm(prev => ({ ...prev, size: e.target.value }))}
+									placeholder="e.g., M, L, 18mm"
+									className="w-full"
+								/>
+							</div>
+							<div className="space-y-2">
+								<Label htmlFor="edit-weight" className="text-sm font-medium">Weight (grams)</Label>
+								<Input
+									id="edit-weight"
+									type="number"
+									step="0.01"
+									min="0"
+									value={productForm.weight}
+									onChange={(e) => setProductForm(prev => ({ ...prev, weight: e.target.value }))}
+									placeholder="0.00"
+									className="w-full"
+								/>
+							</div>
+							<div className="space-y-2">
+								<Label htmlFor="edit-dimensions" className="text-sm font-medium">Dimensions</Label>
+								<Input
+									id="edit-dimensions"
+									value={productForm.dimensions}
+									onChange={(e) => setProductForm(prev => ({ ...prev, dimensions: e.target.value }))}
+									placeholder="e.g., 20x15mm"
+									className="w-full"
+								/>
+							</div>
+						</div>
+
+						<div className="grid grid-cols-2 gap-6">
+							<div className="space-y-2">
+								<Label htmlFor="edit-metaTitle" className="text-sm font-medium">Meta Title (SEO)</Label>
+								<Input
+									id="edit-metaTitle"
+									value={productForm.metaTitle}
+									onChange={(e) => setProductForm(prev => ({ ...prev, metaTitle: e.target.value }))}
+									placeholder="SEO title for search engines"
+									className="w-full"
+								/>
+							</div>
+							<div className="space-y-2">
+								<Label htmlFor="edit-metaDescription" className="text-sm font-medium">Meta Description (SEO)</Label>
+								<Textarea
+									id="edit-metaDescription"
+									value={productForm.metaDescription}
+									onChange={(e) => setProductForm(prev => ({ ...prev, metaDescription: e.target.value }))}
+									placeholder="SEO description for search engines"
+									className="w-full min-h-[60px] resize-none"
+								/>
+							</div>
+						</div>
+
 						<div className="flex items-center space-x-6">
 							<div className="flex items-center space-x-2">
 								<Switch
@@ -896,7 +1088,7 @@ export function ProductsManagement() {
 
 			{/* View Product Dialog */}
 			<Dialog open={isViewProductOpen} onOpenChange={setIsViewProductOpen}>
-				<DialogContent className="sm:max-w-[700px] w-full">
+				<DialogContent className="sm:max-w-[900px] w-full max-h-[90vh] overflow-y-auto">
 					<DialogHeader>
 						<DialogTitle>Product Details</DialogTitle>
 						<DialogDescription>
@@ -944,6 +1136,30 @@ export function ProductsManagement() {
 									<h3 className="text-sm font-medium">Brand</h3>
 									<p className="text-sm">{viewingProduct.brand || 'N/A'}</p>
 								</div>
+								<div>
+									<h3 className="text-sm font-medium">Slug</h3>
+									<p className="text-sm font-mono text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{viewingProduct.slug}</p>
+								</div>
+								<div>
+									<h3 className="text-sm font-medium">Created</h3>
+									<p className="text-sm">{new Date(viewingProduct.createdAt).toLocaleDateString()} {new Date(viewingProduct.createdAt).toLocaleTimeString()}</p>
+								</div>
+							</div>
+
+							{/* Descriptions */}
+							<div className="grid grid-cols-1 gap-4">
+								{viewingProduct.shortDescription && (
+									<div>
+										<h3 className="text-sm font-medium">Short Description</h3>
+										<p className="text-sm text-muted-foreground">{viewingProduct.shortDescription}</p>
+									</div>
+								)}
+								{viewingProduct.description && (
+									<div>
+										<h3 className="text-sm font-medium">Full Description</h3>
+										<p className="text-sm">{viewingProduct.description}</p>
+									</div>
+								)}
 							</div>
 
 							{/* Pricing */}
@@ -955,56 +1171,126 @@ export function ProductsManagement() {
 								<div>
 									<h3 className="text-sm font-medium">Cost Price</h3>
 									<p className="text-lg font-semibold text-orange-600 dark:text-orange-400">LKR {viewingProduct.costPrice}</p>
+									<p className="text-xs text-muted-foreground">
+										Margin: {((viewingProduct.price - viewingProduct.costPrice) / viewingProduct.price * 100).toFixed(1)}%
+									</p>
 								</div>
 							</div>
 
-							{/* Description */}
-							{viewingProduct.description && (
-								<div>
-									<h3 className="text-sm font-medium">Description</h3>
-									<p className="text-sm">{viewingProduct.description}</p>
+							{/* Physical Attributes */}
+							<div>
+								<h3 className="text-sm font-medium mb-3">Physical Attributes</h3>
+								<div className="grid grid-cols-2 gap-4">
+									<div>
+										<p className="text-xs text-muted-foreground">Material</p>
+										<p className="text-sm">{viewingProduct.material || 'N/A'}</p>
+									</div>
+									<div>
+										<p className="text-xs text-muted-foreground">Color</p>
+										<p className="text-sm">{viewingProduct.color || 'N/A'}</p>
+									</div>
+									<div>
+										<p className="text-xs text-muted-foreground">Size</p>
+										<p className="text-sm">{viewingProduct.size || 'N/A'}</p>
+									</div>
+									<div>
+										<p className="text-xs text-muted-foreground">Weight</p>
+										<p className="text-sm">{viewingProduct.weight ? `${viewingProduct.weight}g` : 'N/A'}</p>
+									</div>
+									<div className="col-span-2">
+										<p className="text-xs text-muted-foreground">Dimensions</p>
+										<p className="text-sm">{viewingProduct.dimensions || 'N/A'}</p>
+									</div>
 								</div>
-							)}
+							</div>
 
-							{/* Inventory */}
-							{viewingProduct.inventory && (
+							{/* SEO Information */}
+							{(viewingProduct.metaTitle || viewingProduct.metaDescription) && (
 								<div>
-									<h3 className="text-sm font-medium">Inventory</h3>
-									<div className="grid grid-cols-2 gap-4 mt-2">
-										<div>
-											<p className="text-xs text-muted-foreground">Available</p>
-											<p className="text-sm font-medium">{viewingProduct.inventory.quantityAvailable}</p>
-										</div>
-										<div>
-											<p className="text-xs text-muted-foreground">Reserved</p>
-											<p className="text-sm font-medium">{viewingProduct.inventory.quantityReserved}</p>
-										</div>
+									<h3 className="text-sm font-medium mb-3">SEO Information</h3>
+									<div className="space-y-3">
+										{viewingProduct.metaTitle && (
+											<div>
+												<p className="text-xs text-muted-foreground">Meta Title</p>
+												<p className="text-sm">{viewingProduct.metaTitle}</p>
+											</div>
+										)}
+										{viewingProduct.metaDescription && (
+											<div>
+												<p className="text-xs text-muted-foreground">Meta Description</p>
+												<p className="text-sm text-muted-foreground">{viewingProduct.metaDescription}</p>
+											</div>
+										)}
 									</div>
 								</div>
 							)}
 
-							{/* Status */}
-							<div className="flex items-center space-x-4">
-								<Badge 
-									variant={viewingProduct.isActive ? "default" : "secondary"}
-									className={cn(
-										"text-xs font-medium",
-										viewingProduct.isActive 
-											? "bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300 border-green-300 dark:border-green-600"
-											: "bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-400 border-gray-300 dark:border-gray-600"
-									)}
-								>
-									{viewingProduct.isActive ? 'Active' : 'Inactive'}
-								</Badge>
-								{viewingProduct.isFeatured && (
+							{/* Inventory Details */}
+							{viewingProduct.inventory && (
+								<div>
+									<h3 className="text-sm font-medium mb-3">Inventory Details</h3>
+									<div className="grid grid-cols-2 gap-4">
+										<div>
+											<p className="text-xs text-muted-foreground">Available Stock</p>
+											<p className="text-lg font-semibold">{viewingProduct.inventory.quantityAvailable}</p>
+										</div>
+										<div>
+											<p className="text-xs text-muted-foreground">Reserved Stock</p>
+											<p className="text-sm font-medium">{viewingProduct.inventory.quantityReserved}</p>
+										</div>
+										<div>
+											<p className="text-xs text-muted-foreground">Reorder Level</p>
+											<p className="text-sm">{viewingProduct.inventory.reorderLevel}</p>
+										</div>
+										<div>
+											<p className="text-xs text-muted-foreground">Max Stock Level</p>
+											<p className="text-sm">{viewingProduct.inventory.maxStockLevel}</p>
+										</div>
+										{viewingProduct.inventory.lastRestockedAt && (
+											<div className="col-span-2">
+												<p className="text-xs text-muted-foreground">Last Restocked</p>
+												<p className="text-sm">{new Date(viewingProduct.inventory.lastRestockedAt).toLocaleDateString()}</p>
+											</div>
+										)}
+									</div>
+								</div>
+							)}
+
+							{/* Status and Timestamps */}
+							<div>
+								<h3 className="text-sm font-medium mb-3">Status & Timeline</h3>
+								<div className="flex items-center space-x-4 mb-3">
 									<Badge 
-										variant="outline"
-										className="text-xs font-medium bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300 border-yellow-300 dark:border-yellow-600"
+										variant={viewingProduct.isActive ? "default" : "secondary"}
+										className={cn(
+											"text-xs font-medium",
+											viewingProduct.isActive 
+												? "bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300 border-green-300 dark:border-green-600"
+												: "bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-400 border-gray-300 dark:border-gray-600"
+										)}
 									>
-										<Star className="w-3 h-3 mr-1 fill-current" />
-										Featured
+										{viewingProduct.isActive ? 'Active' : 'Inactive'}
 									</Badge>
-								)}
+									{viewingProduct.isFeatured && (
+										<Badge 
+											variant="outline"
+											className="text-xs font-medium bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300 border-yellow-300 dark:border-yellow-600"
+										>
+											<Star className="w-3 h-3 mr-1 fill-current" />
+											Featured
+										</Badge>
+									)}
+								</div>
+								<div className="grid grid-cols-2 gap-4 text-xs">
+									<div>
+										<p className="text-muted-foreground">Created</p>
+										<p>{new Date(viewingProduct.createdAt).toLocaleString()}</p>
+									</div>
+									<div>
+										<p className="text-muted-foreground">Last Updated</p>
+										<p>{new Date(viewingProduct.updatedAt).toLocaleString()}</p>
+									</div>
+								</div>
 							</div>
 						</div>
 					)}

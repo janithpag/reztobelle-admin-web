@@ -241,11 +241,13 @@ lib/
 ### Inventory Management System
 - `GET /inventory` - Inventory overview with low stock alerts
 - `GET /inventory/:productId` - Detailed stock information
-- `POST /inventory/adjust` - Manual stock adjustments
+- `PUT /inventory/:id/adjust` - Manual stock adjustments with **Weighted Average Cost** calculation
 - `POST /inventory/reserve` - Reserve stock for orders
 - `POST /inventory/release` - Release reserved stock
 - `GET /inventory/movements` - Stock movement history
-- `POST /inventory/restock` - Record new inventory purchases
+- `GET /inventory/:id/cost-history` - Cost price history tracking (WAC)
+- `GET /inventory/summary` - Inventory valuation and summary
+- `GET /inventory/low-stock` - Low stock items alert
 
 ### Comprehensive Order Management
 - `GET /orders` - List orders with advanced filtering
@@ -1004,7 +1006,10 @@ model ProductImage {
 }
 ```
 
-#### Inventory Management System
+#### Inventory Management System with Weighted Average Costing
+
+The inventory system implements **Weighted Average Cost (WAC)** for accurate inventory valuation and profit calculation.
+
 ```prisma
 model Inventory {
   id                Int       @id @default(autoincrement())
@@ -1029,7 +1034,7 @@ model StockMovement {
   referenceType StockReferenceType // PURCHASE, SALE, RETURN, DAMAGE, ADJUSTMENT
   referenceId   Int?
   notes         String?
-  unitCost      Decimal?           @db.Decimal(10, 2)
+  unitCost      Decimal?           @db.Decimal(10, 2) // Cost at time of movement - drives WAC
   createdBy     Int
   createdAt     DateTime           @default(now())
   
@@ -1037,6 +1042,29 @@ model StockMovement {
   product       Product            @relation(fields: [productId], references: [id])
   createdByUser User               @relation(fields: [createdBy], references: [id])
 }
+```
+
+##### Weighted Average Cost Implementation
+
+When new stock arrives (IN movement) with a `unitCost`:
+1. **Current Value** = Current Quantity × Current Cost Price
+2. **New Value** = New Quantity × New Unit Cost  
+3. **Total Value** = Current Value + New Value
+4. **New Average Cost** = Total Value ÷ Total Quantity
+5. **Product.costPrice** is automatically updated to the new average
+
+**Example:**
+- Current: 10 units @ LKR 5,000 = LKR 50,000
+- Purchase: 5 units @ LKR 6,000 = LKR 30,000
+- New Average: LKR 80,000 ÷ 15 units = **LKR 5,333.33** ✅
+
+**Benefits:**
+- ✅ Automatic cost price updates with each purchase
+- ✅ Accurate inventory valuation for financial reporting
+- ✅ Precise profit margin calculations
+- ✅ Historical cost tracking in StockMovement records
+- ✅ Simpler than FIFO/LIFO (no batch tracking required)
+
 ```
 
 #### Advanced Order Management

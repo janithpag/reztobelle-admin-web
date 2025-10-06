@@ -93,10 +93,17 @@ class InventoryService {
 	}
 
 	// Adjust stock levels with movement tracking
-	async adjustStock(adjustment: StockAdjustment): Promise<{ previousQuantity: number, newQuantity: number }> {
+	async adjustStock(adjustment: StockAdjustment): Promise<{ previousQuantity: number, newQuantity: number, newCostPrice?: number }> {
 		return await this.prisma.$transaction(async (tx) => {
 			const inventory = await tx.inventory.findUnique({
-				where: { productId: adjustment.productId }
+				where: { productId: adjustment.productId },
+				include: {
+					product: {
+						select: {
+							costPrice: true
+						}
+					}
+				}
 			})
 
 			if (!inventory) {
@@ -105,23 +112,61 @@ class InventoryService {
 
 			const previousQuantity = inventory.quantityAvailable
 			let newQuantity = previousQuantity
+			let newCostPrice: number | undefined
 
 			// Calculate new quantity based on movement type
 			switch (adjustment.movementType) {
 				case StockMovementType.IN:
 					newQuantity = previousQuantity + adjustment.quantity
+					
+					// Calculate weighted average cost when receiving new stock
+					if (adjustment.unitCost !== undefined) {
+						const currentTotalValue = previousQuantity * Number(inventory.product.costPrice)
+						const newStockValue = adjustment.quantity * adjustment.unitCost
+						const totalValue = currentTotalValue + newStockValue
+						const totalQuantity = newQuantity
+						
+						// Calculate weighted average cost
+						newCostPrice = totalQuantity > 0 ? totalValue / totalQuantity : adjustment.unitCost
+						
+						// Update product's cost price
+						await tx.product.update({
+							where: { id: adjustment.productId },
+							data: {
+								costPrice: newCostPrice
+							}
+						})
+					}
 					break
 				case StockMovementType.OUT:
 					if (previousQuantity < adjustment.quantity) {
 						throw new Error(`Insufficient stock. Available: ${previousQuantity}, Required: ${adjustment.quantity}`)
 					}
 					newQuantity = previousQuantity - adjustment.quantity
+					// Cost price doesn't change when stock goes out
 					break
 				case StockMovementType.ADJUSTMENT:
 					// For adjustments, the quantity can be positive or negative
 					newQuantity = previousQuantity + adjustment.quantity
 					if (newQuantity < 0) {
 						throw new Error('Stock adjustment would result in negative inventory')
+					}
+					
+					// If adjustment has a unit cost, recalculate weighted average
+					if (adjustment.quantity > 0 && adjustment.unitCost !== undefined) {
+						const currentTotalValue = previousQuantity * Number(inventory.product.costPrice)
+						const adjustmentValue = adjustment.quantity * adjustment.unitCost
+						const totalValue = currentTotalValue + adjustmentValue
+						const totalQuantity = newQuantity
+						
+						newCostPrice = totalQuantity > 0 ? totalValue / totalQuantity : adjustment.unitCost
+						
+						await tx.product.update({
+							where: { id: adjustment.productId },
+							data: {
+								costPrice: newCostPrice
+							}
+						})
 					}
 					break
 			}
@@ -149,7 +194,7 @@ class InventoryService {
 				}
 			})
 
-			return { previousQuantity, newQuantity }
+			return { previousQuantity, newQuantity, newCostPrice }
 		})
 	}
 
@@ -167,6 +212,7 @@ class InventoryService {
 						sku: true,
 						isActive: true,
 						price: true,
+						costPrice: true,
 						category: {
 							select: {
 								name: true
@@ -199,6 +245,7 @@ class InventoryService {
 						name: true,
 						sku: true,
 						price: true,
+						costPrice: true,
 						category: {
 							select: {
 								name: true
@@ -328,6 +375,62 @@ class InventoryService {
 		)
 
 		return summary
+	}
+
+	// Get cost history for a product
+	async getCostHistory(productId: number, limit = 20): Promise<{
+		currentCostPrice: number
+		movements: Array<{
+			date: Date
+			movementType: string
+			quantity: number
+			unitCost: number | null
+			notes: string | null
+			createdBy: string
+		}>
+	}> {
+		// Get current product cost
+		const product = await this.prisma.product.findUnique({
+			where: { id: productId },
+			select: { costPrice: true }
+		})
+
+		if (!product) {
+			throw new Error('Product not found')
+		}
+
+		// Get stock movements with cost information
+		const movements = await this.prisma.stockMovement.findMany({
+			where: {
+				productId,
+				movementType: { in: ['IN', 'ADJUSTMENT'] },
+				unitCost: { not: null }
+			},
+			include: {
+				createdByUser: {
+					select: {
+						firstName: true,
+						lastName: true
+					}
+				}
+			},
+			orderBy: {
+				createdAt: 'desc'
+			},
+			take: limit
+		})
+
+		return {
+			currentCostPrice: Number(product.costPrice),
+			movements: movements.map(m => ({
+				date: m.createdAt,
+				movementType: m.movementType,
+				quantity: m.quantity,
+				unitCost: m.unitCost ? Number(m.unitCost) : null,
+				notes: m.notes,
+				createdBy: `${m.createdByUser.firstName} ${m.createdByUser.lastName}`
+			}))
+		}
 	}
 }
 

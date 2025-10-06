@@ -268,9 +268,11 @@ export function InventoryManagement() {
 	const totalProducts = inventoryData.length;
 	const lowStockProducts = inventoryData.filter(inv => inv.quantityAvailable <= inv.reorderLevel).length;
 	const outOfStockProducts = inventoryData.filter(inv => inv.quantityAvailable === 0).length;
-	const totalStockValue = inventoryData.reduce((sum, inv) => 
-		sum + (inv.quantityAvailable * Number(inv.product.costPrice)), 0
-	);
+	const totalStockValue = inventoryData.reduce((sum, inv) => {
+		const costPrice = Number(inv.product.costPrice) || 0;
+		const quantity = Number(inv.quantityAvailable) || 0;
+		return sum + (quantity * costPrice);
+	}, 0);
 
 	return (
 		<div className="space-y-3">

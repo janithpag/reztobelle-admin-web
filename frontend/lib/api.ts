@@ -392,6 +392,26 @@ export const inventoryAPI = {
 		const response = await apiClient.get('/inventory/summary');
 		return response.data;
 	},
+
+	// Get cost history for a product (Weighted Average Cost tracking)
+	getCostHistory: async (productId: number, limit = 20): Promise<{
+		costHistory: {
+			currentCostPrice: number;
+			movements: Array<{
+				date: string;
+				movementType: string;
+				quantity: number;
+				unitCost: number | null;
+				notes: string | null;
+				createdBy: string;
+			}>;
+		}
+	}> => {
+		const response = await apiClient.get(`/inventory/${productId}/cost-history`, {
+			params: { limit }
+		});
+		return response.data;
+	},
 };
 
 // Payments API

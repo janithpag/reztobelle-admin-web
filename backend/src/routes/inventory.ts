@@ -116,9 +116,12 @@ const inventoryRoutes: FastifyPluginCallback = async (fastify) => {
 
 			return {
 				success: true,
-				message: 'Stock adjusted successfully',
+				message: result.newCostPrice 
+					? `Stock adjusted successfully. New weighted average cost: LKR ${result.newCostPrice.toFixed(2)}`
+					: 'Stock adjusted successfully',
 				previousQuantity: result.previousQuantity,
-				newQuantity: result.newQuantity
+				newQuantity: result.newQuantity,
+				newCostPrice: result.newCostPrice
 			}
 		} catch (error: any) {
 			return reply.code(500).send({
@@ -294,6 +297,34 @@ const inventoryRoutes: FastifyPluginCallback = async (fastify) => {
 		} catch (error: any) {
 			return reply.code(500).send({
 				error: 'Failed to confirm stock',
+				message: error.message
+			})
+		}
+	})
+
+	// Get cost history for a product (Weighted Average Cost tracking)
+	fastify.get('/:id/cost-history', {
+		preHandler: authRequired
+	}, async (request, reply) => {
+		try {
+			const { id } = request.params as { id: string }
+			const productId = parseInt(id)
+
+			if (isNaN(productId)) {
+				return reply.code(400).send({ error: 'Invalid product ID' })
+			}
+
+			const { limit = '20' } = request.query as { limit?: string }
+
+			const costHistory = await inventoryService.getCostHistory(
+				productId,
+				parseInt(limit)
+			)
+
+			return { costHistory }
+		} catch (error: any) {
+			return reply.code(500).send({
+				error: 'Failed to fetch cost history',
 				message: error.message
 			})
 		}

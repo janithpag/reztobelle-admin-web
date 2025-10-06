@@ -224,30 +224,48 @@ class KoombiyoService {
 
 	// Add order to Koombiyo
 	async addOrder(orderData: OrderData): Promise<KoombiyoApiResponse<any>> {
-		const koombiyoData = {
-			orderWaybillid: orderData.waybillId,
-			orderNo: orderData.orderNo,
-			receiverName: orderData.receiverName,
-			receiverStreet: orderData.receiverStreet,
-			receiverDistrict: orderData.receiverDistrict.toString(),
-			receiverCity: orderData.receiverCity.toString(),
-			receiverPhone: orderData.receiverPhone,
-			description: orderData.description,
-			spclNote: orderData.specialNotes || '',
-			getCod: orderData.codAmount.toString()
-		}
+		try {
+			console.log('[Koombiyo] Adding order to Koombiyo...')
+			console.log('[Koombiyo] Order data:', JSON.stringify(orderData, null, 2))
 
-		const response = await this.makeRequest('/Addorders/users', koombiyoData)
+			const koombiyoData = {
+				orderWaybillid: orderData.waybillId,
+				orderNo: orderData.orderNo,
+				receiverName: orderData.receiverName,
+				receiverStreet: orderData.receiverStreet,
+				receiverDistrict: orderData.receiverDistrict.toString(),
+				receiverCity: orderData.receiverCity.toString(),
+				receiverPhone: orderData.receiverPhone,
+				description: orderData.description,
+				spclNote: orderData.specialNotes || '',
+				getCod: orderData.codAmount.toString()
+			}
 
-		if (response.success) {
+			console.log('[Koombiyo] Koombiyo API data:', JSON.stringify(koombiyoData, null, 2))
+
+			const response = await this.makeRequest('/Addorders/users', koombiyoData)
+
+			if (response.success) {
+				console.log('[Koombiyo] ✅ Order successfully added to Koombiyo')
+				return {
+					success: true,
+					data: response.data,
+					message: 'Order successfully sent to Koombiyo'
+				}
+			}
+
+			console.error('[Koombiyo] ❌ Failed to add order:', response.message)
 			return {
-				success: true,
-				data: response.data,
-				message: 'Order successfully sent to Koombiyo'
+				success: false,
+				message: response.message || 'Failed to add order to Koombiyo'
+			}
+		} catch (error: any) {
+			console.error('[Koombiyo] Exception in addOrder:', error.message)
+			return {
+				success: false,
+				message: error.message || 'Exception occurred while adding order to Koombiyo'
 			}
 		}
-
-		throw new Error(response.message || 'Failed to add order to Koombiyo')
 	}
 
 	// Track order in real-time
@@ -366,21 +384,19 @@ class KoombiyoService {
 	async logDeliveryAction(
 		prisma: PrismaClient,
 		orderId: number,
-		action: string,
-		status?: string,
-		message?: string,
-		response?: any,
-		userId?: number
+		status: string,
+		remarks?: string,
+		location?: string,
+		timestamp?: Date
 	): Promise<void> {
 		try {
 			await prisma.deliveryLog.create({
 				data: {
 					orderId,
-					action: action as any,
 					status,
-					message,
-					response: response ? JSON.parse(JSON.stringify(response)) : null,
-					createdBy: userId
+					remarks,
+					location,
+					timestamp: timestamp || new Date()
 				}
 			})
 		} catch (error) {

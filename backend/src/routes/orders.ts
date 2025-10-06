@@ -133,8 +133,8 @@ const orderRoutes: FastifyPluginCallback = async (fastify) => {
             // Bank transfers are considered already paid, COD is pending until delivery
             const paymentStatus = orderData.paymentMethod === 'BANK_TRANSFER' ? 'PAID' : 'PENDING'
 
-            // Set COD amount - should be 0 for bank transfers (already paid), total for COD
-            const codAmount = orderData.paymentMethod === 'CASH_ON_DELIVERY' ? 0 : null
+            // Set COD amount - should be total amount for COD orders, null for bank transfers (already paid)
+            const codAmount = orderData.paymentMethod === 'CASH_ON_DELIVERY' ? totalAmount : null
 
             const order = await fastify.prisma.order.create({
                 data: {
@@ -254,15 +254,14 @@ const orderRoutes: FastifyPluginCallback = async (fastify) => {
             // Handle SENT_TO_DELIVERY transition - send to Koombiyo
             if (status === 'SENT_TO_DELIVERY' && currentOrder.status !== 'SENT_TO_DELIVERY') {
                 updateData.sentToDeliveryAt = new Date()
-                updateData.deliveryStatus = 'SENT_TO_KOOMBIYO'
                 
                 // Log the action
                 await fastify.prisma.deliveryLog.create({
                     data: {
                         orderId: parseInt(id),
-                        action: 'SENT_TO_KOOMBIYO',
                         status: 'SENT_TO_KOOMBIYO',
-                        message: 'Order marked as sent to delivery service'
+                        remarks: 'Order marked as sent to delivery service',
+                        timestamp: new Date()
                     }
                 })
             }
@@ -270,7 +269,6 @@ const orderRoutes: FastifyPluginCallback = async (fastify) => {
             // Handle DELIVERED transition
             if (status === 'DELIVERED') {
                 updateData.deliveredAt = new Date()
-                updateData.deliveryStatus = 'DELIVERED'
             }
 
             const order = await fastify.prisma.order.update({
@@ -412,15 +410,13 @@ const orderRoutes: FastifyPluginCallback = async (fastify) => {
             const result = await koombiyoService.addOrder(orderData)
 
             if (result.success) {
-                // Update order with waybill and delivery status
+                // Update order with waybill
                 const updatedOrder = await fastify.prisma.order.update({
                     where: { id: parseInt(id) },
                     data: {
                         waybillId: waybillId,
-                        deliveryStatus: 'SENT_TO_KOOMBIYO',
                         sentToDeliveryAt: new Date(),
-                        status: 'SENT_TO_DELIVERY',
-                        koombiyoOrderId: result.data?.id || null
+                        status: 'SENT_TO_DELIVERY'
                     },
                     include: {
                         orderItems: {
@@ -431,21 +427,19 @@ const orderRoutes: FastifyPluginCallback = async (fastify) => {
                     }
                 })
 
-                // Log the action
-                await koombiyoService.logDeliveryAction(
-                    fastify.prisma,
-                    parseInt(id),
-                    'SENT_TO_KOOMBIYO',
-                    'SENT_TO_KOOMBIYO',
-                    `Order ${currentOrder.orderNumber} sent to Koombiyo with waybill ${waybillId}`,
-                    result.data,
-                    (request as any).user?.id
-                )
+                // Log the delivery action
+                await fastify.prisma.deliveryLog.create({
+                    data: {
+                        orderId: parseInt(id),
+                        status: 'SENT_TO_KOOMBIYO',
+                        remarks: `Order ${currentOrder.orderNumber} sent to Koombiyo with waybill ${waybillId}. Koombiyo Order ID: ${result.data?.id || 'N/A'}`,
+                        timestamp: new Date()
+                    }
+                })
 
                 return { 
                     order: updatedOrder,
-                    message: 'Waybill attached and order sent to Koombiyo successfully',
-                    koombiyoOrderId: result.data?.id
+                    message: 'Waybill attached and order sent to Koombiyo successfully'
                 }
             }
 

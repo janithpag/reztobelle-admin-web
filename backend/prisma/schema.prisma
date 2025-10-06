@@ -100,42 +100,37 @@ model StockMovement {
 }
 
 model Order {
-  orderNumber             String                  @unique @db.VarChar(50)
-  customerName            String                  @db.VarChar(200)
-  customerEmail           String?                 @db.VarChar(255)
-  customerPhone           String?                 @db.VarChar(20)
-  status                  OrderStatus             @default(PENDING)
-  totalAmount             Decimal                 @db.Decimal(12, 2)
-  notes                   String?
-  createdAt               DateTime                @default(now())
-  updatedAt               DateTime                @updatedAt
-  address                 String                  @db.VarChar(500)
-  cityId                  Int
-  cityName                String                  @db.VarChar(100)
-  codAmount               Decimal?                @db.Decimal(12, 2)
-  deliveredAt             DateTime?
-  deliveryStatus          KoombiyoDeliveryStatus? @default(NOT_SENT)
-  discountAmount          Decimal                 @default(0.00) @db.Decimal(10, 2)
-  districtId              Int
-  districtName            String                  @db.VarChar(100)
-  internalNotes           String?
-  koombiyoLastStatus      String?                 @db.VarChar(100)
-  koombiyoOrderId         String?                 @db.VarChar(100)
-  koombiyoStatusUpdatedAt DateTime?
-  orderedAt               DateTime                @default(now())
-  packageDescription      String?                 @db.VarChar(500)
-  paymentMethod           PaymentMethod
-  paymentStatus           PaymentStatus           @default(PENDING)
-  sentToDeliveryAt        DateTime?
-  shippedAt               DateTime?
-  shippingAmount          Decimal                 @default(0.00) @db.Decimal(10, 2)
-  specialNotes            String?
-  subtotal                Decimal                 @db.Decimal(12, 2)
-  waybillId               String?                 @unique @db.VarChar(50)
-  id                      Int                     @id @default(autoincrement())
-  deliveryLogs            DeliveryLog[]
-  orderItems              OrderItem[]
-  paymentTransactions     PaymentTransaction[]
+  orderNumber        String        @unique @db.VarChar(50)
+  customerName       String        @db.VarChar(200)
+  customerEmail      String?       @db.VarChar(255)
+  customerPhone      String?       @db.VarChar(20)
+  status             OrderStatus   @default(PENDING)
+  totalAmount        Decimal       @db.Decimal(12, 2)
+  notes              String?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  address            String        @db.VarChar(500)
+  cityId             Int
+  cityName           String        @db.VarChar(100)
+  codAmount          Decimal?      @db.Decimal(12, 2)
+  deliveredAt        DateTime?
+  discountAmount     Decimal       @default(0.00) @db.Decimal(10, 2)
+  districtId         Int
+  districtName       String        @db.VarChar(100)
+  internalNotes      String?
+  orderedAt          DateTime      @default(now())
+  packageDescription String?       @db.VarChar(500)
+  paymentMethod      PaymentMethod
+  paymentStatus      PaymentStatus @default(PENDING)
+  sentToDeliveryAt   DateTime?
+  shippedAt          DateTime?
+  shippingAmount     Decimal       @default(0.00) @db.Decimal(10, 2)
+  specialNotes       String?
+  subtotal           Decimal       @db.Decimal(12, 2)
+  waybillId          String?       @unique @db.VarChar(50)
+  id                 Int           @id @default(autoincrement())
+  orderItems         OrderItem[]
+  deliveryLogs       DeliveryLog[]
 
   @@map("orders")
 }
@@ -157,44 +152,37 @@ model OrderItem {
   @@map("order_items")
 }
 
-model PaymentTransaction {
-  id             Int               @id @default(autoincrement())
-  orderId        Int
-  transactionId  String            @unique @db.VarChar(100)
-  paymentMethod  PaymentMethod
-  amount         Decimal           @db.Decimal(12, 2)
-  status         TransactionStatus
-  bankDetails    String?           @db.VarChar(500)
-  depositSlipUrl String?           @db.VarChar(500)
-  verifiedBy     Int?
-  verifiedAt     DateTime?
-  notes          String?
-  processedAt    DateTime?
-  createdAt      DateTime          @default(now())
-  order          Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  verifiedByUser User?             @relation(fields: [verifiedBy], references: [id], onDelete: Cascade)
+model DeliveryLog {
+  id          Int      @id @default(autoincrement())
+  orderId     Int
+  status      String   @db.VarChar(100)
+  location    String?  @db.VarChar(200)
+  remarks     String?
+  timestamp   DateTime
+  createdAt   DateTime @default(now())
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
-  @@map("payment_transactions")
+  @@map("delivery_logs")
 }
 
+
+
 model User {
-  email                String               @unique @db.VarChar(255)
-  createdAt            DateTime             @default(now())
-  updatedAt            DateTime             @updatedAt
-  emailVerifiedAt      DateTime?
-  firstName            String               @db.VarChar(100)
-  isActive             Boolean              @default(true)
-  lastLoginAt          DateTime?
-  lastName             String               @db.VarChar(100)
-  passwordHash         String               @db.VarChar(255)
-  id                   Int                  @id @default(autoincrement())
-  role                 UserRole
-  status               UserStatus           @default(PENDING)
-  activityLogs         ActivityLog[]
-  deliveryLogs         DeliveryLog[]
-  expenses             Expense[]
-  verifiedTransactions PaymentTransaction[]
-  stockMovements       StockMovement[]
+  email           String        @unique @db.VarChar(255)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  emailVerifiedAt DateTime?
+  firstName       String        @db.VarChar(100)
+  isActive        Boolean       @default(true)
+  lastLoginAt     DateTime?
+  lastName        String        @db.VarChar(100)
+  passwordHash    String        @db.VarChar(255)
+  id              Int           @id @default(autoincrement())
+  role            UserRole
+  status          UserStatus    @default(PENDING)
+  activityLogs    ActivityLog[]
+  expenses        Expense[]
+  stockMovements  StockMovement[]
 
   @@map("users")
 }
@@ -214,20 +202,7 @@ model ActivityLog {
   @@map("activity_logs")
 }
 
-model DeliveryLog {
-  id            Int            @id @default(autoincrement())
-  orderId       Int
-  action        DeliveryAction
-  status        String?        @db.VarChar(100)
-  message       String?
-  response      Json?
-  createdBy     Int?
-  createdAt     DateTime       @default(now())
-  createdByUser User?          @relation(fields: [createdBy], references: [id], onDelete: Cascade)
-  order         Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
-  @@map("delivery_logs")
-}
 
 model Expense {
   description        String              @db.VarChar(500)
@@ -265,9 +240,6 @@ enum StockReferenceType {
 
 enum OrderStatus {
   PENDING
-  CONFIRMED
-  PROCESSING
-  SHIPPED
   DELIVERED
   CANCELLED
   READY_FOR_DELIVERY
@@ -280,43 +252,12 @@ enum OrderStatus {
 enum PaymentStatus {
   PENDING
   PAID
-  PARTIALLY_PAID
   REFUNDED
-  FAILED
 }
 
 enum PaymentMethod {
   BANK_TRANSFER
   CASH_ON_DELIVERY
-}
-
-enum KoombiyoDeliveryStatus {
-  NOT_SENT
-  SENT_TO_KOOMBIYO
-  PICKED_UP
-  IN_TRANSIT
-  OUT_FOR_DELIVERY
-  DELIVERED
-  FAILED_DELIVERY
-  RETURNED
-  CANCELLED
-}
-
-enum DeliveryAction {
-  SENT_TO_KOOMBIYO
-  STATUS_UPDATE
-  PICKUP_REQUEST
-  TRACKING_UPDATE
-  RETURN_RECEIVED
-  ERROR_LOG
-}
-
-enum TransactionStatus {
-  PENDING
-  COMPLETED
-  FAILED
-  CANCELLED
-  REFUNDED
 }
 
 enum ExpenseCategory {

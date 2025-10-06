@@ -98,14 +98,10 @@ export interface Order {
   cityName: string;
   codAmount?: number;
   deliveredAt?: string;
-  deliveryStatus?: KoombiyoDeliveryStatus;
   discountAmount: number;
   districtId: number;
   districtName: string;
   internalNotes?: string;
-  koombiyoLastStatus?: string;
-  koombiyoOrderId?: string;
-  koombiyoStatusUpdatedAt?: string;
   orderedAt: string;
   packageDescription?: string;
   paymentMethod: PaymentMethod;
@@ -117,7 +113,6 @@ export interface Order {
   subtotal: number;
   waybillId?: string;
   orderItems?: OrderItem[];
-  paymentTransactions?: PaymentTransaction[];
   deliveryLogs?: DeliveryLog[];
 }
 
@@ -134,21 +129,14 @@ export interface OrderItem {
   createdAt: string;
 }
 
-export interface PaymentTransaction {
+export interface DeliveryLog {
   id: number;
   orderId: number;
-  transactionId: string;
-  paymentMethod: PaymentMethod;
-  amount: number;
-  status: TransactionStatus;
-  bankDetails?: string;
-  depositSlipUrl?: string;
-  verifiedBy?: number;
-  verifiedAt?: string;
-  notes?: string;
-  processedAt?: string;
+  status: string;
+  location?: string;
+  remarks?: string;
+  timestamp: string;
   createdAt: string;
-  verifiedByUser?: User;
 }
 
 export interface User {
@@ -190,17 +178,7 @@ export interface ActivityLog {
   user?: User;
 }
 
-export interface DeliveryLog {
-  id: number;
-  orderId: number;
-  action: DeliveryAction;
-  status?: string;
-  message?: string;
-  response?: any;
-  createdBy?: number;
-  createdAt: string;
-  createdByUser?: User;
-}
+
 
 export interface Expense {
   id: number;
@@ -237,9 +215,6 @@ export enum StockReferenceType {
 
 export enum OrderStatus {
   PENDING = 'PENDING',
-  CONFIRMED = 'CONFIRMED',
-  PROCESSING = 'PROCESSING',
-  SHIPPED = 'SHIPPED',
   DELIVERED = 'DELIVERED',
   CANCELLED = 'CANCELLED',
   READY_FOR_DELIVERY = 'READY_FOR_DELIVERY',
@@ -252,43 +227,12 @@ export enum OrderStatus {
 export enum PaymentStatus {
   PENDING = 'PENDING',
   PAID = 'PAID',
-  PARTIALLY_PAID = 'PARTIALLY_PAID',
-  REFUNDED = 'REFUNDED',
-  FAILED = 'FAILED'
+  REFUNDED = 'REFUNDED'
 }
 
 export enum PaymentMethod {
   BANK_TRANSFER = 'BANK_TRANSFER',
   CASH_ON_DELIVERY = 'CASH_ON_DELIVERY'
-}
-
-export enum KoombiyoDeliveryStatus {
-  NOT_SENT = 'NOT_SENT',
-  SENT_TO_KOOMBIYO = 'SENT_TO_KOOMBIYO',
-  PICKED_UP = 'PICKED_UP',
-  IN_TRANSIT = 'IN_TRANSIT',
-  OUT_FOR_DELIVERY = 'OUT_FOR_DELIVERY',
-  DELIVERED = 'DELIVERED',
-  FAILED_DELIVERY = 'FAILED_DELIVERY',
-  RETURNED = 'RETURNED',
-  CANCELLED = 'CANCELLED'
-}
-
-export enum DeliveryAction {
-  SENT_TO_KOOMBIYO = 'SENT_TO_KOOMBIYO',
-  STATUS_UPDATE = 'STATUS_UPDATE',
-  PICKUP_REQUEST = 'PICKUP_REQUEST',
-  TRACKING_UPDATE = 'TRACKING_UPDATE',
-  RETURN_RECEIVED = 'RETURN_RECEIVED',
-  ERROR_LOG = 'ERROR_LOG'
-}
-
-export enum TransactionStatus {
-  PENDING = 'PENDING',
-  COMPLETED = 'COMPLETED',
-  FAILED = 'FAILED',
-  CANCELLED = 'CANCELLED',
-  REFUNDED = 'REFUNDED'
 }
 
 export enum ExpenseCategory {

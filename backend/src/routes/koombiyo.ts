@@ -192,9 +192,8 @@ const koombiyoRoutes: FastifyPluginCallback = async (fastify) => {
 				await fastify.prisma.order.update({
 					where: { id: orderIdNum },
 					data: {
-						deliveryStatus: 'SENT_TO_KOOMBIYO',
-						sentToDeliveryAt: new Date(),
-						koombiyoOrderId: result.data?.id || null
+						status: 'SENT_TO_DELIVERY',
+						sentToDeliveryAt: new Date()
 					}
 				})
 
@@ -203,10 +202,9 @@ const koombiyoRoutes: FastifyPluginCallback = async (fastify) => {
 					fastify.prisma,
 					orderIdNum,
 					'SENT_TO_KOOMBIYO',
-					'Order sent to Koombiyo delivery service',
-					`Order ${order.orderNumber} sent to Koombiyo with waybill ${order.waybillId}`,
-					result.data,
-					(request as any).user?.id
+					`Order sent to Koombiyo delivery service. Order ${order.orderNumber} sent to Koombiyo with waybill ${order.waybillId}`,
+					undefined,
+					new Date()
 				)
 
 				return {
@@ -251,25 +249,16 @@ const koombiyoRoutes: FastifyPluginCallback = async (fastify) => {
 			const result = await koombiyoService.trackOrder(order.waybillId)
 
 			if (result.success && result.data) {
-				// Update local order status if different
 				const currentStatus = result.data.status
-
-				await fastify.prisma.order.update({
-					where: { id: orderIdNum },
-					data: {
-						koombiyoLastStatus: currentStatus,
-						koombiyoStatusUpdatedAt: new Date()
-					}
-				})
 
 				// Log status update
 				await koombiyoService.logDeliveryAction(
 					fastify.prisma,
 					orderIdNum,
 					'STATUS_UPDATE',
-					currentStatus,
 					`Status updated: ${currentStatus}`,
-					result.data
+					result.data.location,
+					new Date(result.data.timestamp)
 				)
 
 				return {
@@ -320,14 +309,6 @@ const koombiyoRoutes: FastifyPluginCallback = async (fastify) => {
 				// Also get local delivery logs
 				const localLogs = await fastify.prisma.deliveryLog.findMany({
 					where: { orderId: orderIdNum },
-					include: {
-						createdByUser: {
-							select: {
-								firstName: true,
-								lastName: true
-							}
-						}
-					},
 					orderBy: { createdAt: 'desc' }
 				})
 
@@ -343,14 +324,6 @@ const koombiyoRoutes: FastifyPluginCallback = async (fastify) => {
 				koombiyoHistory: [],
 				localLogs: await fastify.prisma.deliveryLog.findMany({
 					where: { orderId: orderIdNum },
-					include: {
-						createdByUser: {
-							select: {
-								firstName: true,
-								lastName: true
-							}
-						}
-					},
 					orderBy: { createdAt: 'desc' }
 				}),
 				orderNumber: order.orderNumber,
@@ -487,12 +460,11 @@ const koombiyoRoutes: FastifyPluginCallback = async (fastify) => {
 			const result = await koombiyoService.receiveReturn(waybillId)
 
 			if (result.success) {
-				// Update order status
+				// Update order status to RETURNED
 				await fastify.prisma.order.update({
 					where: { id: order.id },
 					data: {
-						deliveryStatus: 'RETURNED',
-						koombiyoLastStatus: 'RETURNED'
+						status: 'RETURNED'
 					}
 				})
 
@@ -501,10 +473,9 @@ const koombiyoRoutes: FastifyPluginCallback = async (fastify) => {
 					fastify.prisma,
 					order.id,
 					'RETURN_RECEIVED',
-					'RETURNED',
 					`Return received for order ${order.orderNumber}`,
-					result.data,
-					(request as any).user?.id
+					undefined,
+					new Date()
 				)
 
 				return {

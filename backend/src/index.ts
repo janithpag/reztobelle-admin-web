@@ -11,13 +11,11 @@ import { PrismaClient } from '@prisma/client'
 import authRoutes from './routes/auth'
 import productRoutes from './routes/products'
 import orderRoutes from './routes/orders'
-import deliveryRoutes from './routes/deliveries'
 import expenseRoutes from './routes/expenses'
 import reportRoutes from './routes/reports'
 import uploadsRoutes from './routes/uploads'
 import koombiyoRoutes from './routes/koombiyo'
 import inventoryRoutes from './routes/inventory'
-import paymentRoutes from './routes/payments'
 import categoryRoutes from './routes/categories'
 
 const prisma = new PrismaClient()
@@ -135,8 +133,6 @@ async function buildApp() {
 	await app.register(productRoutes, { prefix: '/api/products' })
 	await app.register(inventoryRoutes, { prefix: '/api/inventory' })
 	await app.register(orderRoutes, { prefix: '/api/orders' })
-	await app.register(paymentRoutes, { prefix: '/api/payments' })
-	await app.register(deliveryRoutes, { prefix: '/api/deliveries' })
 	await app.register(koombiyoRoutes, { prefix: '/api/koombiyo' })
 	await app.register(expenseRoutes, { prefix: '/api/expenses' })
 	await app.register(reportRoutes, { prefix: '/api/reports' })

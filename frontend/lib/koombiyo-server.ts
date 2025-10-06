@@ -29,9 +29,7 @@ export interface City {
 }
 
 export interface Waybill {
-	id: string;
-	waybill_number: string;
-	available: boolean;
+	waybill_id: string;
 }
 
 export interface DeliveryOrder {

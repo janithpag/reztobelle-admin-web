@@ -15,6 +15,16 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -56,19 +66,18 @@ import {
 	Trash,
 	PackagePlus,
 } from 'lucide-react';
-import { ordersAPI, productsAPI, deliveriesAPI, koombiyoAPI } from '@/lib/api';
+import { ordersAPI, productsAPI } from '@/lib/api';
 import {
 	Order,
 	Product,
 	OrderStatus,
 	PaymentStatus,
 	PaymentMethod,
-	KoombiyoDeliveryStatus,
 	CreateOrderForm
 } from '@/types';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { getDistricts, getCities, type District, type City } from '@/lib/koombiyo-server';
+import { getDistricts, getCities, sendOrderToKoombiyo, getWaybills, type District, type City, type Waybill } from '@/lib/koombiyo-server';
 
 interface OrderFormData {
 	customerName: string;
@@ -94,11 +103,8 @@ interface OrderFormData {
 // Status badge color mappings
 const statusColors = {
 	[OrderStatus.PENDING]: 'bg-yellow-100 text-yellow-800',
-	[OrderStatus.CONFIRMED]: 'bg-blue-100 text-blue-800',
-	[OrderStatus.PROCESSING]: 'bg-purple-100 text-purple-800',
 	[OrderStatus.READY_FOR_DELIVERY]: 'bg-orange-100 text-orange-800',
 	[OrderStatus.SENT_TO_DELIVERY]: 'bg-indigo-100 text-indigo-800',
-	[OrderStatus.SHIPPED]: 'bg-cyan-100 text-cyan-800',
 	[OrderStatus.DELIVERED]: 'bg-green-100 text-green-800',
 	[OrderStatus.RETURNED]: 'bg-amber-100 text-amber-800',
 	[OrderStatus.CANCELLED]: 'bg-red-100 text-red-800',
@@ -109,21 +115,7 @@ const statusColors = {
 const paymentStatusColors = {
 	[PaymentStatus.PENDING]: 'bg-yellow-100 text-yellow-800',
 	[PaymentStatus.PAID]: 'bg-green-100 text-green-800',
-	[PaymentStatus.PARTIALLY_PAID]: 'bg-orange-100 text-orange-800',
 	[PaymentStatus.REFUNDED]: 'bg-gray-100 text-gray-800',
-	[PaymentStatus.FAILED]: 'bg-red-100 text-red-800',
-};
-
-const deliveryStatusColors = {
-	[KoombiyoDeliveryStatus.NOT_SENT]: 'bg-gray-100 text-gray-800',
-	[KoombiyoDeliveryStatus.SENT_TO_KOOMBIYO]: 'bg-blue-100 text-blue-800',
-	[KoombiyoDeliveryStatus.PICKED_UP]: 'bg-purple-100 text-purple-800',
-	[KoombiyoDeliveryStatus.IN_TRANSIT]: 'bg-orange-100 text-orange-800',
-	[KoombiyoDeliveryStatus.OUT_FOR_DELIVERY]: 'bg-indigo-100 text-indigo-800',
-	[KoombiyoDeliveryStatus.DELIVERED]: 'bg-green-100 text-green-800',
-	[KoombiyoDeliveryStatus.FAILED_DELIVERY]: 'bg-red-100 text-red-800',
-	[KoombiyoDeliveryStatus.RETURNED]: 'bg-yellow-100 text-yellow-800',
-	[KoombiyoDeliveryStatus.CANCELLED]: 'bg-red-100 text-red-800',
 };
 
 export function OrdersManagement() {
@@ -143,8 +135,10 @@ export function OrdersManagement() {
 	const [isAddOrderOpen, setIsAddOrderOpen] = useState(false);
 	const [isEditOrderOpen, setIsEditOrderOpen] = useState(false);
 	const [isAttachWaybillOpen, setIsAttachWaybillOpen] = useState(false);
+	const [isCancelConfirmOpen, setIsCancelConfirmOpen] = useState(false);
+	const [orderToCancel, setOrderToCancel] = useState<number | null>(null);
 	const [waybillId, setWaybillId] = useState('');
-	const [availableWaybills, setAvailableWaybills] = useState<Array<{ waybill_id: string }>>([]);
+	const [availableWaybills, setAvailableWaybills] = useState<Waybill[]>([]);
 	const [isLoadingWaybills, setIsLoadingWaybills] = useState(false);
 	const [waybillOpen, setWaybillOpen] = useState(false);
 
@@ -302,8 +296,12 @@ export function OrdersManagement() {
 
 			// Special handling for SENT_TO_DELIVERY - send to Koombiyo
 			if (newStatus === OrderStatus.SENT_TO_DELIVERY) {
-				await deliveriesAPI.sendToKoombiyo(orderId);
-				toast.success('Order sent to delivery service successfully');
+				const result = await sendOrderToKoombiyo(orderId);
+				if (result.success) {
+					toast.success(result.message || 'Order sent to delivery service successfully');
+				} else {
+					throw new Error(result.error || 'Failed to send order to Koombiyo');
+				}
 			} else {
 				await ordersAPI.updateOrderStatus(orderId, newStatus);
 				toast.success('Order status updated successfully');
@@ -312,7 +310,7 @@ export function OrdersManagement() {
 			await refreshOrderData();
 		} catch (error: any) {
 			console.error('Failed to update order status:', error);
-			toast.error(error.response?.data?.error || 'Failed to update order status');
+			toast.error(error.message || error.response?.data?.error || 'Failed to update order status');
 		} finally {
 			setIsLoading(false);
 		}
@@ -332,19 +330,26 @@ export function OrdersManagement() {
 		}
 	};
 
-	const handleCancelOrder = async (orderId: number) => {
-		if (confirm('Are you sure you want to cancel this order?')) {
-			try {
-				setIsLoading(true);
-				await ordersAPI.cancelOrder(orderId, 'Cancelled by admin');
-				toast.success('Order cancelled successfully');
-				await refreshOrderData();
-			} catch (error: any) {
-				console.error('Failed to cancel order:', error);
-				toast.error(error.response?.data?.error || 'Failed to cancel order');
-			} finally {
-				setIsLoading(false);
-			}
+	const handleOpenCancelConfirm = (orderId: number) => {
+		setOrderToCancel(orderId);
+		setIsCancelConfirmOpen(true);
+	};
+
+	const handleCancelOrder = async () => {
+		if (!orderToCancel) return;
+
+		try {
+			setIsLoading(true);
+			setIsCancelConfirmOpen(false);
+			await ordersAPI.cancelOrder(orderToCancel, 'Cancelled by admin');
+			toast.success('Order cancelled successfully');
+			await refreshOrderData();
+		} catch (error: any) {
+			console.error('Failed to cancel order:', error);
+			toast.error(error.response?.data?.error || 'Failed to cancel order');
+		} finally {
+			setIsLoading(false);
+			setOrderToCancel(null);
 		}
 	};
 
@@ -356,13 +361,15 @@ export function OrdersManagement() {
 		// Load available waybills from Koombiyo
 		setIsLoadingWaybills(true);
 		try {
-			const response = await koombiyoAPI.getWaybills(100);
-			if (response.waybills) {
-				setAvailableWaybills(response.waybills);
+			const response = await getWaybills(100);
+			if (response.success && response.data) {
+				setAvailableWaybills(response.data);
+			} else {
+				throw new Error(response.error || 'Failed to load waybills');
 			}
-		} catch (error) {
+		} catch (error: any) {
 			console.error('Failed to load waybills:', error);
-			toast.error('Failed to load available waybills');
+			toast.error(error.message || 'Failed to load available waybills');
 		} finally {
 			setIsLoadingWaybills(false);
 		}
@@ -1056,29 +1063,9 @@ export function OrdersManagement() {
 				</CardContent>
 			</Card>
 
-			<Card className="border-none shadow-md bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/40 dark:to-blue-800/40 dark:shadow-lg dark:shadow-blue-900/20 py-3 gap-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setStatusFilter(OrderStatus.CONFIRMED)}>
-				<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-					<CardTitle className="text-xs font-medium text-blue-900 dark:text-blue-200">Confirmed</CardTitle>
-					<Check className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-				</CardHeader>
-				<CardContent className="pt-1 pb-3">
-					<div className="text-2xl font-bold text-blue-900 dark:text-blue-50">{orderStats[OrderStatus.CONFIRMED] || 0}</div>
-				</CardContent>
-			</Card>
-
-			<Card className="border-none shadow-md bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/40 dark:to-purple-800/40 dark:shadow-lg dark:shadow-purple-900/20 py-3 gap-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setStatusFilter(OrderStatus.PROCESSING)}>
-				<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-					<CardTitle className="text-xs font-medium text-purple-900 dark:text-purple-200">Processing</CardTitle>
-					<PackagePlus className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-				</CardHeader>
-				<CardContent className="pt-1 pb-3">
-					<div className="text-2xl font-bold text-purple-900 dark:text-purple-50">{orderStats[OrderStatus.PROCESSING] || 0}</div>
-				</CardContent>
-			</Card>
-
 			<Card className="border-none shadow-md bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/40 dark:to-orange-800/40 dark:shadow-lg dark:shadow-orange-900/20 py-3 gap-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setStatusFilter(OrderStatus.READY_FOR_DELIVERY)}>
 				<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-					<CardTitle className="text-xs font-medium text-orange-900 dark:text-orange-200">Ready</CardTitle>
+					<CardTitle className="text-xs font-medium text-orange-900 dark:text-orange-200">Ready for Delivery</CardTitle>
 					<PackageCheck className="h-4 w-4 text-orange-600 dark:text-orange-400" />
 				</CardHeader>
 				<CardContent className="pt-1 pb-3">
@@ -1088,21 +1075,11 @@ export function OrdersManagement() {
 
 			<Card className="border-none shadow-md bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/40 dark:to-indigo-800/40 dark:shadow-lg dark:shadow-indigo-900/20 py-3 gap-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setStatusFilter(OrderStatus.SENT_TO_DELIVERY)}>
 				<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-					<CardTitle className="text-xs font-medium text-indigo-900 dark:text-indigo-200">Sent</CardTitle>
+					<CardTitle className="text-xs font-medium text-indigo-900 dark:text-indigo-200">Sent to Delivery</CardTitle>
 					<Send className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
 				</CardHeader>
 				<CardContent className="pt-1 pb-3">
 					<div className="text-2xl font-bold text-indigo-900 dark:text-indigo-50">{orderStats[OrderStatus.SENT_TO_DELIVERY] || 0}</div>
-				</CardContent>
-			</Card>
-
-			<Card className="border-none shadow-md bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-900/40 dark:to-cyan-800/40 dark:shadow-lg dark:shadow-cyan-900/20 py-3 gap-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setStatusFilter(OrderStatus.SHIPPED)}>
-				<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-					<CardTitle className="text-xs font-medium text-cyan-900 dark:text-cyan-200">Shipped</CardTitle>
-					<ShipWheel className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
-				</CardHeader>
-				<CardContent className="pt-1 pb-3">
-					<div className="text-2xl font-bold text-cyan-900 dark:text-cyan-50">{orderStats[OrderStatus.SHIPPED] || 0}</div>
 				</CardContent>
 			</Card>
 
@@ -1234,7 +1211,6 @@ export function OrdersManagement() {
 										<TableHead className="w-[130px] text-right">Total</TableHead>
 										<TableHead className="w-[140px]">Status</TableHead>
 										<TableHead className="w-[140px]">Payment</TableHead>
-										<TableHead className="w-[140px]">Delivery</TableHead>
 										<TableHead className="w-[140px] text-center">Actions</TableHead>
 									</TableRow>
 								</TableHeader>
@@ -1274,15 +1250,6 @@ export function OrdersManagement() {
 												<Badge className={cn("text-[10px] px-1.5 py-0", paymentStatusColors[order.paymentStatus] || 'bg-gray-100 text-gray-800')}>
 													{order.paymentStatus.replace(/_/g, ' ')}
 												</Badge>
-											</TableCell>
-											<TableCell className="w-[140px]">
-												{order.deliveryStatus ? (
-													<Badge className={cn("text-[10px] px-1.5 py-0", deliveryStatusColors[order.deliveryStatus] || 'bg-gray-100 text-gray-800')}>
-														{order.deliveryStatus.replace(/_/g, ' ')}
-													</Badge>
-												) : (
-													<span className="text-xs text-muted-foreground">-</span>
-												)}
 											</TableCell>
 											<TableCell className="w-[140px]">
 												<div className="flex items-center justify-center gap-1">
@@ -1403,7 +1370,7 @@ export function OrdersManagement() {
 															<DropdownMenuSeparator />															{/* Cancel Order - available for non-cancelled/non-refunded */}
 															{order.status !== OrderStatus.CANCELLED && order.status !== OrderStatus.REFUNDED && (
 																<DropdownMenuItem
-																	onClick={() => handleCancelOrder(order.id)}
+																	onClick={() => handleOpenCancelConfirm(order.id)}
 																	className="text-red-600"
 																>
 																	<AlertCircle className="mr-2 h-4 w-4" />
@@ -1566,14 +1533,6 @@ export function OrdersManagement() {
 											{selectedOrder.paymentStatus.replace(/_/g, ' ')}
 										</Badge>
 									</div>
-									{selectedOrder.deliveryStatus && (
-										<div>
-											<p className="text-xs text-muted-foreground mb-1">Delivery Status</p>
-											<Badge className={cn("text-xs", deliveryStatusColors[selectedOrder.deliveryStatus])}>
-												{selectedOrder.deliveryStatus.replace(/_/g, ' ')}
-											</Badge>
-										</div>
-									)}
 								</div>
 							</div>
 
@@ -1613,12 +1572,6 @@ export function OrdersManagement() {
 											<p className="text-xs text-muted-foreground">Waybill ID</p>
 											<p className="text-sm font-mono">{selectedOrder.waybillId}</p>
 										</div>
-										{selectedOrder.koombiyoOrderId && (
-											<div>
-												<p className="text-xs text-muted-foreground">Koombiyo Order ID</p>
-												<p className="text-sm font-mono">{selectedOrder.koombiyoOrderId}</p>
-											</div>
-										)}
 										{selectedOrder.sentToDeliveryAt && (
 											<div>
 												<p className="text-xs text-muted-foreground">Sent to Delivery</p>
@@ -2151,6 +2104,37 @@ export function OrdersManagement() {
 					</div>
 				</DialogContent>
 			</Dialog>
+
+			{/* Cancel Order Confirmation Dialog */}
+			<AlertDialog open={isCancelConfirmOpen} onOpenChange={setIsCancelConfirmOpen}>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Cancel Order?</AlertDialogTitle>
+						<AlertDialogDescription>
+							Are you sure you want to cancel this order? This action cannot be undone and will update the order status to cancelled.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel disabled={isLoading}>
+							No, Keep Order
+						</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={handleCancelOrder}
+							disabled={isLoading}
+							className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+						>
+							{isLoading ? (
+								<>
+									<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+									Cancelling...
+								</>
+							) : (
+								'Yes, Cancel Order'
+							)}
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</div>
 	);
 }

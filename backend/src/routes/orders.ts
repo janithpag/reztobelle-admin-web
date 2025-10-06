@@ -2,23 +2,26 @@ import { FastifyPluginCallback } from 'fastify'
 import { z } from 'zod'
 
 const createOrderSchema = z.object({
-    customerName: z.string().min(1),
-    customerEmail: z.string().email().optional(),
-    customerPhone: z.string().optional(),
-    address: z.string().min(1),
-    cityId: z.number().int(),
-    cityName: z.string().min(1),
-    districtId: z.number().int(),
-    districtName: z.string().min(1),
+    customerName: z.string().min(1, "Customer name is required"),
+    customerEmail: z.string().email("Invalid email address").optional().or(z.literal('')),
+    customerPhone: z.string().min(1, "Customer phone is required"),
+    address: z.string().min(1, "Address is required"),
+    cityId: z.number().int("City ID must be a valid integer"),
+    cityName: z.string().min(1, "City name is required"),
+    districtId: z.number().int("District ID must be a valid integer"),
+    districtName: z.string().min(1, "District name is required"),
     paymentMethod: z.enum(['CASH_ON_DELIVERY', 'BANK_TRANSFER']),
-    notes: z.string().optional(),
+    notes: z.string().optional().or(z.literal('')),
+    specialNotes: z.string().optional().or(z.literal('')),
+    shippingAmount: z.number().nonnegative("Shipping amount cannot be negative").optional().default(0),
+    discountAmount: z.number().nonnegative("Discount amount cannot be negative").optional().default(0),
     items: z.array(z.object({
-        productId: z.number().int(),
-        quantity: z.number().int().positive(),
-        unitPrice: z.number().positive(),
-        productName: z.string().min(1),
-        sku: z.string().min(1)
-    }))
+        productId: z.number().int("Product ID must be a valid integer"),
+        quantity: z.number().int().positive("Quantity must be a positive integer"),
+        unitPrice: z.number().positive("Unit price must be positive"),
+        productName: z.string().min(1, "Product name is required"),
+        sku: z.string().min(1, "SKU is required")
+    })).min(1, "At least one item is required")
 })
 
 const orderRoutes: FastifyPluginCallback = async (fastify) => {
@@ -72,8 +75,9 @@ const orderRoutes: FastifyPluginCallback = async (fastify) => {
 
             // Calculate totals
             const subtotal = orderData.items.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0)
-            const shippingAmount = 0
-            const totalAmount = subtotal + shippingAmount
+            const shippingAmount = orderData.shippingAmount || 0
+            const discountAmount = orderData.discountAmount || 0
+            const totalAmount = subtotal + shippingAmount - discountAmount
 
             // Generate order number
             const orderNumber = `ORD-${Date.now()}`
@@ -92,8 +96,10 @@ const orderRoutes: FastifyPluginCallback = async (fastify) => {
                     paymentMethod: orderData.paymentMethod,
                     subtotal,
                     shippingAmount,
+                    discountAmount,
                     totalAmount,
                     notes: orderData.notes,
+                    specialNotes: orderData.specialNotes,
                     orderItems: {
                         create: orderData.items.map((item) => ({
                             productId: item.productId,
@@ -123,7 +129,72 @@ const orderRoutes: FastifyPluginCallback = async (fastify) => {
             return reply.code(201).send({ order: orderWithItems })
         } catch (error) {
             console.error('Create order error:', error)
-            return reply.code(400).send({ error: 'Invalid request data' })
+            if (error instanceof z.ZodError) {
+                return reply.code(400).send({ 
+                    error: 'Invalid request data',
+                    details: error.errors 
+                })
+            }
+            return reply.code(400).send({ 
+                error: 'Invalid request data',
+                message: error instanceof Error ? error.message : 'Unknown error'
+            })
+        }
+    })
+
+    // Update order status
+    fastify.patch('/:id/status', async (request, reply) => {
+        try {
+            const { id } = request.params as { id: string }
+            const { status, deliveryStatus, paymentStatus } = request.body as any
+
+            const order = await fastify.prisma.order.update({
+                where: { id: parseInt(id) },
+                data: {
+                    ...(status && { status }),
+                    ...(deliveryStatus && { deliveryStatus }),
+                    ...(paymentStatus && { paymentStatus })
+                },
+                include: {
+                    orderItems: {
+                        include: {
+                            product: true
+                        }
+                    }
+                }
+            })
+
+            return { order }
+        } catch (error) {
+            return reply.code(400).send({ error: 'Invalid request data or order not found' })
+        }
+    })
+
+    // Update payment status
+    fastify.patch('/:id/payment-status', async (request, reply) => {
+        try {
+            const { id } = request.params as { id: string }
+            const { paymentStatus } = request.body as any
+
+            if (!paymentStatus) {
+                return reply.code(400).send({ error: 'Payment status is required' })
+            }
+
+            const order = await fastify.prisma.order.update({
+                where: { id: parseInt(id) },
+                data: { paymentStatus },
+                include: {
+                    orderItems: {
+                        include: {
+                            product: true
+                        }
+                    }
+                }
+            })
+
+            return { order }
+        } catch (error) {
+            return reply.code(400).send({ error: 'Invalid request data or order not found' })
         }
     })
 

@@ -46,6 +46,7 @@ import {
 	CreditCard,
 	Check,
 	ChevronsUpDown,
+	X,
 } from 'lucide-react';
 import { ordersAPI, productsAPI, deliveriesAPI } from '@/lib/api';
 import { 
@@ -155,6 +156,10 @@ export function OrdersManagement() {
 	const [isLoadingCities, setIsLoadingCities] = useState(false);
 	const [districtOpen, setDistrictOpen] = useState(false);
 	const [cityOpen, setCityOpen] = useState(false);
+	
+	// Product selection state
+	const [productOpen, setProductOpen] = useState(false);
+	const [productSearchValue, setProductSearchValue] = useState('');
 
 	const resetForm = () => {
 		setOrderForm({
@@ -323,7 +328,22 @@ export function OrdersManagement() {
 
 			setIsLoading(true);
 
-			const orderData: CreateOrderForm = {
+			// Map items to include product details required by backend
+			const itemsWithDetails = orderForm.items.map(item => {
+				const product = productsData.find(p => p.id === item.productId);
+				if (!product) {
+					throw new Error(`Product not found for ID: ${item.productId}`);
+				}
+				return {
+					productId: item.productId,
+					quantity: item.quantity,
+					unitPrice: Number(product.price),
+					productName: product.name,
+					sku: product.sku,
+				};
+			});
+
+			const orderData: any = {
 				customerName: orderForm.customerName,
 				customerEmail: orderForm.customerEmail || undefined,
 				customerPhone: orderForm.customerPhone,
@@ -333,7 +353,7 @@ export function OrdersManagement() {
 				districtId: typeof orderForm.districtId === 'number' ? orderForm.districtId : parseInt(orderForm.districtId),
 				districtName: orderForm.districtName,
 				paymentMethod: orderForm.paymentMethod,
-				items: orderForm.items,
+				items: itemsWithDetails,
 				notes: orderForm.notes || undefined,
 				specialNotes: orderForm.specialNotes || undefined,
 				shippingAmount: parseFloat(orderForm.shippingAmount) || 0,
@@ -628,10 +648,218 @@ export function OrdersManagement() {
 								/>
 							</div>
 
-							{/* TODO: Add product selection interface */}
-							<div className="space-y-2">
-								<Label className="text-sm font-medium">Order Items</Label>
-								<p className="text-sm text-muted-foreground">Product selection interface to be implemented</p>
+							{/* Product Selection Interface */}
+							<div className="space-y-3">
+								<div className="space-y-2">
+									<Label className="text-sm font-medium">Add Products *</Label>
+									<Popover open={productOpen} onOpenChange={setProductOpen}>
+										<PopoverTrigger asChild>
+											<Button
+												variant="outline"
+												role="combobox"
+												aria-expanded={productOpen}
+												className="w-full justify-between"
+											>
+												<span className="flex items-center gap-2">
+													<Plus className="h-4 w-4" />
+													Search and add products...
+												</span>
+												<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+											</Button>
+										</PopoverTrigger>
+										<PopoverContent className="w-full p-0" align="start" side="bottom" sideOffset={4}>
+											<Command>
+												<CommandInput 
+													placeholder="Search products by name or SKU..." 
+													value={productSearchValue}
+													onValueChange={setProductSearchValue}
+												/>
+												<CommandEmpty>No products found.</CommandEmpty>
+												<CommandList className="max-h-[300px]">
+													<CommandGroup>
+														{productsData
+															.filter(p => p.isActive)
+															.map((product) => {
+																const isSelected = orderForm.items.some(item => item.productId === product.id);
+																const stockAvailable = product.inventory?.quantityAvailable || 0;
+																
+																return (
+																	<CommandItem
+																		key={product.id}
+																		value={`${product.name} ${product.sku}`}
+																		onSelect={() => {
+																			if (!isSelected && stockAvailable > 0) {
+																				const newItems = [...orderForm.items, {
+																					productId: product.id,
+																					quantity: 1,
+																				}];
+																				setOrderForm({...orderForm, items: newItems});
+																				toast.success(`${product.name} added to order`);
+																			} else if (isSelected) {
+																				toast.info(`${product.name} is already in the order`);
+																			} else {
+																				toast.error(`${product.name} is out of stock`);
+																			}
+																			setProductOpen(false);
+																			setProductSearchValue('');
+																		}}
+																		disabled={isSelected || stockAvailable === 0}
+																		className="flex items-center justify-between py-3"
+																	>
+																		<div className="flex items-center gap-2 flex-1 min-w-0">
+																			{isSelected ? (
+																				<Check className="h-4 w-4 text-primary flex-shrink-0" />
+																			) : (
+																				<div className="h-4 w-4 flex-shrink-0" />
+																			)}
+																			<div className="flex-1 min-w-0">
+																				<div className="font-medium text-sm truncate">{product.name}</div>
+																				<div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+																					<span>SKU: {product.sku}</span>
+																					<span>•</span>
+																					<span className="font-medium">LKR {Number(product.price).toFixed(2)}</span>
+																					<span>•</span>
+																					<span className={cn(
+																						"font-medium",
+																						stockAvailable > 10 ? "text-green-600" : stockAvailable > 0 ? "text-orange-600" : "text-red-600"
+																					)}>
+																						Stock: {stockAvailable}
+																					</span>
+																				</div>
+																			</div>
+																		</div>
+																		{isSelected && (
+																			<Badge variant="secondary" className="ml-2 flex-shrink-0">Added</Badge>
+																		)}
+																		{!isSelected && stockAvailable === 0 && (
+																			<Badge variant="destructive" className="ml-2 flex-shrink-0">Out of Stock</Badge>
+																		)}
+																	</CommandItem>
+																);
+															})}
+													</CommandGroup>
+												</CommandList>
+											</Command>
+										</PopoverContent>
+									</Popover>
+									{orderForm.items.length > 0 && (
+										<p className="text-xs text-muted-foreground">
+											{orderForm.items.length} {orderForm.items.length === 1 ? 'product' : 'products'} added to order
+										</p>
+									)}
+								</div>
+
+								{/* Selected Products Table */}
+								{orderForm.items.length > 0 ? (
+									<div className="border rounded-lg overflow-hidden">
+										<Table>
+											<TableHeader>
+												<TableRow className="bg-muted/50">
+													<TableHead>Product</TableHead>
+													<TableHead className="w-[120px]">Quantity</TableHead>
+													<TableHead className="w-[100px] text-right">Price</TableHead>
+													<TableHead className="w-[100px] text-right">Total</TableHead>
+													<TableHead className="w-[60px]"></TableHead>
+												</TableRow>
+											</TableHeader>
+											<TableBody>
+												{orderForm.items.map((item, index) => {
+										const product = productsData.find(p => p.id === item.productId);
+										if (!product) return null;
+										
+										const itemTotal = Number(product.price) * item.quantity;													return (
+														<TableRow key={item.productId}>
+															<TableCell>
+																<div>
+																	<div className="font-medium text-sm">{product.name}</div>
+																	<div className="text-xs text-muted-foreground">SKU: {product.sku}</div>
+																</div>
+															</TableCell>
+															<TableCell>
+																<Input
+																	type="number"
+																	min="1"
+																	value={item.quantity}
+																	onChange={(e) => {
+																		const newQuantity = parseInt(e.target.value) || 1;
+																		const newItems = [...orderForm.items];
+																		newItems[index].quantity = newQuantity;
+																		setOrderForm({...orderForm, items: newItems});
+																	}}
+																	className="w-20 h-8"
+																/>
+															</TableCell>
+															<TableCell className="text-right text-sm">
+																LKR {Number(product.price).toFixed(2)}
+															</TableCell>
+															<TableCell className="text-right text-sm font-medium">
+																LKR {itemTotal.toFixed(2)}
+															</TableCell>
+															<TableCell>
+																<Button
+																	type="button"
+																	size="icon"
+																	variant="ghost"
+																	onClick={() => {
+																		const newItems = orderForm.items.filter((_, i) => i !== index);
+																		setOrderForm({...orderForm, items: newItems});
+																		toast.success('Product removed from order');
+																	}}
+																	className="h-7 w-7 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+																	title="Remove product"
+																>
+																	<X className="h-4 w-4" />
+																</Button>
+															</TableCell>
+														</TableRow>
+													);
+												})}
+											</TableBody>
+										</Table>
+										<div className="px-4 py-3 bg-muted/30 border-t">
+											<div className="space-y-2">
+												<div className="flex justify-between items-center text-sm">
+													<span className="text-muted-foreground">Subtotal:</span>
+													<span className="font-medium">
+														LKR {orderForm.items.reduce((sum, item) => {
+															const product = productsData.find(p => p.id === item.productId);
+															return sum + (product ? Number(product.price) * item.quantity : 0);
+														}, 0).toFixed(2)}
+													</span>
+												</div>
+												<div className="flex justify-between items-center text-sm">
+													<span className="text-muted-foreground">Shipping Fee:</span>
+													<span className="font-medium">
+														LKR {parseFloat(orderForm.shippingAmount || '0').toFixed(2)}
+													</span>
+												</div>
+												{parseFloat(orderForm.discountAmount || '0') > 0 && (
+													<div className="flex justify-between items-center text-sm">
+														<span className="text-muted-foreground">Discount:</span>
+														<span className="font-medium text-green-600 dark:text-green-400">
+															-LKR {parseFloat(orderForm.discountAmount || '0').toFixed(2)}
+														</span>
+													</div>
+												)}
+												<div className="pt-2 border-t border-border/50">
+													<div className="flex justify-between items-center">
+														<span className="font-semibold text-base">Total Amount:</span>
+														<span className="font-bold text-lg text-primary">
+															LKR {(
+																orderForm.items.reduce((sum, item) => {
+																	const product = productsData.find(p => p.id === item.productId);
+																	return sum + (product ? Number(product.price) * item.quantity : 0);
+																}, 0) + 
+																parseFloat(orderForm.shippingAmount || '0') - 
+																parseFloat(orderForm.discountAmount || '0')
+															).toFixed(2)}
+														</span>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								) : null}
 							</div>
 						</div>
 						<div className="flex justify-end gap-3 px-6 py-4 border-t border-primary/10 bg-gradient-to-r from-transparent to-primary/5 dark:from-transparent dark:to-primary/10">

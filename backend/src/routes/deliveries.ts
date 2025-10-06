@@ -36,6 +36,54 @@ const deliveryRoutes: FastifyPluginCallback = async (fastify) => {
 		return { deliveries }
 	})
 
+	// Send order to delivery service
+	fastify.post('/send/:orderId', async (request, reply) => {
+		try {
+			const { orderId } = request.params as { orderId: string }
+
+			// Get the order details
+			const order = await fastify.prisma.order.findUnique({
+				where: { id: parseInt(orderId) }
+			})
+
+			if (!order) {
+				return reply.code(404).send({ error: 'Order not found' })
+			}
+
+			if (order.sentToDeliveryAt) {
+				return reply.code(400).send({ error: 'Order already sent to delivery' })
+			}
+
+			// Update order as sent to delivery
+			const updatedOrder = await fastify.prisma.order.update({
+				where: { id: parseInt(orderId) },
+				data: {
+					deliveryStatus: 'SENT_TO_KOOMBIYO',
+					sentToDeliveryAt: new Date(),
+					status: 'PROCESSING'
+				}
+			})
+
+			// Log the action
+			await fastify.prisma.deliveryLog.create({
+				data: {
+					orderId: parseInt(orderId),
+					action: 'SENT_TO_KOOMBIYO',
+					status: 'SENT_TO_KOOMBIYO',
+					message: 'Order sent to delivery service'
+				}
+			})
+
+			return { order: updatedOrder }
+		} catch (error) {
+			console.error('Send to delivery error:', error)
+			return reply.code(400).send({ 
+				error: 'Failed to send order to delivery',
+				message: error instanceof Error ? error.message : 'Unknown error'
+			})
+		}
+	})
+
 	// Update delivery status for an order
 	fastify.patch('/:orderId/status', async (request, reply) => {
 		try {

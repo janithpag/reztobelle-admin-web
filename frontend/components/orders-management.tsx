@@ -24,6 +24,7 @@ import {
 	CommandGroup,
 	CommandInput,
 	CommandItem,
+	CommandList,
 } from '@/components/ui/command';
 import {
 	Popover,
@@ -486,12 +487,13 @@ export function OrdersManagement() {
 												<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 											</Button>
 										</PopoverTrigger>
-										<PopoverContent className="w-full p-0">
+										<PopoverContent className="w-full p-0" align="start" side="bottom" sideOffset={4} avoidCollisions={false}>
 											<Command>
 												<CommandInput placeholder="Search districts..." />
 												<CommandEmpty>No district found.</CommandEmpty>
-												<CommandGroup className="max-h-64 overflow-auto">
-													{districts.map((district) => (
+												<CommandList className="max-h-64">
+													<CommandGroup>
+														{districts.map((district) => (
 														<CommandItem
 															key={district.id}
 															value={district.name}
@@ -513,10 +515,11 @@ export function OrdersManagement() {
 																	orderForm.districtId === district.id ? "opacity-100" : "opacity-0"
 																)}
 															/>
-															{district.name}
-														</CommandItem>
-													))}
-												</CommandGroup>
+																{district.name}
+															</CommandItem>
+														))}
+													</CommandGroup>
+												</CommandList>
 											</Command>
 										</PopoverContent>
 									</Popover>
@@ -536,12 +539,13 @@ export function OrdersManagement() {
 												<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 											</Button>
 										</PopoverTrigger>
-										<PopoverContent className="w-full p-0">
+										<PopoverContent className="w-full p-0" align="start" side="bottom" sideOffset={4} avoidCollisions={false}>
 											<Command>
 												<CommandInput placeholder="Search cities..." />
 												<CommandEmpty>No city found.</CommandEmpty>
-												<CommandGroup className="max-h-64 overflow-auto">
-													{cities.map((city) => (
+												<CommandList className="max-h-64">
+													<CommandGroup>
+														{cities.map((city) => (
 														<CommandItem
 															key={city.id}
 															value={city.name}
@@ -560,10 +564,11 @@ export function OrdersManagement() {
 																	orderForm.cityId === city.id ? "opacity-100" : "opacity-0"
 																)}
 															/>
-															{city.name}
-														</CommandItem>
-													))}
-												</CommandGroup>
+																{city.name}
+															</CommandItem>
+														))}
+													</CommandGroup>
+												</CommandList>
 											</Command>
 										</PopoverContent>
 									</Popover>

@@ -19,6 +19,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
+	Command,
+	CommandEmpty,
+	CommandGroup,
+	CommandInput,
+	CommandItem,
+} from '@/components/ui/command';
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from '@/components/ui/popover';
+import {
 	Search,
 	MoreHorizontal,
 	Eye,
@@ -31,6 +43,8 @@ import {
 	Plus,
 	Loader2,
 	CreditCard,
+	Check,
+	ChevronsUpDown,
 } from 'lucide-react';
 import { ordersAPI, productsAPI, deliveriesAPI } from '@/lib/api';
 import { 
@@ -44,15 +58,16 @@ import {
 } from '@/types';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { getDistricts, getCities, type District, type City } from '@/lib/koombiyo-server';
 
 interface OrderFormData {
 	customerName: string;
 	customerEmail: string;
 	customerPhone: string;
 	address: string;
-	cityId: string;
+	cityId: number | '';
 	cityName: string;
-	districtId: string;
+	districtId: number | '';
 	districtName: string;
 	paymentMethod: PaymentMethod;
 	items: Array<{
@@ -128,9 +143,17 @@ export function OrdersManagement() {
 		items: [],
 		notes: '',
 		specialNotes: '',
-		shippingAmount: '0',
+		shippingAmount: '350',
 		discountAmount: '0',
 	});
+
+	// Koombiyo location data
+	const [districts, setDistricts] = useState<District[]>([]);
+	const [cities, setCities] = useState<City[]>([]);
+	const [isLoadingDistricts, setIsLoadingDistricts] = useState(false);
+	const [isLoadingCities, setIsLoadingCities] = useState(false);
+	const [districtOpen, setDistrictOpen] = useState(false);
+	const [cityOpen, setCityOpen] = useState(false);
 
 	const resetForm = () => {
 		setOrderForm({
@@ -146,7 +169,7 @@ export function OrdersManagement() {
 			items: [],
 			notes: '',
 			specialNotes: '',
-			shippingAmount: '0',
+			shippingAmount: '350',
 			discountAmount: '0',
 		});
 	};
@@ -183,10 +206,49 @@ export function OrdersManagement() {
 		}
 	}, []);
 
+	// Load districts from Koombiyo
+	const loadDistricts = useCallback(async () => {
+		setIsLoadingDistricts(true);
+		try {
+			const response = await getDistricts();
+			console.log('Koombiyo Districts Response:', response);
+			if (response.success && response.data) {
+				setDistricts(response.data);
+			} else {
+				toast.error('Failed to load districts: ' + (response.error || 'Unknown error'));
+			}
+		} catch (error) {
+			console.error('Failed to load districts:', error);
+			toast.error('Failed to load districts');
+		} finally {
+			setIsLoadingDistricts(false);
+		}
+	}, []);
+
+	// Load cities from Koombiyo based on selected district
+	const loadCities = useCallback(async (districtId: number | string) => {
+		if (!districtId) return;
+		setIsLoadingCities(true);
+		try {
+			const response = await getCities(districtId);
+			if (response.success && response.data) {
+				setCities(response.data);
+			} else {
+				toast.error('Failed to load cities: ' + (response.error || 'Unknown error'));
+			}
+		} catch (error) {
+			console.error('Failed to load cities:', error);
+			toast.error('Failed to load cities');
+		} finally {
+			setIsLoadingCities(false);
+		}
+	}, []);
+
 	// Load data on component mount and when filters change
 	useEffect(() => {
 		loadProducts();
-	}, [loadProducts]);
+		loadDistricts();
+	}, [loadProducts, loadDistricts]);
 
 	useEffect(() => {
 		loadOrders();
@@ -253,8 +315,8 @@ export function OrdersManagement() {
 
 	const handleCreateOrder = async () => {
 		try {
-			if (!orderForm.customerName || !orderForm.address || orderForm.items.length === 0) {
-				toast.error('Please fill in all required fields and add at least one item');
+			if (!orderForm.customerName || !orderForm.customerPhone || !orderForm.address || !orderForm.districtId || !orderForm.cityId || orderForm.items.length === 0) {
+				toast.error('Please fill in all required fields (name, phone, district, city, address) and add at least one item');
 				return;
 			}
 
@@ -263,11 +325,11 @@ export function OrdersManagement() {
 			const orderData: CreateOrderForm = {
 				customerName: orderForm.customerName,
 				customerEmail: orderForm.customerEmail || undefined,
-				customerPhone: orderForm.customerPhone || undefined,
+				customerPhone: orderForm.customerPhone,
 				address: orderForm.address,
-				cityId: parseInt(orderForm.cityId),
+				cityId: typeof orderForm.cityId === 'number' ? orderForm.cityId : parseInt(orderForm.cityId),
 				cityName: orderForm.cityName,
-				districtId: parseInt(orderForm.districtId),
+				districtId: typeof orderForm.districtId === 'number' ? orderForm.districtId : parseInt(orderForm.districtId),
 				districtName: orderForm.districtName,
 				paymentMethod: orderForm.paymentMethod,
 				items: orderForm.items,
@@ -368,13 +430,14 @@ export function OrdersManagement() {
 									/>
 								</div>
 								<div className="space-y-2">
-									<Label htmlFor="customerPhone" className="text-sm font-medium">Phone</Label>
+									<Label htmlFor="customerPhone" className="text-sm font-medium">Phone *</Label>
 									<Input
 										id="customerPhone"
 										value={orderForm.customerPhone}
 										onChange={(e) => setOrderForm({...orderForm, customerPhone: e.target.value})}
 										placeholder="+94 XX XXX XXXX"
 										className="w-full"
+										required
 									/>
 								</div>
 								<div className="space-y-2">
@@ -409,24 +472,101 @@ export function OrdersManagement() {
 							{/* Location Information */}
 							<div className="grid grid-cols-2 gap-6">
 								<div className="space-y-2">
-									<Label htmlFor="districtName" className="text-sm font-medium">District *</Label>
-									<Input
-										id="districtName"
-										value={orderForm.districtName}
-										onChange={(e) => setOrderForm({...orderForm, districtName: e.target.value})}
-										placeholder="e.g., Colombo"
-										className="w-full"
-									/>
+									<Label className="text-sm font-medium">District *</Label>
+									<Popover open={districtOpen} onOpenChange={setDistrictOpen}>
+										<PopoverTrigger asChild>
+											<Button
+												variant="outline"
+												role="combobox"
+												aria-expanded={districtOpen}
+												className="w-full justify-between"
+												disabled={isLoadingDistricts}
+											>
+												{orderForm.districtName || (isLoadingDistricts ? "Loading districts..." : "Select district...")}
+												<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+											</Button>
+										</PopoverTrigger>
+										<PopoverContent className="w-full p-0">
+											<Command>
+												<CommandInput placeholder="Search districts..." />
+												<CommandEmpty>No district found.</CommandEmpty>
+												<CommandGroup className="max-h-64 overflow-auto">
+													{districts.map((district) => (
+														<CommandItem
+															key={district.id}
+															value={district.name}
+															onSelect={() => {
+																setOrderForm({
+																	...orderForm,
+																	districtId: district.id,
+																	districtName: district.name,
+																	cityId: '',
+																	cityName: '',
+																});
+																loadCities(district.id);
+																setDistrictOpen(false);
+															}}
+														>
+															<Check
+																className={cn(
+																	"mr-2 h-4 w-4",
+																	orderForm.districtId === district.id ? "opacity-100" : "opacity-0"
+																)}
+															/>
+															{district.name}
+														</CommandItem>
+													))}
+												</CommandGroup>
+											</Command>
+										</PopoverContent>
+									</Popover>
 								</div>
 								<div className="space-y-2">
-									<Label htmlFor="cityName" className="text-sm font-medium">City *</Label>
-									<Input
-										id="cityName"
-										value={orderForm.cityName}
-										onChange={(e) => setOrderForm({...orderForm, cityName: e.target.value})}
-										placeholder="e.g., Colombo 03"
-										className="w-full"
-									/>
+									<Label className="text-sm font-medium">City *</Label>
+									<Popover open={cityOpen} onOpenChange={setCityOpen}>
+										<PopoverTrigger asChild>
+											<Button
+												variant="outline"
+												role="combobox"
+												aria-expanded={cityOpen}
+												className="w-full justify-between"
+												disabled={!orderForm.districtId || isLoadingCities}
+											>
+												{orderForm.cityName || (isLoadingCities ? "Loading cities..." : orderForm.districtId ? "Select city..." : "Select district first")}
+												<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+											</Button>
+										</PopoverTrigger>
+										<PopoverContent className="w-full p-0">
+											<Command>
+												<CommandInput placeholder="Search cities..." />
+												<CommandEmpty>No city found.</CommandEmpty>
+												<CommandGroup className="max-h-64 overflow-auto">
+													{cities.map((city) => (
+														<CommandItem
+															key={city.id}
+															value={city.name}
+															onSelect={() => {
+																setOrderForm({
+																	...orderForm,
+																	cityId: city.id,
+																	cityName: city.name,
+																});
+																setCityOpen(false);
+															}}
+														>
+															<Check
+																className={cn(
+																	"mr-2 h-4 w-4",
+																	orderForm.cityId === city.id ? "opacity-100" : "opacity-0"
+																)}
+															/>
+															{city.name}
+														</CommandItem>
+													))}
+												</CommandGroup>
+											</Command>
+										</PopoverContent>
+									</Popover>
 								</div>
 							</div>
 

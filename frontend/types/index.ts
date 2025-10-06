@@ -377,7 +377,7 @@ export interface UpdateCategoryForm extends Partial<CreateCategoryForm> {
 export interface CreateOrderForm {
   customerName: string;
   customerEmail?: string;
-  customerPhone?: string;
+  customerPhone: string;
   address: string;
   cityId: number;
   cityName: string;

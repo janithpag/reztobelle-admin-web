@@ -65,6 +65,8 @@ class KoombiyoService {
 				formData.append(key, value)
 			})
 
+			console.log(`[Koombiyo] Making request to: ${this.baseUrl}${endpoint}`)
+
 			const response = await axios.post(`${this.baseUrl}${endpoint}`, formData, {
 				headers: {
 					'Content-Type': 'application/x-www-form-urlencoded'
@@ -72,45 +74,91 @@ class KoombiyoService {
 				timeout: 30000
 			})
 
-			return response.data
+			console.log(`[Koombiyo] Response status: ${response.status}`)
+			console.log(`[Koombiyo] Response data:`, JSON.stringify(response.data, null, 2))
+
+			// Koombiyo API returns data directly as an array or object
+			// Wrap it in our response format
+			return {
+				success: true,
+				data: response.data as T
+			}
 		} catch (error: any) {
-			console.error('Koombiyo API Error:', error.message)
-			throw new Error(`Koombiyo API Error: ${error.message}`)
+			console.error('[Koombiyo] API Error:', error.message)
+			if (error.response) {
+				console.error('[Koombiyo] Response status:', error.response.status)
+				console.error('[Koombiyo] Response data:', error.response.data)
+			}
+			return {
+				success: false,
+				message: error.response?.data?.message || error.message
+			}
 		}
 	}
 
 	// Get districts in real-time
 	async getDistricts(): Promise<KoombiyoApiResponse<District[]>> {
-		const response = await this.makeRequest<District[]>('/Districts/users')
-		if (response.success && response.data) {
+		try {
+			console.log('[Koombiyo] Fetching districts...')
+			const response = await this.makeRequest<any[]>('/Districts/users')
+			
+			if (!response.success) {
+				return { success: false, message: response.message || 'Failed to fetch districts' }
+			}
+
+			if (!response.data || !Array.isArray(response.data)) {
+				console.error('[Koombiyo] Invalid districts data:', response.data)
+				return { success: false, message: 'Invalid districts data format' }
+			}
+
+			const districts = response.data.map((district: any) => ({
+				id: parseInt(district.district_id || district.id),
+				name: district.district_name || district.name
+			}))
+
+			console.log(`[Koombiyo] Successfully fetched ${districts.length} districts`)
 			return {
 				success: true,
-				data: response.data.map((district: any) => ({
-					id: parseInt(district.id),
-					name: district.name
-				}))
+				data: districts
 			}
+		} catch (error: any) {
+			console.error('[Koombiyo] Error in getDistricts:', error.message)
+			return { success: false, message: error.message }
 		}
-		return { success: false, message: 'No districts found' }
 	}
 
 	// Get cities in real-time
 	async getCities(districtId: number): Promise<KoombiyoApiResponse<City[]>> {
-		const response = await this.makeRequest<City[]>('/Cities/users', {
-			district_id: districtId.toString()
-		})
+		try {
+			console.log(`[Koombiyo] Fetching cities for district ${districtId}...`)
+			const response = await this.makeRequest<any[]>('/Cities/users', {
+				district_id: districtId.toString()
+			})
 
-		if (response.success && response.data) {
+			if (!response.success) {
+				return { success: false, message: response.message || 'Failed to fetch cities' }
+			}
+
+			if (!response.data || !Array.isArray(response.data)) {
+				console.error('[Koombiyo] Invalid cities data:', response.data)
+				return { success: false, message: 'Invalid cities data format' }
+			}
+
+			const cities = response.data.map((city: any) => ({
+				id: parseInt(city.city_id || city.id),
+				name: city.city_name || city.name,
+				district_id: parseInt(city.district_id)
+			}))
+
+			console.log(`[Koombiyo] Successfully fetched ${cities.length} cities`)
 			return {
 				success: true,
-				data: response.data.map((city: any) => ({
-					id: parseInt(city.id),
-					name: city.name,
-					district_id: parseInt(city.district_id)
-				}))
+				data: cities
 			}
+		} catch (error: any) {
+			console.error('[Koombiyo] Error in getCities:', error.message)
+			return { success: false, message: error.message }
 		}
-		return { success: false, message: 'No cities found for this district' }
 	}
 
 	// Get available waybills in real-time

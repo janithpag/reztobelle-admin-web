@@ -536,6 +536,91 @@ export const deliveriesAPI = {
 	},
 };
 
+// Koombiyo API - Direct integration with Koombiyo service
+export const koombiyoAPI = {
+	// Get available districts
+	getDistricts: async (): Promise<{ districts: any[] }> => {
+		const response = await apiClient.get('/koombiyo/districts');
+		return response.data;
+	},
+
+	// Get cities by district ID
+	getCities: async (districtId: number): Promise<{ cities: any[] }> => {
+		const response = await apiClient.get(`/koombiyo/cities/${districtId}`);
+		return response.data;
+	},
+
+	// Get available waybills
+	getWaybills: async (limit: number = 50): Promise<{ waybills: any[] }> => {
+		const response = await apiClient.get(`/koombiyo/waybills/available?limit=${limit}`);
+		return response.data;
+	},
+
+	// Validate location (district + city combination)
+	validateLocation: async (districtId: number, cityId: number): Promise<{ isValid: boolean }> => {
+		const response = await apiClient.post('/koombiyo/validate-location', {
+			districtId,
+			cityId
+		});
+		return response.data;
+	},
+
+	// Send order to Koombiyo
+	sendOrder: async (orderId: number): Promise<{ success: boolean; message: string; koombiyoOrderId?: string }> => {
+		const response = await apiClient.post(`/koombiyo/orders/${orderId}/send`);
+		return response.data;
+	},
+
+	// Track order
+	trackOrder: async (orderId: number): Promise<{ tracking: any; orderNumber: string; waybillId: string }> => {
+		const response = await apiClient.get(`/koombiyo/orders/${orderId}/track`);
+		return response.data;
+	},
+
+	// Get order history
+	getOrderHistory: async (orderId: number): Promise<{
+		koombiyoHistory: any[];
+		localLogs: any[];
+		orderNumber: string;
+		waybillId: string;
+	}> => {
+		const response = await apiClient.get(`/koombiyo/orders/${orderId}/history`);
+		return response.data;
+	},
+
+	// Request pickup
+	requestPickup: async (pickupData: {
+		vehicleType: 'Bike' | 'Three wheel' | 'Lorry';
+		pickupAddress: string;
+		latitude: string;
+		longitude: string;
+		phone: string;
+		quantity: number;
+		remarks?: string;
+	}): Promise<{ success: boolean; message: string; data?: any }> => {
+		const response = await apiClient.post('/koombiyo/pickup/request', pickupData);
+		return response.data;
+	},
+
+	// Get returns
+	getReturns: async (): Promise<{ returns: any[]; success: boolean; message?: string }> => {
+		const response = await apiClient.get('/koombiyo/returns');
+		return response.data;
+	},
+
+	// Get return items by note ID
+	getReturnItems: async (noteId: string): Promise<{ items: any[]; success: boolean; message?: string }> => {
+		const response = await apiClient.get(`/koombiyo/returns/${noteId}/items`);
+		return response.data;
+	},
+
+	// Mark return as received
+	receiveReturn: async (waybillId: string): Promise<{ success: boolean; message: string; orderNumber?: string }> => {
+		const response = await apiClient.post(`/koombiyo/returns/${waybillId}/receive`);
+		return response.data;
+	},
+};
+
 // Reports API
 export const reportsAPI = {
 	// Get dashboard overview

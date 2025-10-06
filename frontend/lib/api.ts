@@ -273,6 +273,12 @@ export const productsAPI = {
 
 // Orders API
 export const ordersAPI = {
+	// Get order statistics by status
+	getOrderStats: async (): Promise<{ stats: Record<string, number> }> => {
+		const response = await apiClient.get('/orders/stats');
+		return response.data;
+	},
+
 	// Get all orders
 	getOrders: async (params?: {
 		status?: string;
@@ -512,10 +518,15 @@ export const expensesAPI = {
 
 // Deliveries API (Koombiyo integration)
 export const deliveriesAPI = {
-	// Get delivery logs
-	getDeliveryLogs: async (orderId?: number): Promise<{ deliveryLogs: DeliveryLog[] }> => {
-		const url = orderId ? `/deliveries/logs?orderId=${orderId}` : '/deliveries/logs';
-		const response = await apiClient.get(url);
+	// Get all deliveries (orders with delivery information)
+	getDeliveries: async (): Promise<{ deliveries: Order[] }> => {
+		const response = await apiClient.get('/deliveries');
+		return response.data;
+	},
+
+	// Get delivery logs for a specific order
+	getDeliveryLogs: async (orderId: number): Promise<{ logs: DeliveryLog[] }> => {
+		const response = await apiClient.get(`/deliveries/${orderId}/logs`);
 		return response.data;
 	},
 
@@ -532,11 +543,10 @@ export const deliveriesAPI = {
 	},
 
 	// Update delivery status manually
-	updateDeliveryStatus: async (orderId: number, status: string, notes?: string): Promise<{ deliveryLog: DeliveryLog }> => {
-		const response = await apiClient.post(`/deliveries/update-status`, {
-			orderId,
-			status,
-			notes
+	updateDeliveryStatus: async (orderId: number, deliveryStatus: string, koombiyoLastStatus?: string): Promise<{ order: Order }> => {
+		const response = await apiClient.patch(`/deliveries/${orderId}/status`, {
+			deliveryStatus,
+			koombiyoLastStatus
 		});
 		return response.data;
 	},

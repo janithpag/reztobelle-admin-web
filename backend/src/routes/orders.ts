@@ -42,6 +42,23 @@ const updateOrderSchema = z.object({
 })
 
 const orderRoutes: FastifyPluginCallback = async (fastify) => {
+    // Get order statistics by status
+    fastify.get('/stats', async (request, reply) => {
+        const statusCounts = await fastify.prisma.order.groupBy({
+            by: ['status'],
+            _count: {
+                id: true
+            }
+        })
+
+        const stats = statusCounts.reduce((acc, item) => {
+            acc[item.status] = item._count.id
+            return acc
+        }, {} as Record<string, number>)
+
+        return { stats }
+    })
+
     // Get all orders
     fastify.get('/', async (request, reply) => {
         const orders = await fastify.prisma.order.findMany({

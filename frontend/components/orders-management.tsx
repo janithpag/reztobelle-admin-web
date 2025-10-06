@@ -47,6 +47,14 @@ import {
 	Check,
 	ChevronsUpDown,
 	X,
+	PackageCheck,
+	Send,
+	ShipWheel,
+	RotateCcw,
+	XCircle,
+	RefreshCw,
+	Trash,
+	PackagePlus,
 } from 'lucide-react';
 import { ordersAPI, productsAPI, deliveriesAPI, koombiyoAPI } from '@/lib/api';
 import {
@@ -128,6 +136,7 @@ export function OrdersManagement() {
 	const [ordersData, setOrdersData] = useState<Order[]>([]);
 	const [productsData, setProductsData] = useState<Product[]>([]);
 	const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+	const [orderStats, setOrderStats] = useState<Record<string, number>>({});
 
 	// Dialog states
 	const [isViewOrderOpen, setIsViewOrderOpen] = useState(false);
@@ -191,6 +200,16 @@ export function OrdersManagement() {
 	};
 
 	// Load data functions
+	const loadOrderStats = useCallback(async () => {
+		try {
+			const response = await ordersAPI.getOrderStats();
+			setOrderStats(response.stats || {});
+		} catch (error) {
+			console.error('Failed to load order stats:', error);
+			toast.error('Failed to load order statistics');
+		}
+	}, []);
+
 	const loadOrders = useCallback(async () => {
 		setIsLoading(true);
 		try {
@@ -264,11 +283,17 @@ export function OrdersManagement() {
 	useEffect(() => {
 		loadProducts();
 		loadDistricts();
-	}, [loadProducts, loadDistricts]);
+		loadOrderStats();
+	}, [loadProducts, loadDistricts, loadOrderStats]);
 
 	useEffect(() => {
 		loadOrders();
 	}, [loadOrders]);
+
+	// Helper function to refresh both orders and stats
+	const refreshOrderData = useCallback(async () => {
+		await Promise.all([loadOrders(), loadOrderStats()]);
+	}, [loadOrders, loadOrderStats]);
 
 	// Order actions
 	const handleUpdateOrderStatus = async (orderId: number, newStatus: OrderStatus) => {
@@ -284,7 +309,7 @@ export function OrdersManagement() {
 				toast.success('Order status updated successfully');
 			}
 
-			await loadOrders();
+			await refreshOrderData();
 		} catch (error: any) {
 			console.error('Failed to update order status:', error);
 			toast.error(error.response?.data?.error || 'Failed to update order status');
@@ -298,7 +323,7 @@ export function OrdersManagement() {
 			setIsLoading(true);
 			await ordersAPI.updatePaymentStatus(orderId, paymentStatus);
 			toast.success('Payment status updated successfully');
-			await loadOrders();
+			await refreshOrderData();
 		} catch (error: any) {
 			console.error('Failed to update payment status:', error);
 			toast.error(error.response?.data?.error || 'Failed to update payment status');
@@ -313,7 +338,7 @@ export function OrdersManagement() {
 				setIsLoading(true);
 				await ordersAPI.cancelOrder(orderId, 'Cancelled by admin');
 				toast.success('Order cancelled successfully');
-				await loadOrders();
+				await refreshOrderData();
 			} catch (error: any) {
 				console.error('Failed to cancel order:', error);
 				toast.error(error.response?.data?.error || 'Failed to cancel order');
@@ -358,7 +383,7 @@ export function OrdersManagement() {
 			setIsAttachWaybillOpen(false);
 			setWaybillId('');
 			setSelectedOrder(null);
-			await loadOrders();
+			await refreshOrderData();
 		} catch (error: any) {
 			console.error('Failed to attach waybill:', error);
 			toast.error(error.response?.data?.error || error.response?.data?.message || 'Failed to attach waybill and send to Koombiyo');
@@ -413,7 +438,7 @@ export function OrdersManagement() {
 			toast.success('Order created successfully');
 			setIsAddOrderOpen(false);
 			resetForm();
-			await loadOrders();
+			await refreshOrderData();
 		} catch (error: any) {
 			console.error('Failed to create order:', error);
 			toast.error(error.response?.data?.error || 'Failed to create order');
@@ -452,7 +477,7 @@ export function OrdersManagement() {
 			toast.success('Order updated successfully');
 			setIsEditOrderOpen(false);
 			resetForm();
-			await loadOrders();
+			await refreshOrderData();
 		} catch (error: any) {
 			console.error('Failed to update order:', error);
 			toast.error(error.response?.data?.error || 'Failed to update order');
@@ -508,14 +533,6 @@ export function OrdersManagement() {
 	const startIndex = (currentPage - 1) * itemsPerPage;
 	const endIndex = startIndex + itemsPerPage;
 	const paginatedOrders = filteredOrders.slice(startIndex, endIndex);
-
-	// Stats calculations
-	const totalOrders = ordersData.length;
-	const pendingOrders = ordersData.filter(o => o.status === OrderStatus.PENDING).length;
-	const deliveredOrders = ordersData.filter(o => o.status === OrderStatus.DELIVERED).length;
-	const totalRevenue = ordersData
-		.filter(o => o.status === OrderStatus.DELIVERED)
-		.reduce((sum, order) => sum + Number(order.totalAmount), 0);
 
 	return (
 		<div className="space-y-3">
@@ -1027,67 +1044,128 @@ export function OrdersManagement() {
 				</Dialog>
 			</div>
 
-			{/* Stats Cards */}
-			<div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-				<Card className="border-none shadow-md bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/40 dark:to-blue-800/40 dark:shadow-lg dark:shadow-blue-900/20 py-4 gap-0">
-					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-						<CardTitle className="text-xs font-medium text-blue-900 dark:text-blue-200">Total Orders</CardTitle>
-						<div className="h-8 w-8 rounded-full bg-blue-500 dark:bg-blue-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
-							<Package className="h-4 w-4 text-white" />
-						</div>
-					</CardHeader>
-					<CardContent className="pt-2 pb-4">
-						<div className="text-2xl font-bold text-blue-900 dark:text-blue-50">{totalOrders}</div>
-						<p className="text-xs text-blue-700 dark:text-blue-300 mt-0.5">
-							All time orders
-						</p>
-					</CardContent>
-				</Card>
-				<Card className="border-none shadow-md bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/40 dark:to-amber-800/40 dark:shadow-lg dark:shadow-amber-900/20 py-4 gap-0">
-					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-						<CardTitle className="text-xs font-medium text-amber-900 dark:text-amber-200">Pending Orders</CardTitle>
-						<div className="h-8 w-8 rounded-full bg-amber-500 dark:bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/30">
-							<Clock className="h-4 w-4 text-white" />
-						</div>
-					</CardHeader>
-					<CardContent className="pt-2 pb-4">
-						<div className="text-2xl font-bold text-amber-900 dark:text-amber-50">{pendingOrders}</div>
-						<p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
-							Awaiting processing
-						</p>
-					</CardContent>
-				</Card>
-				<Card className="border-none shadow-md bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/40 dark:to-green-800/40 dark:shadow-lg dark:shadow-green-900/20 py-4 gap-0">
-					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-						<CardTitle className="text-xs font-medium text-green-900 dark:text-green-200">Delivered</CardTitle>
-						<div className="h-8 w-8 rounded-full bg-green-500 dark:bg-green-500 flex items-center justify-center shadow-lg shadow-green-500/30">
-							<CheckCircle className="h-4 w-4 text-white" />
-						</div>
-					</CardHeader>
-					<CardContent className="pt-2 pb-4">
-						<div className="text-2xl font-bold text-green-900 dark:text-green-50">{deliveredOrders}</div>
-						<p className="text-xs text-green-700 dark:text-green-300 mt-0.5">
-							Successfully delivered
-						</p>
-					</CardContent>
-				</Card>
-				<Card className="border-none shadow-md bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/40 dark:to-purple-800/40 dark:shadow-lg dark:shadow-purple-900/20 py-4 gap-0">
-					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-						<CardTitle className="text-xs font-medium text-purple-900 dark:text-purple-200">Revenue</CardTitle>
-						<div className="h-8 w-8 rounded-full bg-purple-500 dark:bg-purple-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
-							<DollarSign className="h-4 w-4 text-white" />
-						</div>
-					</CardHeader>
-					<CardContent className="pt-2 pb-4">
-						<div className="text-2xl font-bold text-purple-900 dark:text-purple-50">LKR {totalRevenue.toFixed(2)}</div>
-						<p className="text-xs text-purple-700 dark:text-purple-300 mt-0.5">
-							From delivered orders
-						</p>
-					</CardContent>
-				</Card>
-			</div>
+		{/* Order Status Stats Cards */}
+		<div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+			<Card className="border-none shadow-md bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/40 dark:to-yellow-800/40 dark:shadow-lg dark:shadow-yellow-900/20 py-3 gap-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setStatusFilter(OrderStatus.PENDING)}>
+				<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+					<CardTitle className="text-xs font-medium text-yellow-900 dark:text-yellow-200">Pending</CardTitle>
+					<Clock className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+				</CardHeader>
+				<CardContent className="pt-1 pb-3">
+					<div className="text-2xl font-bold text-yellow-900 dark:text-yellow-50">{orderStats[OrderStatus.PENDING] || 0}</div>
+				</CardContent>
+			</Card>
 
-			{/* Search and Filters */}
+			<Card className="border-none shadow-md bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/40 dark:to-blue-800/40 dark:shadow-lg dark:shadow-blue-900/20 py-3 gap-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setStatusFilter(OrderStatus.CONFIRMED)}>
+				<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+					<CardTitle className="text-xs font-medium text-blue-900 dark:text-blue-200">Confirmed</CardTitle>
+					<Check className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+				</CardHeader>
+				<CardContent className="pt-1 pb-3">
+					<div className="text-2xl font-bold text-blue-900 dark:text-blue-50">{orderStats[OrderStatus.CONFIRMED] || 0}</div>
+				</CardContent>
+			</Card>
+
+			<Card className="border-none shadow-md bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/40 dark:to-purple-800/40 dark:shadow-lg dark:shadow-purple-900/20 py-3 gap-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setStatusFilter(OrderStatus.PROCESSING)}>
+				<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+					<CardTitle className="text-xs font-medium text-purple-900 dark:text-purple-200">Processing</CardTitle>
+					<PackagePlus className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+				</CardHeader>
+				<CardContent className="pt-1 pb-3">
+					<div className="text-2xl font-bold text-purple-900 dark:text-purple-50">{orderStats[OrderStatus.PROCESSING] || 0}</div>
+				</CardContent>
+			</Card>
+
+			<Card className="border-none shadow-md bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/40 dark:to-orange-800/40 dark:shadow-lg dark:shadow-orange-900/20 py-3 gap-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setStatusFilter(OrderStatus.READY_FOR_DELIVERY)}>
+				<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+					<CardTitle className="text-xs font-medium text-orange-900 dark:text-orange-200">Ready</CardTitle>
+					<PackageCheck className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+				</CardHeader>
+				<CardContent className="pt-1 pb-3">
+					<div className="text-2xl font-bold text-orange-900 dark:text-orange-50">{orderStats[OrderStatus.READY_FOR_DELIVERY] || 0}</div>
+				</CardContent>
+			</Card>
+
+			<Card className="border-none shadow-md bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/40 dark:to-indigo-800/40 dark:shadow-lg dark:shadow-indigo-900/20 py-3 gap-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setStatusFilter(OrderStatus.SENT_TO_DELIVERY)}>
+				<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+					<CardTitle className="text-xs font-medium text-indigo-900 dark:text-indigo-200">Sent</CardTitle>
+					<Send className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+				</CardHeader>
+				<CardContent className="pt-1 pb-3">
+					<div className="text-2xl font-bold text-indigo-900 dark:text-indigo-50">{orderStats[OrderStatus.SENT_TO_DELIVERY] || 0}</div>
+				</CardContent>
+			</Card>
+
+			<Card className="border-none shadow-md bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-900/40 dark:to-cyan-800/40 dark:shadow-lg dark:shadow-cyan-900/20 py-3 gap-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setStatusFilter(OrderStatus.SHIPPED)}>
+				<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+					<CardTitle className="text-xs font-medium text-cyan-900 dark:text-cyan-200">Shipped</CardTitle>
+					<ShipWheel className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
+				</CardHeader>
+				<CardContent className="pt-1 pb-3">
+					<div className="text-2xl font-bold text-cyan-900 dark:text-cyan-50">{orderStats[OrderStatus.SHIPPED] || 0}</div>
+				</CardContent>
+			</Card>
+
+			<Card className="border-none shadow-md bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/40 dark:to-green-800/40 dark:shadow-lg dark:shadow-green-900/20 py-3 gap-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setStatusFilter(OrderStatus.DELIVERED)}>
+				<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+					<CardTitle className="text-xs font-medium text-green-900 dark:text-green-200">Delivered</CardTitle>
+					<CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+				</CardHeader>
+				<CardContent className="pt-1 pb-3">
+					<div className="text-2xl font-bold text-green-900 dark:text-green-50">{orderStats[OrderStatus.DELIVERED] || 0}</div>
+				</CardContent>
+			</Card>
+
+			<Card className="border-none shadow-md bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/40 dark:to-amber-800/40 dark:shadow-lg dark:shadow-amber-900/20 py-3 gap-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setStatusFilter(OrderStatus.RETURNED)}>
+				<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+					<CardTitle className="text-xs font-medium text-amber-900 dark:text-amber-200">Returned</CardTitle>
+					<RotateCcw className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+				</CardHeader>
+				<CardContent className="pt-1 pb-3">
+					<div className="text-2xl font-bold text-amber-900 dark:text-amber-50">{orderStats[OrderStatus.RETURNED] || 0}</div>
+				</CardContent>
+			</Card>
+
+			<Card className="border-none shadow-md bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/40 dark:to-red-800/40 dark:shadow-lg dark:shadow-red-900/20 py-3 gap-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setStatusFilter(OrderStatus.CANCELLED)}>
+				<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+					<CardTitle className="text-xs font-medium text-red-900 dark:text-red-200">Cancelled</CardTitle>
+					<XCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
+				</CardHeader>
+				<CardContent className="pt-1 pb-3">
+					<div className="text-2xl font-bold text-red-900 dark:text-red-50">{orderStats[OrderStatus.CANCELLED] || 0}</div>
+				</CardContent>
+			</Card>
+
+			<Card className="border-none shadow-md bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900/40 dark:to-gray-800/40 dark:shadow-lg dark:shadow-gray-900/20 py-3 gap-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setStatusFilter(OrderStatus.REFUNDED)}>
+				<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+					<CardTitle className="text-xs font-medium text-gray-900 dark:text-gray-200">Refunded</CardTitle>
+					<RefreshCw className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+				</CardHeader>
+				<CardContent className="pt-1 pb-3">
+					<div className="text-2xl font-bold text-gray-900 dark:text-gray-50">{orderStats[OrderStatus.REFUNDED] || 0}</div>
+				</CardContent>
+			</Card>
+
+			<Card className="border-none shadow-md bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/40 dark:to-slate-800/40 dark:shadow-lg dark:shadow-slate-900/20 py-3 gap-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setStatusFilter(OrderStatus.DELETED)}>
+				<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+					<CardTitle className="text-xs font-medium text-slate-900 dark:text-slate-200">Deleted</CardTitle>
+					<Trash className="h-4 w-4 text-slate-600 dark:text-slate-400" />
+				</CardHeader>
+				<CardContent className="pt-1 pb-3">
+					<div className="text-2xl font-bold text-slate-900 dark:text-slate-50">{orderStats[OrderStatus.DELETED] || 0}</div>
+				</CardContent>
+			</Card>
+
+			<Card className="border-none shadow-md bg-gradient-to-br from-primary/10 to-primary/20 dark:from-primary/20 dark:to-primary/30 dark:shadow-lg dark:shadow-primary/20 py-3 gap-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setStatusFilter('all')}>
+				<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+					<CardTitle className="text-xs font-medium text-primary">All Orders</CardTitle>
+					<Package className="h-4 w-4 text-primary" />
+				</CardHeader>
+				<CardContent className="pt-1 pb-3">
+					<div className="text-2xl font-bold text-primary">{Object.values(orderStats).reduce((sum, count) => sum + count, 0)}</div>
+				</CardContent>
+			</Card>
+		</div>			{/* Search and Filters */}
 			<div className="flex flex-col sm:flex-row gap-3">
 				<div className="relative flex-1 max-w-sm">
 					<Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary/70" />

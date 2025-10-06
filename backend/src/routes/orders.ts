@@ -111,6 +111,13 @@ const orderRoutes: FastifyPluginCallback = async (fastify) => {
             // Determine initial status based on markAsReadyForDelivery flag
             const initialStatus = orderData.markAsReadyForDelivery ? 'READY_FOR_DELIVERY' : 'PENDING'
 
+            // Determine payment status based on payment method
+            // Bank transfers are considered already paid, COD is pending until delivery
+            const paymentStatus = orderData.paymentMethod === 'BANK_TRANSFER' ? 'PAID' : 'PENDING'
+
+            // Set COD amount - should be 0 for bank transfers (already paid), total for COD
+            const codAmount = orderData.paymentMethod === 'CASH_ON_DELIVERY' ? 0 : null
+
             const order = await fastify.prisma.order.create({
                 data: {
                     orderNumber,
@@ -123,6 +130,8 @@ const orderRoutes: FastifyPluginCallback = async (fastify) => {
                     districtId: orderData.districtId,
                     districtName: orderData.districtName,
                     paymentMethod: orderData.paymentMethod,
+                    paymentStatus,
+                    codAmount,
                     status: initialStatus,
                     subtotal,
                     shippingAmount,

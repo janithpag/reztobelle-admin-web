@@ -308,12 +308,13 @@ export function ProductsManagement() {
 	).length;
 
 	return (
-		<div className="space-y-6">
+		<div className="space-y-3">
 			{/* Header */}
-			<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+			<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 p-4 rounded-lg bg-gradient-to-r from-primary/5 via-primary/10 to-purple-500/5 dark:from-primary/10 dark:via-primary/20 dark:to-purple-500/10 border border-primary/20 shadow-md">
 				<div>
-					<h1 className="text-2xl font-bold tracking-tight">Products</h1>
-					<p className="text-muted-foreground">
+					<h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-primary via-primary to-purple-600 dark:from-primary dark:via-primary dark:to-purple-400 bg-clip-text text-transparent">Products</h1>
+					<p className="text-muted-foreground text-sm mt-0.5 flex items-center gap-1.5">
+						<Package className="h-3.5 w-3.5" />
 						Manage your product catalog, inventory, and pricing
 					</p>
 				</div>
@@ -329,10 +330,13 @@ export function ProductsManagement() {
 							Add Product
 						</Button>
 					</DialogTrigger>
-					<DialogContent className="sm:max-w-[800px] w-full">
-						<DialogHeader>
-							<DialogTitle>Add New Product</DialogTitle>
-							<DialogDescription>
+					<DialogContent className="sm:max-w-[800px] w-full border-primary/20 shadow-2xl">
+						<DialogHeader className="border-b border-primary/10 pb-4 bg-gradient-to-r from-primary/5 to-transparent dark:from-primary/10 dark:to-transparent rounded-t-lg">
+							<DialogTitle className="text-2xl flex items-center gap-3">
+								<Package className="h-6 w-6 text-primary flex-shrink-0" />
+								<span>Add New Product</span>
+							</DialogTitle>
+							<DialogDescription className="pl-9">
 								Create a new product with all the necessary details.
 							</DialogDescription>
 						</DialogHeader>
@@ -566,14 +570,15 @@ export function ProductsManagement() {
 								/>
 							</div>
 						</div>
-						<div className="flex justify-end gap-3 px-6 py-4 border-t">
+						<div className="flex justify-end gap-3 px-6 py-4 border-t border-primary/10 bg-gradient-to-r from-transparent to-primary/5 dark:from-transparent dark:to-primary/10">
 							<Button variant="outline" onClick={() => {
 								setIsAddProductOpen(false);
 								resetForm();
-							}}>
+							}} className="border-primary/30 hover:bg-primary/5 transition-all">
 								Cancel
 							</Button>
-							<Button onClick={handleFormSubmit} className="bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 text-white">
+							<Button onClick={handleFormSubmit} className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 dark:from-green-600 dark:to-emerald-600 dark:hover:from-green-700 dark:hover:to-emerald-700 text-white shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 transition-all duration-300">
+								<Plus className="mr-2 h-4 w-4" />
 								Create Product
 							</Button>
 						</div>
@@ -582,47 +587,47 @@ export function ProductsManagement() {
 			</div>
 
 			{/* Stats Cards */}
-			<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-				<Card className="border-none shadow-md bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/40 dark:to-blue-800/40 dark:shadow-lg dark:shadow-blue-900/20">
+			<div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+				<Card className="border-none shadow-md bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/40 dark:to-blue-800/40 dark:shadow-lg dark:shadow-blue-900/20 py-4 gap-0">
 					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-						<CardTitle className="text-sm font-medium text-blue-900 dark:text-blue-200">Total Products</CardTitle>
-						<div className="h-10 w-10 rounded-full bg-blue-500 dark:bg-blue-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
-							<Package className="h-5 w-5 text-white" />
+						<CardTitle className="text-xs font-medium text-blue-900 dark:text-blue-200">Total Products</CardTitle>
+						<div className="h-8 w-8 rounded-full bg-blue-500 dark:bg-blue-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
+							<Package className="h-4 w-4 text-white" />
 						</div>
 					</CardHeader>
-					<CardContent>
-						<div className="text-3xl font-bold text-blue-900 dark:text-blue-50">{totalProducts}</div>
-						<p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+					<CardContent className="pt-2 pb-4">
+						<div className="text-2xl font-bold text-blue-900 dark:text-blue-50">{totalProducts}</div>
+						<p className="text-xs text-blue-700 dark:text-blue-300 mt-0.5">
 							{activeProducts} active
 						</p>
 					</CardContent>
 				</Card>
-				<Card className="border-none shadow-md bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/40 dark:to-amber-800/40 dark:shadow-lg dark:shadow-amber-900/20">
+				<Card className="border-none shadow-md bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/40 dark:to-amber-800/40 dark:shadow-lg dark:shadow-amber-900/20 py-4 gap-0">
 					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-						<CardTitle className="text-sm font-medium text-amber-900 dark:text-amber-200">Low Stock Alert</CardTitle>
-						<div className="h-10 w-10 rounded-full bg-amber-500 dark:bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/30">
-							<AlertCircle className="h-5 w-5 text-white" />
+						<CardTitle className="text-xs font-medium text-amber-900 dark:text-amber-200">Low Stock Alert</CardTitle>
+						<div className="h-8 w-8 rounded-full bg-amber-500 dark:bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/30">
+							<AlertCircle className="h-4 w-4 text-white" />
 						</div>
 					</CardHeader>
-					<CardContent>
-						<div className="text-3xl font-bold text-amber-900 dark:text-amber-50">{lowStockProducts}</div>
-						<p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+					<CardContent className="pt-2 pb-4">
+						<div className="text-2xl font-bold text-amber-900 dark:text-amber-50">{lowStockProducts}</div>
+						<p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
 							Need restocking
 						</p>
 					</CardContent>
 				</Card>
-				<Card className="border-none shadow-md bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/40 dark:to-purple-800/40 dark:shadow-lg dark:shadow-purple-900/20">
+				<Card className="border-none shadow-md bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/40 dark:to-purple-800/40 dark:shadow-lg dark:shadow-purple-900/20 py-4 gap-0">
 					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-						<CardTitle className="text-sm font-medium text-purple-900 dark:text-purple-200">Featured Products</CardTitle>
-						<div className="h-10 w-10 rounded-full bg-purple-500 dark:bg-purple-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
-							<Star className="h-5 w-5 text-white fill-white" />
+						<CardTitle className="text-xs font-medium text-purple-900 dark:text-purple-200">Featured Products</CardTitle>
+						<div className="h-8 w-8 rounded-full bg-purple-500 dark:bg-purple-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
+							<Star className="h-4 w-4 text-white fill-white" />
 						</div>
 					</CardHeader>
-					<CardContent>
-						<div className="text-3xl font-bold text-purple-900 dark:text-purple-50">
+					<CardContent className="pt-2 pb-4">
+						<div className="text-2xl font-bold text-purple-900 dark:text-purple-50">
 							{productsData.filter(p => p.isFeatured).length}
 						</div>
-						<p className="text-sm text-purple-700 dark:text-purple-300 mt-1">
+						<p className="text-xs text-purple-700 dark:text-purple-300 mt-0.5">
 							Highlighted
 						</p>
 					</CardContent>
@@ -630,21 +635,21 @@ export function ProductsManagement() {
 			</div>
 
 			{/* Search and Filters */}
-			<div className="flex flex-col sm:flex-row gap-4">
+			<div className="flex flex-col sm:flex-row gap-3">
 				<div className="relative flex-1 max-w-sm">
-					<Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+					<Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary/70" />
 					<Input
 						placeholder="Search products..."
 						value={searchTerm}
 						onChange={(e) => setSearchTerm(e.target.value)}
-						className="pl-10"
+						className="pl-10 bg-gradient-to-r from-background to-primary/5 dark:from-background dark:to-primary/10 border-primary/30 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-sm hover:shadow-md"
 					/>
 				</div>
 				<Select
 					value={selectedCategory === 'all' ? 'all' : selectedCategory.toString()}
 					onValueChange={(value) => setSelectedCategory(value === 'all' ? 'all' : parseInt(value))}
 				>
-					<SelectTrigger className="w-[200px]">
+					<SelectTrigger className="w-[200px] border-primary/30 focus:ring-2 focus:ring-primary/20 shadow-sm hover:shadow-md transition-all">
 						<SelectValue placeholder="Filter by category" />
 					</SelectTrigger>
 					<SelectContent>
@@ -659,19 +664,11 @@ export function ProductsManagement() {
 			</div>
 
 			{/* Products Table */}
-			<Card>
-				<CardHeader>
-					<CardTitle>Products ({filteredProducts.length})</CardTitle>
-					<CardDescription>
-						All products in your catalog
-					</CardDescription>
-				</CardHeader>
-				<CardContent>
-					{isLoading ? (
-						<div className="flex items-center justify-center py-8">
-							<div className="text-muted-foreground">Loading products...</div>
-						</div>
-					) : filteredProducts.length === 0 ? (
+			{isLoading ? (
+				<div className="flex items-center justify-center py-8">
+					<div className="text-muted-foreground">Loading products...</div>
+				</div>
+			) : filteredProducts.length === 0 ? (
 						<div className="flex flex-col items-center justify-center py-8 text-center">
 							<Package className="h-12 w-12 text-muted-foreground mb-4" />
 							<h3 className="text-lg font-medium text-muted-foreground mb-2">
@@ -685,11 +682,11 @@ export function ProductsManagement() {
 						</div>
 					) : (
 						<>
-							<div className="border rounded-lg overflow-hidden">
+							<div className="border border-primary/20 rounded-lg overflow-hidden shadow-lg bg-card">
 								<div className="overflow-x-auto">
 									<Table>
 										<TableHeader>
-											<TableRow className="bg-muted/50">
+											<TableRow className="bg-gradient-to-r from-muted/50 via-muted/70 to-primary/10 dark:from-muted/30 dark:via-muted/50 dark:to-primary/20 border-b-2 border-primary/20">
 												<TableHead className="w-[250px]">Product</TableHead>
 												<TableHead className="w-[120px]">SKU</TableHead>
 												<TableHead className="w-[150px]">Category</TableHead>
@@ -704,7 +701,7 @@ export function ProductsManagement() {
 										</TableHeader>
 										<TableBody>
 											{paginatedProducts.map((product) => (
-												<TableRow key={product.id} className="hover:bg-muted/50">
+												<TableRow key={product.id} className="hover:bg-gradient-to-r hover:from-primary/5 hover:to-transparent dark:hover:from-primary/10 dark:hover:to-transparent transition-all duration-200 border-b border-border/50">
 													<TableCell className="w-[250px]">
 														<div className="flex items-center gap-2">
 															<div className="relative w-10 h-10 flex-shrink-0">
@@ -840,8 +837,6 @@ export function ProductsManagement() {
 							)}
 						</>
 					)}
-				</CardContent>
-			</Card>
 
 			{/* Edit Product Dialog */}
 			<Dialog open={isEditProductOpen} onOpenChange={(open) => {

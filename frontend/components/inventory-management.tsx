@@ -61,7 +61,7 @@ export function InventoryManagement() {
 	const [searchTerm, setSearchTerm] = useState('');
 	const [filterType, setFilterType] = useState<string>('all');
 	const [currentPage, setCurrentPage] = useState(1);
-	const [itemsPerPage] = useState(10);
+	const [itemsPerPage] = useState(5);
 	const [isLoading, setIsLoading] = useState(true);
 	const [inventoryData, setInventoryData] = useState<(Inventory & { product: Product & { category: { name: string } } })[]>([]);
 	const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);

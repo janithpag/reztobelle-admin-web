@@ -57,6 +57,175 @@ const inventoryRoutes: FastifyPluginCallback = async (fastify) => {
 		}
 	})
 
+	// Get inventory by product ID
+	fastify.get('/product/:productId', {
+		preHandler: authRequired
+	}, async (request, reply) => {
+		try {
+			const { productId } = request.params as { productId: string }
+			const id = parseInt(productId)
+
+			if (isNaN(id)) {
+				return reply.code(400).send({ error: 'Invalid product ID' })
+			}
+
+			const inventory = await fastify.prisma.inventory.findUnique({
+				where: { productId: id },
+				include: {
+					product: {
+						select: {
+							id: true,
+							name: true,
+							sku: true,
+							price: true,
+							costPrice: true,
+							isActive: true,
+							category: {
+								select: {
+									name: true
+								}
+							}
+						}
+					}
+				}
+			})
+
+			if (!inventory) {
+				return reply.code(404).send({ error: 'Inventory not found for this product' })
+			}
+
+			return { inventory }
+		} catch (error: any) {
+			return reply.code(500).send({
+				error: 'Failed to fetch product inventory',
+				message: error.message
+			})
+		}
+	})
+
+	// Update inventory settings (reorder level, max stock level)
+	fastify.put('/product/:productId', {
+		preHandler: managerOrAdmin,
+		schema: {
+			body: {
+				type: 'object',
+				properties: {
+					reorderLevel: { type: 'integer', minimum: 0 },
+					maxStockLevel: { type: 'integer', minimum: 0 }
+				}
+			}
+		}
+	}, async (request, reply) => {
+		try {
+			const { productId } = request.params as { productId: string }
+			const id = parseInt(productId)
+
+			if (isNaN(id)) {
+				return reply.code(400).send({ error: 'Invalid product ID' })
+			}
+
+			// Validate request body with Zod
+			const updateInventorySchema = z.object({
+				reorderLevel: z.number().int().min(0).optional(),
+				maxStockLevel: z.number().int().min(0).optional()
+			})
+
+			const validationResult = updateInventorySchema.safeParse(request.body)
+			if (!validationResult.success) {
+				return reply.code(400).send({
+					error: 'Validation failed',
+					details: validationResult.error.issues
+				})
+			}
+
+			const { reorderLevel, maxStockLevel } = validationResult.data
+
+			// Check if inventory exists
+			const existingInventory = await fastify.prisma.inventory.findUnique({
+				where: { productId: id }
+			})
+
+			if (!existingInventory) {
+				return reply.code(404).send({ error: 'Inventory not found for this product' })
+			}
+
+			// Validate that maxStockLevel >= reorderLevel
+			const finalReorderLevel = reorderLevel ?? existingInventory.reorderLevel
+			const finalMaxStockLevel = maxStockLevel ?? existingInventory.maxStockLevel
+
+			if (finalReorderLevel > finalMaxStockLevel) {
+				return reply.code(400).send({ 
+					error: 'Reorder level cannot be greater than maximum stock level' 
+				})
+			}
+
+			// Update inventory settings
+			const inventory = await fastify.prisma.inventory.update({
+				where: { productId: id },
+				data: {
+					...(reorderLevel !== undefined && { reorderLevel }),
+					...(maxStockLevel !== undefined && { maxStockLevel })
+				},
+				include: {
+					product: {
+						select: {
+							id: true,
+							name: true,
+							sku: true
+						}
+					}
+				}
+			})
+
+			return { 
+				success: true,
+				message: 'Inventory settings updated successfully',
+				inventory 
+			}
+		} catch (error: any) {
+			return reply.code(500).send({
+				error: 'Failed to update inventory settings',
+				message: error.message
+			})
+		}
+	})
+
+	// Get stock movements for a specific product
+	fastify.get('/product/:productId/movements', {
+		preHandler: authRequired
+	}, async (request, reply) => {
+		try {
+			const { productId } = request.params as { productId: string }
+			const id = parseInt(productId)
+
+			if (isNaN(id)) {
+				return reply.code(400).send({ error: 'Invalid product ID' })
+			}
+
+			const {
+				limit = '50',
+				offset = '0'
+			} = request.query as {
+				limit?: string
+				offset?: string
+			}
+
+			const movements = await inventoryService.getStockMovements(
+				id,
+				undefined,
+				parseInt(limit),
+				parseInt(offset)
+			)
+
+			return { movements }
+		} catch (error: any) {
+			return reply.code(500).send({
+				error: 'Failed to fetch stock movements',
+				message: error.message
+			})
+		}
+	})
+
 	// Adjust stock levels
 	fastify.put('/:id/adjust', {
 		preHandler: managerOrAdmin,
@@ -103,6 +272,11 @@ const inventoryRoutes: FastifyPluginCallback = async (fastify) => {
 
 			const adjustmentData = validationResult.data
 
+			// Get user ID from authenticated request
+			if (!request.user?.userId) {
+				return reply.code(401).send({ error: 'User not authenticated' })
+			}
+
 			const result = await inventoryService.adjustStock({
 				productId,
 				quantity: adjustmentData.quantity,
@@ -111,7 +285,7 @@ const inventoryRoutes: FastifyPluginCallback = async (fastify) => {
 				referenceId: adjustmentData.referenceId,
 				notes: adjustmentData.notes,
 				unitCost: adjustmentData.unitCost,
-				userId: (request as any).user?.id
+				userId: parseInt(request.user.userId)
 			})
 
 			return {

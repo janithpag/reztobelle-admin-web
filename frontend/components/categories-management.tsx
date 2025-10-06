@@ -228,13 +228,19 @@ export function CategoriesManagement() {
 		setIsDeleteDialogOpen(true);
 	};
 
+	// Stats
+	const totalCategories = categories.length;
+	const activeCategories = categories.filter(cat => cat.isActive).length;
+	const totalProducts = categories.reduce((sum, cat) => sum + (cat._count?.products || 0), 0);
+
 	return (
-		<div className="space-y-6">
+		<div className="space-y-3">
 			{/* Header */}
-			<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+			<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 p-4 rounded-lg bg-gradient-to-r from-primary/5 via-primary/10 to-purple-500/5 dark:from-primary/10 dark:via-primary/20 dark:to-purple-500/10 border border-primary/20 shadow-md">
 				<div>
-					<h1 className="text-2xl font-bold tracking-tight">Categories</h1>
-					<p className="text-muted-foreground">
+					<h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-primary via-primary to-purple-600 dark:from-primary dark:via-primary dark:to-purple-400 bg-clip-text text-transparent">Categories</h1>
+					<p className="text-muted-foreground text-sm mt-0.5 flex items-center gap-1.5">
+						<Package className="h-3.5 w-3.5" />
 						Manage product categories and organize your inventory
 					</p>
 				</div>
@@ -251,14 +257,17 @@ export function CategoriesManagement() {
 							Add Category
 						</Button>
 					</DialogTrigger>
-					<DialogContent>
-						<DialogHeader>
-							<DialogTitle>Create New Category</DialogTitle>
-							<DialogDescription>
+					<DialogContent className="sm:max-w-[600px] w-full border-primary/20 shadow-2xl">
+						<DialogHeader className="border-b border-primary/10 pb-4 bg-gradient-to-r from-primary/5 to-transparent dark:from-primary/10 dark:to-transparent rounded-t-lg">
+							<DialogTitle className="text-2xl flex items-center gap-3">
+								<Package className="h-6 w-6 text-primary flex-shrink-0" />
+								<span>Create New Category</span>
+							</DialogTitle>
+							<DialogDescription className="pl-9">
 								Add a new product category to organize your inventory.
 							</DialogDescription>
 						</DialogHeader>
-						<DialogBody>
+						<DialogBody className="p-6">
 							<div className="space-y-6">
 								<div className="space-y-2">
 									<Label htmlFor="create-name" className="text-sm font-medium">Name *</Label>
@@ -306,161 +315,201 @@ export function CategoriesManagement() {
 				</Dialog>
 			</div>
 
+			{/* Stats Cards */}
+			<div className="grid gap-3 md:grid-cols-3">
+				<Card className="border-none shadow-md bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/40 dark:to-blue-800/40 dark:shadow-lg dark:shadow-blue-900/20 py-4 gap-0">
+					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+						<CardTitle className="text-xs font-medium text-blue-900 dark:text-blue-200">Total Categories</CardTitle>
+						<div className="h-8 w-8 rounded-full bg-blue-500 dark:bg-blue-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
+							<Package className="h-4 w-4 text-white" />
+						</div>
+					</CardHeader>
+					<CardContent className="pt-2 pb-4">
+						<div className="text-2xl font-bold text-blue-900 dark:text-blue-50">{totalCategories}</div>
+						<p className="text-xs text-blue-700 dark:text-blue-300 mt-0.5">
+							{activeCategories} active
+						</p>
+					</CardContent>
+				</Card>
+				<Card className="border-none shadow-md bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/40 dark:to-green-800/40 dark:shadow-lg dark:shadow-green-900/20 py-4 gap-0">
+					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+						<CardTitle className="text-xs font-medium text-green-900 dark:text-green-200">Active Categories</CardTitle>
+						<div className="h-8 w-8 rounded-full bg-green-500 dark:bg-green-500 flex items-center justify-center shadow-lg shadow-green-500/30">
+							<Package className="h-4 w-4 text-white" />
+						</div>
+					</CardHeader>
+					<CardContent className="pt-2 pb-4">
+						<div className="text-2xl font-bold text-green-900 dark:text-green-50">{activeCategories}</div>
+						<p className="text-xs text-green-700 dark:text-green-300 mt-0.5">
+							In use
+						</p>
+					</CardContent>
+				</Card>
+				<Card className="border-none shadow-md bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/40 dark:to-purple-800/40 dark:shadow-lg dark:shadow-purple-900/20 py-4 gap-0">
+					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+						<CardTitle className="text-xs font-medium text-purple-900 dark:text-purple-200">Total Products</CardTitle>
+						<div className="h-8 w-8 rounded-full bg-purple-500 dark:bg-purple-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
+							<Package className="h-4 w-4 text-white" />
+						</div>
+					</CardHeader>
+					<CardContent className="pt-2 pb-4">
+						<div className="text-2xl font-bold text-purple-900 dark:text-purple-50">{totalProducts}</div>
+						<p className="text-xs text-purple-700 dark:text-purple-300 mt-0.5">
+							Across categories
+						</p>
+					</CardContent>
+				</Card>
+			</div>
+
 			{/* Search */}
 			<div className="flex items-center space-x-2">
 				<div className="relative flex-1 max-w-sm">
-					<Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+					<Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary/70" />
 					<Input
 						placeholder="Search categories..."
 						value={searchTerm}
 						onChange={(e) => setSearchTerm(e.target.value)}
-						className="pl-10"
+						className="pl-10 bg-gradient-to-r from-background to-primary/5 dark:from-background dark:to-primary/10 border-primary/30 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-sm hover:shadow-md"
 					/>
 				</div>
 			</div>
 
 			{/* Categories Table */}
-			<Card>
-				<CardHeader>
-					<CardTitle>Categories ({filteredCategories.length})</CardTitle>
-					<CardDescription>
-						All product categories in your system
-					</CardDescription>
-				</CardHeader>
-				<CardContent>
-					{loading ? (
-						<div className="flex items-center justify-center py-8">
-							<div className="text-muted-foreground">Loading categories...</div>
-						</div>
-					) : filteredCategories.length === 0 ? (
-						<div className="flex flex-col items-center justify-center py-8 text-center">
-							<Package className="h-12 w-12 text-muted-foreground mb-4" />
-							<h3 className="text-lg font-medium text-muted-foreground mb-2">
-								{categories.length === 0 ? 'No categories yet' : 'No categories match your search'}
-							</h3>
-							<p className="text-sm text-muted-foreground max-w-sm mb-4">
-								{categories.length === 0
-									? 'Get started by creating your first product category.'
-									: 'Try adjusting your search terms to find what you\'re looking for.'}
-							</p>
-							{categories.length === 0 && (
-								<Button
-									onClick={() => setIsCreateDialogOpen(true)}
-									className="bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 text-white"
-								>
-									<Plus className="mr-2 h-4 w-4" />
-									Create First Category
-								</Button>
-							)}
-						</div>
-					) : (
+			{loading ? (
+				<div className="flex items-center justify-center py-8">
+					<div className="text-muted-foreground">Loading categories...</div>
+				</div>
+			) : filteredCategories.length === 0 ? (
+				<div className="flex flex-col items-center justify-center py-8 text-center">
+					<Package className="h-12 w-12 text-muted-foreground mb-4" />
+					<h3 className="text-lg font-medium text-muted-foreground mb-2">
+						{categories.length === 0 ? 'No categories yet' : 'No categories match your search'}
+					</h3>
+					<p className="text-sm text-muted-foreground max-w-sm mb-4">
+						{categories.length === 0
+							? 'Get started by creating your first product category.'
+							: 'Try adjusting your search terms to find what you\'re looking for.'}
+					</p>
+					{categories.length === 0 && (
+						<Button
+							onClick={() => setIsCreateDialogOpen(true)}
+							className="bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 text-white"
+						>
+							<Plus className="mr-2 h-4 w-4" />
+							Create First Category
+						</Button>
+					)}
+				</div>
+			) : (
+				<div className="border border-primary/20 rounded-lg overflow-hidden shadow-lg bg-card">
+					<div className="overflow-x-auto">
 						<Table>
 							<TableHeader>
-								<TableRow>
-									<TableHead>Category</TableHead>
-									<TableHead>Description</TableHead>
-									<TableHead>Products</TableHead>
-									<TableHead>Status</TableHead>
-									<TableHead>Created</TableHead>
-									<TableHead className="w-[70px]">Actions</TableHead>
+								<TableRow className="bg-gradient-to-r from-muted/50 via-muted/70 to-primary/10 dark:from-muted/30 dark:via-muted/50 dark:to-primary/20 border-b-2 border-primary/20">
+									<TableHead className="w-[250px]">Category</TableHead>
+									<TableHead className="w-[300px]">Description</TableHead>
+									<TableHead className="w-[120px]">Products</TableHead>
+									<TableHead className="w-[120px]">Status</TableHead>
+									<TableHead className="w-[150px]">Created</TableHead>
+									<TableHead className="w-[140px] text-center">Actions</TableHead>
 								</TableRow>
 							</TableHeader>
 							<TableBody>
-								{filteredCategories.map((category) => (
-									<TableRow key={category.id}>
-										<TableCell>
-											<div className="flex items-center gap-3">
-												<Avatar className="h-10 w-10">
-													<AvatarImage src={category.imageUrl} alt={category.name} />
-													<AvatarFallback>
-														{category.name.slice(0, 2).toUpperCase()}
-													</AvatarFallback>
-												</Avatar>
-												<div>
-													<div className="font-medium">{category.name}</div>
-													<div className="text-sm text-muted-foreground">
-														Slug: {category.slug}
-													</div>
+							{filteredCategories.map((category) => (
+								<TableRow key={category.id}>
+									<TableCell>
+										<div className="flex items-center gap-3">
+											<Avatar className="h-10 w-10">
+												<AvatarImage src={category.imageUrl} alt={category.name} />
+												<AvatarFallback>
+													{category.name.slice(0, 2).toUpperCase()}
+												</AvatarFallback>
+											</Avatar>
+											<div>
+												<div className="font-medium">{category.name}</div>
+												<div className="text-sm text-muted-foreground">
+													Slug: {category.slug}
 												</div>
 											</div>
-										</TableCell>
-										<TableCell>
-											<div className="max-w-xs">
-												{category.description ? (
-													<p className="text-sm text-muted-foreground truncate">
-														{category.description}
-													</p>
-												) : (
-													<span className="text-sm text-muted-foreground italic">
-														No description
-													</span>
-												)}
-											</div>
-										</TableCell>
-										<TableCell>
-											<Badge variant="secondary">
-												{category._count?.products || 0} products
-											</Badge>
-										</TableCell>
-										<TableCell>
-											<Badge
-												variant={category.isActive ? 'default' : 'secondary'}
-												className={cn(
-													"text-xs",
-													category.isActive
-														? "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-green-300 dark:border-green-600"
-														: "bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600"
-												)}
+										</div>
+									</TableCell>
+									<TableCell>
+										<div className="max-w-xs">
+											{category.description ? (
+												<p className="text-sm text-muted-foreground truncate">
+													{category.description}
+												</p>
+											) : (
+												<span className="text-sm text-muted-foreground italic">
+													No description
+												</span>
+											)}
+										</div>
+									</TableCell>
+									<TableCell>
+										<Badge variant="secondary">
+											{category._count?.products || 0} products
+										</Badge>
+									</TableCell>
+									<TableCell>
+										<Badge
+											variant={category.isActive ? 'default' : 'secondary'}
+											className={cn(
+												"text-xs",
+												category.isActive
+													? "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-green-300 dark:border-green-600"
+													: "bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600"
+											)}
+										>
+											{category.isActive ? 'Active' : 'Inactive'}
+										</Badge>
+									</TableCell>
+									<TableCell>
+										<div className="text-sm text-muted-foreground">
+											{new Date(category.createdAt).toLocaleDateString()}
+										</div>
+									</TableCell>
+									<TableCell>
+										<div className="flex items-center justify-center gap-1">
+											<Button
+												size="icon"
+												variant="outline"
+												onClick={() => {
+													setSelectedCategory(category);
+													setIsViewDialogOpen(true);
+												}}
+												className="h-8 w-8 border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-700 dark:hover:text-blue-300 hover:border-blue-300 dark:hover:border-blue-700"
+												title="View Category"
 											>
-												{category.isActive ? 'Active' : 'Inactive'}
-											</Badge>
-										</TableCell>
-										<TableCell>
-											<div className="text-sm text-muted-foreground">
-												{new Date(category.createdAt).toLocaleDateString()}
-											</div>
-										</TableCell>
-										<TableCell>
-											<div className="flex items-center justify-center gap-1">
-												<Button
-													size="icon"
-													variant="outline"
-													onClick={() => {
-														setSelectedCategory(category);
-														setIsViewDialogOpen(true);
-													}}
-													className="h-8 w-8 border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-700 dark:hover:text-blue-300 hover:border-blue-300 dark:hover:border-blue-700"
-													title="View Category"
-												>
-													<Eye className="h-4 w-4" />
-												</Button>
-												<Button
-													size="icon"
-													variant="outline"
-													onClick={() => openEditDialog(category)}
-													className="h-8 w-8 border-yellow-200 dark:border-yellow-800 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 hover:text-yellow-700 dark:hover:text-yellow-300 hover:border-yellow-300 dark:hover:border-yellow-700"
-													title="Edit Category"
-												>
-													<Edit2 className="h-4 w-4" />
-												</Button>
-												<Button
-													size="icon"
-													variant="outline"
-													onClick={() => openDeleteDialog(category)}
-													className="h-8 w-8 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700 dark:hover:text-red-300 hover:border-red-300 dark:hover:border-red-700"
-													title="Delete Category"
-												>
-													<Trash2 className="h-4 w-4" />
-												</Button>
-											</div>
-										</TableCell>
-									</TableRow>
-								))}
-							</TableBody>
-						</Table>
-					)}
-				</CardContent>
-			</Card>
+												<Eye className="h-4 w-4" />
+											</Button>
+											<Button
+												size="icon"
+												variant="outline"
+												onClick={() => openEditDialog(category)}
+												className="h-8 w-8 border-yellow-200 dark:border-yellow-800 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 hover:text-yellow-700 dark:hover:text-yellow-300 hover:border-yellow-300 dark:hover:border-yellow-700"
+												title="Edit Category"
+											>
+												<Edit2 className="h-4 w-4" />
+											</Button>
+											<Button
+												size="icon"
+												variant="outline"
+												onClick={() => openDeleteDialog(category)}
+												className="h-8 w-8 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700 dark:hover:text-red-300 hover:border-red-300 dark:hover:border-red-700"
+												title="Delete Category"
+											>
+												<Trash2 className="h-4 w-4" />
+											</Button>
+										</div>
+									</TableCell>
+								</TableRow>
+							))}
+						</TableBody>
+					</Table>
+				</div>
+			</div>
+			)}
 
 			{/* Edit Dialog */}
 			<Dialog open={isEditDialogOpen} onOpenChange={(open) => {
@@ -469,14 +518,17 @@ export function CategoriesManagement() {
 					setEditImages([]);
 				}
 			}}>
-				<DialogContent>
-					<DialogHeader>
-						<DialogTitle>Edit Category</DialogTitle>
-						<DialogDescription>
+				<DialogContent className="sm:max-w-[600px] w-full border-primary/20 shadow-2xl">
+					<DialogHeader className="border-b border-primary/10 pb-4 bg-gradient-to-r from-primary/5 to-transparent dark:from-primary/10 dark:to-transparent rounded-t-lg">
+						<DialogTitle className="text-2xl flex items-center gap-3">
+							<Edit2 className="h-6 w-6 text-primary flex-shrink-0" />
+							<span>Edit Category</span>
+						</DialogTitle>
+						<DialogDescription className="pl-9">
 							Update the category details below.
 						</DialogDescription>
 					</DialogHeader>
-					<DialogBody>
+					<DialogBody className="p-6">
 						<div className="space-y-6">
 							<div className="space-y-2">
 								<Label htmlFor="edit-name" className="text-sm font-medium">Name *</Label>

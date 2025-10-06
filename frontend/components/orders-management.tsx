@@ -49,14 +49,14 @@ import {
 	X,
 } from 'lucide-react';
 import { ordersAPI, productsAPI, deliveriesAPI, koombiyoAPI } from '@/lib/api';
-import { 
-	Order, 
-	Product, 
-	OrderStatus, 
-	PaymentStatus, 
+import {
+	Order,
+	Product,
+	OrderStatus,
+	PaymentStatus,
 	PaymentMethod,
 	KoombiyoDeliveryStatus,
-	CreateOrderForm 
+	CreateOrderForm
 } from '@/types';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -95,6 +95,7 @@ const statusColors = {
 	[OrderStatus.RETURNED]: 'bg-amber-100 text-amber-800',
 	[OrderStatus.CANCELLED]: 'bg-red-100 text-red-800',
 	[OrderStatus.REFUNDED]: 'bg-gray-100 text-gray-800',
+	[OrderStatus.DELETED]: 'bg-slate-100 text-slate-800',
 };
 
 const paymentStatusColors = {
@@ -127,7 +128,7 @@ export function OrdersManagement() {
 	const [ordersData, setOrdersData] = useState<Order[]>([]);
 	const [productsData, setProductsData] = useState<Product[]>([]);
 	const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-	
+
 	// Dialog states
 	const [isViewOrderOpen, setIsViewOrderOpen] = useState(false);
 	const [isAddOrderOpen, setIsAddOrderOpen] = useState(false);
@@ -137,7 +138,7 @@ export function OrdersManagement() {
 	const [availableWaybills, setAvailableWaybills] = useState<Array<{ waybill_id: string }>>([]);
 	const [isLoadingWaybills, setIsLoadingWaybills] = useState(false);
 	const [waybillOpen, setWaybillOpen] = useState(false);
-	
+
 	// Form state
 	const [orderForm, setOrderForm] = useState<OrderFormData>({
 		customerName: '',
@@ -163,7 +164,7 @@ export function OrdersManagement() {
 	const [isLoadingCities, setIsLoadingCities] = useState(false);
 	const [districtOpen, setDistrictOpen] = useState(false);
 	const [cityOpen, setCityOpen] = useState(false);
-	
+
 	// Product selection state
 	const [productOpen, setProductOpen] = useState(false);
 	const [productSearchValue, setProductSearchValue] = useState('');
@@ -200,7 +201,7 @@ export function OrdersManagement() {
 			if (paymentFilter !== 'all') {
 				params.paymentStatus = paymentFilter;
 			}
-			
+
 			const response = await ordersAPI.getOrders(params);
 			setOrdersData(response.orders || []);
 		} catch (error) {
@@ -326,7 +327,7 @@ export function OrdersManagement() {
 		setSelectedOrder(order);
 		setWaybillId('');
 		setIsAttachWaybillOpen(true);
-		
+
 		// Load available waybills from Koombiyo
 		setIsLoadingWaybills(true);
 		try {
@@ -483,7 +484,7 @@ export function OrdersManagement() {
 			shippingAmount: order.shippingAmount.toString(),
 			discountAmount: order.discountAmount.toString(),
 		});
-		
+
 		// Load cities for the selected district
 		if (order.districtId) {
 			loadCities(order.districtId);
@@ -494,11 +495,11 @@ export function OrdersManagement() {
 
 	// Filter and search orders
 	const filteredOrders = ordersData.filter((order) => {
-		const matchesSearch = 
+		const matchesSearch =
 			order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
 			order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
 			order.customerEmail?.toLowerCase().includes(searchTerm.toLowerCase());
-		
+
 		return matchesSearch;
 	});
 
@@ -553,7 +554,7 @@ export function OrdersManagement() {
 									<Input
 										id="customerName"
 										value={orderForm.customerName}
-										onChange={(e) => setOrderForm({...orderForm, customerName: e.target.value})}
+										onChange={(e) => setOrderForm({ ...orderForm, customerName: e.target.value })}
 										placeholder="Enter customer name"
 										className="w-full"
 									/>
@@ -564,7 +565,7 @@ export function OrdersManagement() {
 										id="customerEmail"
 										type="email"
 										value={orderForm.customerEmail}
-										onChange={(e) => setOrderForm({...orderForm, customerEmail: e.target.value})}
+										onChange={(e) => setOrderForm({ ...orderForm, customerEmail: e.target.value })}
 										placeholder="customer@email.com"
 										className="w-full"
 									/>
@@ -574,7 +575,7 @@ export function OrdersManagement() {
 									<Input
 										id="customerPhone"
 										value={orderForm.customerPhone}
-										onChange={(e) => setOrderForm({...orderForm, customerPhone: e.target.value})}
+										onChange={(e) => setOrderForm({ ...orderForm, customerPhone: e.target.value })}
 										placeholder="+94 XX XXX XXXX"
 										className="w-full"
 										required
@@ -584,7 +585,7 @@ export function OrdersManagement() {
 									<Label htmlFor="paymentMethod" className="text-sm font-medium">Payment Method *</Label>
 									<Select
 										value={orderForm.paymentMethod}
-										onValueChange={(value) => setOrderForm({...orderForm, paymentMethod: value as PaymentMethod})}
+										onValueChange={(value) => setOrderForm({ ...orderForm, paymentMethod: value as PaymentMethod })}
 									>
 										<SelectTrigger className="w-full">
 											<SelectValue />
@@ -603,7 +604,7 @@ export function OrdersManagement() {
 								<Textarea
 									id="address"
 									value={orderForm.address}
-									onChange={(e) => setOrderForm({...orderForm, address: e.target.value})}
+									onChange={(e) => setOrderForm({ ...orderForm, address: e.target.value })}
 									placeholder="Enter complete delivery address"
 									className="w-full min-h-[80px] resize-none"
 								/>
@@ -633,27 +634,27 @@ export function OrdersManagement() {
 												<CommandList className="max-h-64">
 													<CommandGroup>
 														{districts.map((district) => (
-														<CommandItem
-															key={district.id}
-															value={district.name}
-															onSelect={() => {
-																setOrderForm({
-																	...orderForm,
-																	districtId: district.id,
-																	districtName: district.name,
-																	cityId: '',
-																	cityName: '',
-																});
-																loadCities(district.id);
-																setDistrictOpen(false);
-															}}
-														>
-															<Check
-																className={cn(
-																	"mr-2 h-4 w-4",
-																	orderForm.districtId === district.id ? "opacity-100" : "opacity-0"
-																)}
-															/>
+															<CommandItem
+																key={district.id}
+																value={district.name}
+																onSelect={() => {
+																	setOrderForm({
+																		...orderForm,
+																		districtId: district.id,
+																		districtName: district.name,
+																		cityId: '',
+																		cityName: '',
+																	});
+																	loadCities(district.id);
+																	setDistrictOpen(false);
+																}}
+															>
+																<Check
+																	className={cn(
+																		"mr-2 h-4 w-4",
+																		orderForm.districtId === district.id ? "opacity-100" : "opacity-0"
+																	)}
+																/>
 																{district.name}
 															</CommandItem>
 														))}
@@ -685,24 +686,24 @@ export function OrdersManagement() {
 												<CommandList className="max-h-64">
 													<CommandGroup>
 														{cities.map((city) => (
-														<CommandItem
-															key={city.id}
-															value={city.name}
-															onSelect={() => {
-																setOrderForm({
-																	...orderForm,
-																	cityId: city.id,
-																	cityName: city.name,
-																});
-																setCityOpen(false);
-															}}
-														>
-															<Check
-																className={cn(
-																	"mr-2 h-4 w-4",
-																	orderForm.cityId === city.id ? "opacity-100" : "opacity-0"
-																)}
-															/>
+															<CommandItem
+																key={city.id}
+																value={city.name}
+																onSelect={() => {
+																	setOrderForm({
+																		...orderForm,
+																		cityId: city.id,
+																		cityName: city.name,
+																	});
+																	setCityOpen(false);
+																}}
+															>
+																<Check
+																	className={cn(
+																		"mr-2 h-4 w-4",
+																		orderForm.cityId === city.id ? "opacity-100" : "opacity-0"
+																	)}
+																/>
 																{city.name}
 															</CommandItem>
 														))}
@@ -724,7 +725,7 @@ export function OrdersManagement() {
 										step="0.01"
 										min="0"
 										value={orderForm.shippingAmount}
-										onChange={(e) => setOrderForm({...orderForm, shippingAmount: e.target.value})}
+										onChange={(e) => setOrderForm({ ...orderForm, shippingAmount: e.target.value })}
 										placeholder="0.00"
 										className="w-full"
 									/>
@@ -737,7 +738,7 @@ export function OrdersManagement() {
 										step="0.01"
 										min="0"
 										value={orderForm.discountAmount}
-										onChange={(e) => setOrderForm({...orderForm, discountAmount: e.target.value})}
+										onChange={(e) => setOrderForm({ ...orderForm, discountAmount: e.target.value })}
 										placeholder="0.00"
 										className="w-full"
 									/>
@@ -750,7 +751,7 @@ export function OrdersManagement() {
 								<Textarea
 									id="notes"
 									value={orderForm.notes}
-									onChange={(e) => setOrderForm({...orderForm, notes: e.target.value})}
+									onChange={(e) => setOrderForm({ ...orderForm, notes: e.target.value })}
 									placeholder="General notes about the order"
 									className="w-full min-h-[60px] resize-none"
 								/>
@@ -761,7 +762,7 @@ export function OrdersManagement() {
 								<Textarea
 									id="specialNotes"
 									value={orderForm.specialNotes}
-									onChange={(e) => setOrderForm({...orderForm, specialNotes: e.target.value})}
+									onChange={(e) => setOrderForm({ ...orderForm, specialNotes: e.target.value })}
 									placeholder="Special delivery or handling instructions"
 									className="w-full min-h-[60px] resize-none"
 								/>
@@ -773,7 +774,7 @@ export function OrdersManagement() {
 									type="checkbox"
 									id="markAsReadyForDelivery"
 									checked={orderForm.markAsReadyForDelivery || false}
-									onChange={(e) => setOrderForm({...orderForm, markAsReadyForDelivery: e.target.checked})}
+									onChange={(e) => setOrderForm({ ...orderForm, markAsReadyForDelivery: e.target.checked })}
 									className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded cursor-pointer"
 								/>
 								<Label htmlFor="markAsReadyForDelivery" className="text-sm font-medium cursor-pointer flex-1">
@@ -808,8 +809,8 @@ export function OrdersManagement() {
 										</PopoverTrigger>
 										<PopoverContent className="w-full p-0" align="start" side="bottom" sideOffset={4}>
 											<Command>
-												<CommandInput 
-													placeholder="Search products by name or SKU..." 
+												<CommandInput
+													placeholder="Search products by name or SKU..."
 													value={productSearchValue}
 													onValueChange={setProductSearchValue}
 												/>
@@ -821,7 +822,7 @@ export function OrdersManagement() {
 															.map((product) => {
 																const isSelected = orderForm.items.some(item => item.productId === product.id);
 																const stockAvailable = product.inventory?.quantityAvailable || 0;
-																
+
 																return (
 																	<CommandItem
 																		key={product.id}
@@ -832,7 +833,7 @@ export function OrdersManagement() {
 																					productId: product.id,
 																					quantity: 1,
 																				}];
-																				setOrderForm({...orderForm, items: newItems});
+																				setOrderForm({ ...orderForm, items: newItems });
 																				toast.success(`${product.name} added to order`);
 																			} else if (isSelected) {
 																				toast.info(`${product.name} is already in the order`);
@@ -903,10 +904,10 @@ export function OrdersManagement() {
 											</TableHeader>
 											<TableBody>
 												{orderForm.items.map((item, index) => {
-										const product = productsData.find(p => p.id === item.productId);
-										if (!product) return null;
-										
-										const itemTotal = Number(product.price) * item.quantity;													return (
+													const product = productsData.find(p => p.id === item.productId);
+													if (!product) return null;
+
+													const itemTotal = Number(product.price) * item.quantity; return (
 														<TableRow key={item.productId}>
 															<TableCell>
 																<div>
@@ -923,7 +924,7 @@ export function OrdersManagement() {
 																		const newQuantity = parseInt(e.target.value) || 1;
 																		const newItems = [...orderForm.items];
 																		newItems[index].quantity = newQuantity;
-																		setOrderForm({...orderForm, items: newItems});
+																		setOrderForm({ ...orderForm, items: newItems });
 																	}}
 																	className="w-20 h-8"
 																/>
@@ -941,7 +942,7 @@ export function OrdersManagement() {
 																	variant="ghost"
 																	onClick={() => {
 																		const newItems = orderForm.items.filter((_, i) => i !== index);
-																		setOrderForm({...orderForm, items: newItems});
+																		setOrderForm({ ...orderForm, items: newItems });
 																		toast.success('Product removed from order');
 																	}}
 																	className="h-7 w-7 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
@@ -988,8 +989,8 @@ export function OrdersManagement() {
 																orderForm.items.reduce((sum, item) => {
 																	const product = productsData.find(p => p.id === item.productId);
 																	return sum + (product ? Number(product.price) * item.quantity : 0);
-																}, 0) + 
-																parseFloat(orderForm.shippingAmount || '0') - 
+																}, 0) +
+																parseFloat(orderForm.shippingAmount || '0') -
 																parseFloat(orderForm.discountAmount || '0')
 															).toFixed(2)}
 														</span>
@@ -1221,7 +1222,7 @@ export function OrdersManagement() {
 													</Button>
 													<DropdownMenu>
 														<DropdownMenuTrigger asChild>
-															<Button 
+															<Button
 																size="icon"
 																variant="outline"
 																className="h-7 w-7 border-primary/30 hover:bg-primary/5"
@@ -1233,7 +1234,7 @@ export function OrdersManagement() {
 														<DropdownMenuContent align="end">
 															<DropdownMenuLabel>Actions</DropdownMenuLabel>
 															<DropdownMenuSeparator />
-															
+
 															{/* Edit Order - only for PENDING */}
 															{order.status === OrderStatus.PENDING && (
 																<DropdownMenuItem onClick={() => handleOpenEditOrder(order)}>
@@ -1241,7 +1242,7 @@ export function OrdersManagement() {
 																	Edit Order
 																</DropdownMenuItem>
 															)}
-															
+
 															{/* PENDING -> READY_FOR_DELIVERY */}
 															{order.status === OrderStatus.PENDING && (
 																<DropdownMenuItem onClick={() => handleUpdateOrderStatus(order.id, OrderStatus.READY_FOR_DELIVERY)}>
@@ -1249,7 +1250,7 @@ export function OrdersManagement() {
 																	Mark Ready for Delivery
 																</DropdownMenuItem>
 															)}
-															
+
 															{/* READY_FOR_DELIVERY -> SENT_TO_DELIVERY */}
 															{order.status === OrderStatus.READY_FOR_DELIVERY && (
 																<DropdownMenuItem onClick={() => handleOpenAttachWaybill(order)}>
@@ -1257,7 +1258,7 @@ export function OrdersManagement() {
 																	Attach Waybill & Send to Delivery
 																</DropdownMenuItem>
 															)}
-															
+
 															{/* SENT_TO_DELIVERY -> DELIVERED/RETURNED/REFUNDED */}
 															{order.status === OrderStatus.SENT_TO_DELIVERY && (
 																<>
@@ -1275,7 +1276,7 @@ export function OrdersManagement() {
 																	</DropdownMenuItem>
 																</>
 															)}
-															
+
 															{/* DELIVERED/RETURNED -> RETURNED/REFUNDED */}
 															{(order.status === OrderStatus.DELIVERED || order.status === OrderStatus.RETURNED) && (
 																<>
@@ -1291,29 +1292,39 @@ export function OrdersManagement() {
 																	</DropdownMenuItem>
 																</>
 															)}
-															
+
 															<DropdownMenuSeparator />
-															
+
 															{/* Payment Status - separate from order status */}
 															<DropdownMenuLabel className="text-xs">Payment Status</DropdownMenuLabel>
-															{order.paymentStatus !== PaymentStatus.PAID && (
-																<DropdownMenuItem onClick={() => handleUpdatePaymentStatus(order.id, PaymentStatus.PAID)}>
-																	<CreditCard className="mr-2 h-4 w-4 text-green-600" />
-																	Mark as Paid
+															{/* Only allow payment status changes if not REFUNDED (terminal state) */}
+															{order.paymentStatus !== PaymentStatus.REFUNDED && (
+																<>
+																	{order.paymentStatus !== PaymentStatus.PAID && (
+																		<DropdownMenuItem onClick={() => handleUpdatePaymentStatus(order.id, PaymentStatus.PAID)}>
+																			<CreditCard className="mr-2 h-4 w-4 text-green-600" />
+																			Mark as Paid
+																		</DropdownMenuItem>
+																	)}
+																	{/* Cannot change from PAID to PENDING */}
+																	{order.paymentStatus !== PaymentStatus.PENDING && order.paymentStatus !== PaymentStatus.PAID && (
+																		<DropdownMenuItem onClick={() => handleUpdatePaymentStatus(order.id, PaymentStatus.PENDING)}>
+																			<Clock className="mr-2 h-4 w-4 text-yellow-600" />
+																			Mark as Pending
+																		</DropdownMenuItem>
+																	)}
+																</>
+															)}
+															{order.paymentStatus === PaymentStatus.REFUNDED && (
+																<DropdownMenuItem disabled>
+																	<DollarSign className="mr-2 h-4 w-4 text-gray-400" />
+																	Payment Refunded (Locked)
 																</DropdownMenuItem>
 															)}
-															{order.paymentStatus !== PaymentStatus.PENDING && (
-																<DropdownMenuItem onClick={() => handleUpdatePaymentStatus(order.id, PaymentStatus.PENDING)}>
-																	<Clock className="mr-2 h-4 w-4 text-yellow-600" />
-																	Mark as Pending
-																</DropdownMenuItem>
-															)}
-															
-															<DropdownMenuSeparator />
-															
-															{/* Cancel Order - available for non-cancelled/non-refunded */}
+
+															<DropdownMenuSeparator />															{/* Cancel Order - available for non-cancelled/non-refunded */}
 															{order.status !== OrderStatus.CANCELLED && order.status !== OrderStatus.REFUNDED && (
-																<DropdownMenuItem 
+																<DropdownMenuItem
 																	onClick={() => handleCancelOrder(order.id)}
 																	className="text-red-600"
 																>
@@ -1576,7 +1587,7 @@ export function OrdersManagement() {
 								<Input
 									id="edit-customerName"
 									value={orderForm.customerName}
-									onChange={(e) => setOrderForm({...orderForm, customerName: e.target.value})}
+									onChange={(e) => setOrderForm({ ...orderForm, customerName: e.target.value })}
 								/>
 							</div>
 							<div className="space-y-2">
@@ -1585,7 +1596,7 @@ export function OrdersManagement() {
 									id="edit-customerEmail"
 									type="email"
 									value={orderForm.customerEmail}
-									onChange={(e) => setOrderForm({...orderForm, customerEmail: e.target.value})}
+									onChange={(e) => setOrderForm({ ...orderForm, customerEmail: e.target.value })}
 								/>
 							</div>
 							<div className="space-y-2">
@@ -1593,7 +1604,7 @@ export function OrdersManagement() {
 								<Input
 									id="edit-customerPhone"
 									value={orderForm.customerPhone}
-									onChange={(e) => setOrderForm({...orderForm, customerPhone: e.target.value})}
+									onChange={(e) => setOrderForm({ ...orderForm, customerPhone: e.target.value })}
 								/>
 							</div>
 						</div>
@@ -1604,7 +1615,7 @@ export function OrdersManagement() {
 							<Textarea
 								id="edit-address"
 								value={orderForm.address}
-								onChange={(e) => setOrderForm({...orderForm, address: e.target.value})}
+								onChange={(e) => setOrderForm({ ...orderForm, address: e.target.value })}
 								className="min-h-[80px] resize-none"
 							/>
 						</div>
@@ -1702,7 +1713,7 @@ export function OrdersManagement() {
 									step="0.01"
 									min="0"
 									value={orderForm.shippingAmount}
-									onChange={(e) => setOrderForm({...orderForm, shippingAmount: e.target.value})}
+									onChange={(e) => setOrderForm({ ...orderForm, shippingAmount: e.target.value })}
 								/>
 							</div>
 							<div className="space-y-2">
@@ -1713,7 +1724,7 @@ export function OrdersManagement() {
 									step="0.01"
 									min="0"
 									value={orderForm.discountAmount}
-									onChange={(e) => setOrderForm({...orderForm, discountAmount: e.target.value})}
+									onChange={(e) => setOrderForm({ ...orderForm, discountAmount: e.target.value })}
 								/>
 							</div>
 						</div>
@@ -1724,7 +1735,7 @@ export function OrdersManagement() {
 							<Textarea
 								id="edit-notes"
 								value={orderForm.notes}
-								onChange={(e) => setOrderForm({...orderForm, notes: e.target.value})}
+								onChange={(e) => setOrderForm({ ...orderForm, notes: e.target.value })}
 								className="min-h-[60px] resize-none"
 							/>
 						</div>
@@ -1733,7 +1744,7 @@ export function OrdersManagement() {
 							<Textarea
 								id="edit-specialNotes"
 								value={orderForm.specialNotes}
-								onChange={(e) => setOrderForm({...orderForm, specialNotes: e.target.value})}
+								onChange={(e) => setOrderForm({ ...orderForm, specialNotes: e.target.value })}
 								className="min-h-[60px] resize-none"
 							/>
 						</div>
@@ -2027,37 +2038,37 @@ export function OrdersManagement() {
 					{/* Fixed Footer */}
 					<div className="border-t bg-background px-6 py-4 mt-auto flex-shrink-0">
 						<div className="flex justify-end items-center gap-3">
-								<Button 
-									variant="outline" 
-									onClick={() => {
-										setIsAttachWaybillOpen(false);
-										setWaybillId('');
-										setSelectedOrder(null);
-									}}
-									disabled={isLoading}
-									className="flex-1 sm:flex-none sm:min-w-[100px]"
-								>
-									<X className="mr-2 h-4 w-4" />
-									Cancel
-								</Button>
-								<Button 
-									onClick={handleAttachWaybill} 
-									disabled={isLoading || !waybillId.trim()}
-									className="flex-1 sm:flex-none sm:min-w-[200px] bg-primary hover:bg-primary/90"
-									size="lg"
-								>
-									{isLoading ? (
-										<>
-											<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-											Sending to Koombiyo...
-										</>
-									) : (
-										<>
-											<Truck className="mr-2 h-5 w-5" />
-											Send to Delivery
-										</>
-									)}
-								</Button>
+							<Button
+								variant="outline"
+								onClick={() => {
+									setIsAttachWaybillOpen(false);
+									setWaybillId('');
+									setSelectedOrder(null);
+								}}
+								disabled={isLoading}
+								className="flex-1 sm:flex-none sm:min-w-[100px]"
+							>
+								<X className="mr-2 h-4 w-4" />
+								Cancel
+							</Button>
+							<Button
+								onClick={handleAttachWaybill}
+								disabled={isLoading || !waybillId.trim()}
+								className="flex-1 sm:flex-none sm:min-w-[200px] bg-primary hover:bg-primary/90"
+								size="lg"
+							>
+								{isLoading ? (
+									<>
+										<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+										Sending to Koombiyo...
+									</>
+								) : (
+									<>
+										<Truck className="mr-2 h-5 w-5" />
+										Send to Delivery
+									</>
+								)}
+							</Button>
 						</div>
 					</div>
 				</DialogContent>

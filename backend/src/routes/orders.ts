@@ -193,13 +193,14 @@ const orderRoutes: FastifyPluginCallback = async (fastify) => {
 
             // Validate status transitions
             const validTransitions: Record<string, string[]> = {
-                'PENDING': ['READY_FOR_DELIVERY', 'CANCELLED'],
-                'READY_FOR_DELIVERY': ['SENT_TO_DELIVERY', 'CANCELLED'],
-                'SENT_TO_DELIVERY': ['DELIVERED', 'RETURNED', 'REFUNDED', 'CANCELLED'],
-                'DELIVERED': ['RETURNED', 'REFUNDED'],
-                'RETURNED': ['REFUNDED'],
-                'CANCELLED': [], // Cannot transition from cancelled
-                'REFUNDED': [] // Cannot transition from refunded
+                'PENDING': ['READY_FOR_DELIVERY', 'CANCELLED', 'DELETED'],
+                'READY_FOR_DELIVERY': ['SENT_TO_DELIVERY', 'CANCELLED', 'DELETED'],
+                'SENT_TO_DELIVERY': ['DELIVERED', 'RETURNED', 'REFUNDED', 'CANCELLED', 'DELETED'],
+                'DELIVERED': ['RETURNED', 'REFUNDED', 'DELETED'],
+                'RETURNED': ['REFUNDED', 'DELETED'],
+                'CANCELLED': ['DELETED'], // Can only be deleted
+                'REFUNDED': ['DELETED'], // Can only be deleted
+                'DELETED': [] // Cannot transition from deleted
             }
 
             const allowedTransitions = validTransitions[currentOrder.status] || []
@@ -211,6 +212,17 @@ const orderRoutes: FastifyPluginCallback = async (fastify) => {
             }
 
             const updateData: any = { status }
+
+            // Handle REFUNDED transition - automatically set payment status to REFUNDED
+            if (status === 'REFUNDED') {
+                updateData.paymentStatus = 'REFUNDED'
+            }
+
+            // Handle RETURNED transition - set payment status to REFUNDED
+            // (assuming returns result in full refunds)
+            if (status === 'RETURNED') {
+                updateData.paymentStatus = 'REFUNDED'
+            }
 
             // Handle SENT_TO_DELIVERY transition - send to Koombiyo
             if (status === 'SENT_TO_DELIVERY' && currentOrder.status !== 'SENT_TO_DELIVERY') {
@@ -264,6 +276,29 @@ const orderRoutes: FastifyPluginCallback = async (fastify) => {
 
             if (!paymentStatus) {
                 return reply.code(400).send({ error: 'Payment status is required' })
+            }
+
+            // Get current order to check payment status
+            const currentOrder = await fastify.prisma.order.findUnique({
+                where: { id: parseInt(id) }
+            })
+
+            if (!currentOrder) {
+                return reply.code(404).send({ error: 'Order not found' })
+            }
+
+            // Prevent changing from PAID to PENDING
+            if (currentOrder.paymentStatus === 'PAID' && paymentStatus === 'PENDING') {
+                return reply.code(400).send({ 
+                    error: 'Cannot change payment status from PAID back to PENDING' 
+                })
+            }
+
+            // Prevent updating payment status if it's in a terminal state (REFUNDED)
+            if (currentOrder.paymentStatus === 'REFUNDED') {
+                return reply.code(400).send({ 
+                    error: 'Cannot change payment status once it has been marked as REFUNDED' 
+                })
             }
 
             const order = await fastify.prisma.order.update({

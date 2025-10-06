@@ -245,7 +245,8 @@ export enum OrderStatus {
   READY_FOR_DELIVERY = 'READY_FOR_DELIVERY',
   SENT_TO_DELIVERY = 'SENT_TO_DELIVERY',
   RETURNED = 'RETURNED',
-  REFUNDED = 'REFUNDED'
+  REFUNDED = 'REFUNDED',
+  DELETED = 'DELETED'
 }
 
 export enum PaymentStatus {

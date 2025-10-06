@@ -274,6 +274,7 @@ enum OrderStatus {
   SENT_TO_DELIVERY
   RETURNED
   REFUNDED
+  DELETED
 }
 
 enum PaymentStatus {
